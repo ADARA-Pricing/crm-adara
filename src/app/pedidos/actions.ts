@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireCrmUser } from "@/lib/auth";
 
 const statusSchema = z.enum(["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "DELIVERED", "CANCELLED"]);
 const allowedTransitions: Record<string, string[]> = {
@@ -17,6 +18,7 @@ const labels: Record<string, string> = {
 };
 
 export async function updateOrderStatus(orderId: string, nextStatus: string) {
+  await requireCrmUser();
   const status = statusSchema.parse(nextStatus);
   const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
   if (!order || !allowedTransitions[order.status]?.includes(status)) throw new Error("El pedido ya no permite ese cambio de estado.");
@@ -38,6 +40,7 @@ const logisticsSchema = z.object({
 });
 
 export async function updateLogisticsDetails(orderId: string, formData: FormData) {
+  await requireCrmUser();
   const data = logisticsSchema.parse({
     assignedCourier: formData.get("assignedCourier") || undefined,
     deliveryTimeWindow: formData.get("deliveryTimeWindow") || undefined,

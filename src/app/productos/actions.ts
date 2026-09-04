@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { requireAdmin } from "@/lib/auth";
 
 const productSchema = z.object({
   sku: z.string().trim().min(2).max(80),
@@ -39,6 +40,7 @@ function readProductForm(formData: FormData) {
 }
 
 export async function createProduct(formData: FormData) {
+  await requireAdmin();
   const data = readProductForm(formData);
   const product = await prisma.product.create({ data });
   revalidatePath("/productos");
@@ -47,6 +49,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: string, formData: FormData) {
+  await requireAdmin();
   const data = readProductForm(formData);
   await prisma.product.update({ where: { id }, data });
   revalidatePath("/productos");
@@ -56,6 +59,7 @@ export async function updateProduct(id: string, formData: FormData) {
 }
 
 export async function deleteProduct(id: string) {
+  await requireAdmin();
   const product = await prisma.product.findUnique({ where: { id }, include: { _count: { select: { orderItems: true } } } });
   if (!product) redirect("/productos");
   if (product._count.orderItems) {
@@ -71,6 +75,7 @@ export async function deleteProduct(id: string) {
 }
 
 export async function toggleProductStatus(id: string, nextActive: boolean) {
+  await requireAdmin();
   await prisma.product.update({ where: { id }, data: { isActive: nextActive, isAvailableForBot: nextActive } });
   revalidatePath("/productos");
   revalidatePath(`/productos/${id}`);

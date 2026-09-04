@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { requireCrmUser, signOut } from "@/lib/auth";
 
 type CrmShellProps = { active: string; children: ReactNode };
 
@@ -12,7 +13,8 @@ const groups = [
   { label: "Catálogo", links: [["Productos", "/productos"]] }
 ];
 
-export function CrmShell({ active, children }: CrmShellProps) {
+export async function CrmShell({ active, children }: CrmShellProps) {
+  const user = await requireCrmUser();
   return <div className="crm-shell">
     <aside className="sidebar">
       <Link href="/" className="brand"><Image src="/brand/adara-group.png" alt="Adara group" width={176} height={92} priority /></Link>
@@ -22,7 +24,7 @@ export function CrmShell({ active, children }: CrmShellProps) {
           {name}
         </Link>)}
       </nav>)}
-      <div className="sidebar-footer"><strong>Adara group</strong>CRM interno · Argentina</div>
+      <div className="sidebar-footer"><strong>{user.displayName || user.email}</strong><span>{user.role === "ADMIN" ? "Administrador" : user.role === "SALES" ? "Ventas" : "Logística"}</span><form action={signOut}><button type="submit">Cerrar sesión</button></form></div>
     </aside>
     <main className="workspace">{children}</main>
   </div>;
