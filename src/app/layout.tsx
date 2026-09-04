@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { BotpressWebchat } from "@/components/botpress-simulator";
 
 export const metadata: Metadata = {
   title: "CRM Adara",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>{children}<BotpressWebchat /></body>
     </html>
   );
 }
