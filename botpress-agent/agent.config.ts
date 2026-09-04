@@ -24,6 +24,18 @@ export default defineConfig({
         }),
     },
 
+    configuration: {
+        schema: z.object({
+            crmApiBaseUrl: z.string().url().default('https://crm-adara.vercel.app'),
+        }),
+    },
+
+    secrets: {
+        CRM_WEBHOOK_SECRET: {
+            description: 'Secreto compartido para autorizar el alta de pedidos confirmados en CRM Adara.',
+        },
+    },
+
     // Static bot-level config — import { configuration } from '@botpress/runtime' to read it anywhere.
     // Great for feature flags, API endpoints, and other deploy-time settings.
     // configuration: {

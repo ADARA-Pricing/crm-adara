@@ -1,5 +1,6 @@
 import { Conversation, z } from '@botpress/runtime'
 import { quoteOrder } from '../actions/quoteOrder'
+import { recordConfirmedOrder } from '../actions/recordConfirmedOrder'
 
 /**
  * A channel-specific message handler. Use `channel: '*'` to match all channels,
@@ -32,9 +33,10 @@ Retiro: Av. Cramer 2548, CABA; lunes a viernes de 10 a 19 h y sábados de 11 a 1
 No ofrecemos créditos personales ni cuotas con DNI. Cuando pregunten por cuotas, explicá esto sin negociar.
 Atención humana: lunes a viernes de 10 a 18 h. Si la piden fuera de ese horario, registrá la intención y decí que el equipo responderá en el próximo horario hábil.
 
-Para avanzar a la compra preguntá de a un dato: modalidad de entrega, localidad/dirección, día deseado, nombre del receptor y teléfono (puede ser el de este chat). Al tener todo, usá la herramienta para cotizar y mostrale un resumen con total. Pedí confirmación explícita. Nunca prometas una entrega exacta ni confirmes logística: el pedido queda sujeto a revisión comercial y de zona.
-Usá la herramienta quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.`,
-      tools: [quoteOrder.asTool()],
+Para avanzar a la compra preguntá de a un dato: modalidad de entrega, localidad/dirección, día deseado, nombre del receptor y teléfono (puede ser el de este chat). Al tener todo, usá la herramienta para cotizar y mostrale un resumen con total. Pedí confirmación explícita.
+Solo cuando el cliente responda de forma inequívoca que confirma ese resumen, usá recordConfirmedOrder exactamente una vez. Después decí que el pedido fue recibido y queda pendiente de revisión comercial y de zona. Nunca prometas una entrega exacta ni confirmes logística.
+Usá quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.`,
+      tools: [quoteOrder.asTool(), recordConfirmedOrder.asTool()],
     })
   },
 })
