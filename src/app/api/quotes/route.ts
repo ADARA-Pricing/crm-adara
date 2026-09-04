@@ -14,6 +14,10 @@ const quoteSchema = z.object({
   deliveryMethod: z.enum(["COURIER", "PICKUP"]),
   paymentMethod: z.enum(["CASH_OR_TRANSFER", "CARD_ONE_PAYMENT"]),
   locality: z.string().trim().min(2).optional()
+}).superRefine((data, context) => {
+  if (data.deliveryMethod === "COURIER" && data.paymentMethod === "CARD_ONE_PAYMENT") {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "La tarjeta no está disponible para envíos por mensajería" });
+  }
 });
 
 export async function POST(request: NextRequest) {

@@ -17,6 +17,10 @@ const confirmationSchema = z.object({
   locality: z.string().trim().min(2).max(120),
   requestedDate: z.string().datetime().optional(),
   botpressConversationId: z.string().trim().min(1).max(160).optional()
+}).superRefine((data, context) => {
+  if (data.deliveryMethod === "COURIER" && data.paymentMethod === "CARD_ONE_PAYMENT") {
+    context.addIssue({ code: z.ZodIssueCode.custom, message: "La tarjeta no está disponible para envíos por mensajería" });
+  }
 });
 
 export async function POST(request: NextRequest) {

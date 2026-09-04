@@ -20,6 +20,9 @@ export const recordConfirmedOrder = new Action({
     requiresManualReview: z.boolean(),
   }),
   async handler({ input }) {
+    if (input.deliveryMethod === 'courier' && input.paymentMethod === 'card_one_payment') {
+      throw new Error('No se puede registrar un envío por mensajería con tarjeta. La tarjeta se procesa únicamente desde la web.')
+    }
     const conversation = context.get('conversation', { optional: true })
     const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
     const response = await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/orders/confirm`, {

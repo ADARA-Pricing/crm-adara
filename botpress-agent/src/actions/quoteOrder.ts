@@ -14,6 +14,9 @@ export const quoteOrder = new Action({
     terms: z.string(),
   }),
   async handler({ input }) {
+    if (input.deliveryMethod === 'courier' && input.paymentMethod === 'card_one_payment') {
+      throw new Error('Para mensajería privada no corresponde cotizar tarjeta. Ofrecé compra por la web o contraentrega.')
+    }
     const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
     const response = await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/quotes`, {
       method: 'POST',
