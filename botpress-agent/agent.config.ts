@@ -2,7 +2,7 @@ import { z, defineConfig } from '@botpress/runtime'
 
 export default defineConfig({
     name: 'Adara Ventas',
-    description: 'An AI agent built with Botpress ADK',
+    description: 'Asistente comercial de Adara para ventas por WhatsApp.',
 
     // defaultModels: {
     //   autonomous: "openai:gpt-4.1-mini-2025-04-14", // Model used by execute() in conversations/workflows
@@ -12,12 +12,16 @@ export default defineConfig({
 
     // Per-bot persistent state — add fields here to store data across conversations.
     bot: {
-        state: z.object({}),
+        state: z.object({
+            maintenanceMode: z.boolean().default(false),
+        }),
     },
 
     // Per-user persistent state — add fields here to remember things about each user.
     user: {
-        state: z.object({}),
+        state: z.object({
+            requestedHuman: z.boolean().default(false),
+        }),
     },
 
     // Static bot-level config — import { configuration } from '@botpress/runtime' to read it anywhere.

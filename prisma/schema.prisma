@@ -15,8 +15,9 @@ enum CustomerStatus {
 
 enum OrderStatus {
   DRAFT
-  PENDING_PAYMENT
-  PAID
+  AWAITING_CUSTOMER_CONFIRMATION
+  PENDING_REVIEW
+  APPROVED_FOR_LOGISTICS
   PREPARING
   SHIPPED
   DELIVERED
@@ -62,6 +63,16 @@ model Order {
   customerId      String
   customer        Customer         @relation(fields: [customerId], references: [id])
   status          OrderStatus      @default(DRAFT)
+  deliveryMethod  String
+  paymentMethod   String
+  recipientName   String
+  deliveryAddress String
+  postalCode      String?
+  locality        String
+  requestedDate   DateTime?
+  shippingCents   Int              @default(0)
+  riskReview      Boolean          @default(false)
+  reviewReason    String?
   totalCents      Int              @default(0)
   currency        String           @default("ARS")
   source          String           @default("whatsapp")
