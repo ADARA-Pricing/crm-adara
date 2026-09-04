@@ -1,0 +1,17 @@
+import { CrmShell } from "@/components/crm-shell";
+import { OrderStatusActions } from "@/components/order-status-actions";
+import { updateLogisticsDetails } from "@/app/pedidos/actions";
+import { prisma } from "@/lib/prisma";
+import { formatArs, getPickupSchedule, LOCAL_ADDRESS } from "@/lib/sales-policy";
+
+export const dynamic = "force-dynamic";
+
+const statusLabels: Record<string, string> = { PENDING_REVIEW: "A revisar", APPROVED_FOR_LOGISTICS: "Pendiente", PREPARING: "Preparando", SHIPPED: "En reparto" };
+
+export default async function LogisticsPage() {
+  const orders = await prisma.order.findMany({ where: { status: { in: ["PENDING_REVIEW", "APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED"] } }, orderBy: [{ requestedDate: "asc" }, { createdAt: "asc" }], include: { customer: true, items: { include: { product: true } } } });
+  return <CrmShell active="/logistica"><header className="topbar"><div><p className="eyebrow">Operación</p><h1>Logística</h1><p className="topbar-copy">Validá, asigná y seguí cada entrega o retiro confirmado.</p></div></header>
+    <section className="logistics-summary"><div><strong>{orders.filter((item) => item.status === "PENDING_REVIEW").length}</strong><span>para revisar</span></div><div><strong>{orders.filter((item) => item.status === "APPROVED_FOR_LOGISTICS").length}</strong><span>por preparar</span></div><div><strong>{orders.filter((item) => item.status === "SHIPPED").length}</strong><span>en reparto</span></div><p><b>Retiro en local:</b> {LOCAL_ADDRESS}. {getPickupSchedule()}</p></section>
+    <section className="logistics-list">{orders.length ? orders.map((order) => <article className="logistics-card" key={order.id}><header><div><span className={`badge ${order.status === "PENDING_REVIEW" ? "warning" : "neutral"}`}>{statusLabels[order.status]}</span><h2>{order.recipientName || order.customer.fullName || "Cliente sin nombre"}</h2><p>{order.items.map((item) => item.product.name).join(", ")} · {formatArs(order.totalCents)}</p></div><OrderStatusActions id={order.id} status={order.status} /></header><div className="logistics-details"><div><small>Modalidad</small><strong>{order.deliveryMethod === "PICKUP" ? "Retiro en Av. Cramer" : "Mensajería privada"}</strong></div><div><small>Destino</small><strong>{order.deliveryMethod === "PICKUP" ? LOCAL_ADDRESS : `${order.deliveryAddress}, ${order.locality}`}</strong></div><div><small>Fecha solicitada</small><strong>{order.requestedDate?.toLocaleDateString("es-AR") ?? "A coordinar"}</strong></div></div><form action={updateLogisticsDetails.bind(null, order.id)} className="logistics-form"><label>Cadete / responsable<input name="assignedCourier" defaultValue={order.assignedCourier ?? ""} placeholder="Sin asignar" /></label><label>Franja de entrega<input name="deliveryTimeWindow" defaultValue={order.deliveryTimeWindow ?? ""} placeholder={order.deliveryMethod === "PICKUP" ? "Horario de retiro" : "18 a 21 h"} /></label><label className="logistics-note">Nota operativa<input name="logisticsNote" defaultValue={order.logisticsNote ?? ""} placeholder="Indicaciones internas, validación o riesgo" /></label><button className="button secondary" type="submit">Guardar operación</button></form></article>) : <div className="empty panel">No hay pedidos activos para logística.</div>}</section>
+  </CrmShell>;
+}

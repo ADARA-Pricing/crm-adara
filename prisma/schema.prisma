@@ -103,12 +103,29 @@ model Order {
   shippingCents   Int              @default(0)
   riskReview      Boolean          @default(false)
   reviewReason    String?
+  reviewedAt      DateTime?
+  assignedCourier String?
+  deliveryTimeWindow String?
+  logisticsNote   String?
+  deliveredAt     DateTime?
   totalCents      Int              @default(0)
   currency        String           @default("ARS")
   source          String           @default("whatsapp")
   items           OrderItem[]
+  activities      OrderActivity[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+}
+
+model OrderActivity {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  action          String
+  detail          String?
+  createdAt       DateTime @default(now())
+
+  @@index([orderId, createdAt])
 }
 
 model OrderItem {
