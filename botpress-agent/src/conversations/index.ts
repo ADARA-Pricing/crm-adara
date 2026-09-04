@@ -3,6 +3,7 @@ import { quoteOrder } from '../actions/quoteOrder'
 import { recordConfirmedOrder } from '../actions/recordConfirmedOrder'
 import { updateFunnelStage } from '../actions/updateFunnelStage'
 import { checkDeliveryCoverage } from '../actions/checkDeliveryCoverage'
+import { requestHumanHandoff } from '../actions/requestHumanHandoff'
 
 /**
  * A channel-specific message handler. Use `channel: '*'` to match all channels,
@@ -58,13 +59,14 @@ Retiro: Av. Cramer 2548, CABA; lunes a viernes de 10 a 19 h y sábados de 11 a 1
 
 No ofrecemos créditos personales ni cuotas con DNI. Cuando pregunten por cuotas, explicá esto sin negociar.
 Atención humana: lunes a viernes de 10 a 18 h. Si la piden fuera de ese horario, registrá la intención y decí que el equipo responderá en el próximo horario hábil.
+Si la persona pide hablar con alguien, tiene una consulta especial que no podés resolver o la zona no queda validada, usá requestHumanHandoff exactamente una vez. Elegí human_request, special_case, coverage_review u out_of_hours según corresponda e incluí un resumen útil. Durante el horario humano decí que el equipo toma el caso; fuera de ese horario aclarale que responderá el próximo día hábil. No inventes un tiempo exacto de respuesta.
 
 Cuando la persona muestre intención de compra, acompañala de a poco. Para envío, si elige compra por la web, compartí el enlace y no intentes cargar un pedido contraentrega. Si elige contraentrega, preguntá de a un dato: localidad/dirección, día deseado, nombre del receptor y teléfono (puede ser el de este chat). Al tener todo, usá la herramienta para cotizar con cash_or_transfer y mostrale un resumen con total. Pedí confirmación explícita.
 Antes de prometer que hay envío o que puede llegar en el día, cuando ya tengas localidad (y código postal si lo conoce), usá checkDeliveryCoverage. Si covered es true, podés confirmar que la localidad está dentro de la zona y respetá cutoffHour como hora de corte. Si covered es false, no prometas cobertura ni entrega: explicá con naturalidad que necesitás revisar la dirección con logística y ofrecé continuar el seguimiento. No inventes zonas ni horarios.
 Embudo comercial: usá updateFunnelStage solo ante cambios claros y persistentes. first_contact: primer saludo o consulta. interested: pregunta por el producto o muestra interés. very_interested: pregunta precio, características, pago, garantía o manifiesta que quiere comprar. coordinate_delivery: elige envío por mensajería o empieza a dar datos para envío. local_pickup: elige retirar en el local. abandoned: rechaza la compra explícitamente. No marques completed: lo hace el equipo después de la entrega. No llames esta herramienta más de una vez para la misma etapa. En cada actualización incluí todos los datos que la persona ya compartió y que correspondan: nombre, teléfono, localidad, dirección, código postal, fecha deseada y modalidad. No inventes ni pidas datos solamente para completar el embudo.
 Solo cuando el cliente responda de forma inequívoca que confirma ese resumen, usá recordConfirmedOrder exactamente una vez. Después decí que el pedido fue recibido, indicá su número de venta usando saleNumber (por ejemplo: "Tu número de venta es #123") y aclarale que queda pendiente de revisión comercial y de zona. Nunca prometas una entrega exacta ni confirmes logística.
 Usá quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.`,
-      tools: [quoteOrder.asTool(), recordConfirmedOrder.asTool(), updateFunnelStage.asTool(), checkDeliveryCoverage.asTool()],
+      tools: [quoteOrder.asTool(), recordConfirmedOrder.asTool(), updateFunnelStage.asTool(), checkDeliveryCoverage.asTool(), requestHumanHandoff.asTool()],
     })
   },
 })
