@@ -1,13 +1,17 @@
 import { formatArs, getHumanSupportSchedule, getPickupSchedule, LOCAL_ADDRESS, PRODUCT } from "@/lib/sales-policy";
+import { prisma } from "@/lib/prisma";
 
-const cards = [
-  ["Pedidos para revisar", "0", "Se completará cuando conectemos Supabase."],
-  ["Entrega Flex", formatArs(700_000), "Costo fijo para este canal."],
-  ["Atención humana", getHumanSupportSchedule(), "Derivación desde el bot."],
-  ["Retiro en local", LOCAL_ADDRESS, getPickupSchedule()]
-];
+export const dynamic = "force-dynamic";
 
-export default function Home() {
+export default async function Home() {
+  const pendingOrders = await prisma.order.count({ where: { status: "PENDING_REVIEW" } });
+  const cards = [
+    ["Pedidos para revisar", String(pendingOrders), "Confirmados por el cliente y pendientes de validación."],
+    ["Entrega Flex", formatArs(700_000), "Costo fijo para este canal."],
+    ["Atención humana", getHumanSupportSchedule(), "Derivación desde el bot."],
+    ["Retiro en local", LOCAL_ADDRESS, getPickupSchedule()]
+  ];
+
   return (
     <main style={{ maxWidth: 980, margin: "0 auto", padding: "48px 24px", fontFamily: "Arial, sans-serif", color: "#221b18" }}>
       <p style={{ color: "#8c5d2e", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>CRM Adara</p>
