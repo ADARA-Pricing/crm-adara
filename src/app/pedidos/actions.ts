@@ -20,13 +20,14 @@ const labels: Record<string, string> = {
 export async function updateOrderStatus(orderId: string, nextStatus: string) {
   await requireCrmUser();
   const status = statusSchema.parse(nextStatus);
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true } });
+  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true, deliveryDate: true } });
   if (!order || !allowedTransitions[order.status]?.includes(status)) throw new Error("El pedido ya no permite ese cambio de estado.");
   const now = new Date();
   await prisma.order.update({ where: { id: orderId }, data: {
     status,
     reviewedAt: status === "APPROVED_FOR_LOGISTICS" ? now : undefined,
     deliveredAt: status === "DELIVERED" ? now : undefined,
+    deliveryDate: status === "DELIVERED" && !order.deliveryDate ? now : undefined,
     riskReview: status === "APPROVED_FOR_LOGISTICS" ? false : undefined,
     activities: { create: { action: "STATUS_CHANGED", detail: `Estado actualizado a ${labels[status]}.` } }
   } });

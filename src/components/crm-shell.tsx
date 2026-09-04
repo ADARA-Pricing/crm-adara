@@ -10,6 +10,7 @@ const groups = [
   { label: "Atención", links: [["Bandeja WhatsApp", "/bandeja"], ["Clientes", "/clientes"], ["Embudo comercial", "/embudo"]] },
   { label: "Ventas", links: [["Pedidos", "/pedidos"]] },
   { label: "Operación", links: [["Logística", "/logistica"]] },
+  { label: "Trabajo", links: [["Tareas", "/tareas"]] },
   { label: "Catálogo", links: [["Productos", "/productos"]] }
 ];
 

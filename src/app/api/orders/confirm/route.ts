@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     orderId: order.id,
+    saleNumber: order.saleNumber,
     status: order.status,
     totalCents: order.totalCents,
     requiresManualReview: true

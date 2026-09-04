@@ -15,6 +15,7 @@ export const recordConfirmedOrder = new Action({
   }),
   output: z.object({
     orderId: z.string(),
+    saleNumber: z.number(),
     status: z.string(),
     totalCents: z.number(),
     requiresManualReview: z.boolean(),
