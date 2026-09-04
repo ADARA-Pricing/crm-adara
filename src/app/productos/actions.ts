@@ -69,3 +69,10 @@ export async function deleteProduct(id: string) {
   revalidatePath("/");
   redirect("/productos");
 }
+
+export async function toggleProductStatus(id: string, nextActive: boolean) {
+  await prisma.product.update({ where: { id }, data: { isActive: nextActive, isAvailableForBot: nextActive } });
+  revalidatePath("/productos");
+  revalidatePath(`/productos/${id}`);
+  revalidatePath("/");
+}
