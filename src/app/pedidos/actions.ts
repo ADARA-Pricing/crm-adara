@@ -37,7 +37,8 @@ export async function updateOrderStatus(orderId: string, nextStatus: string) {
 const logisticsSchema = z.object({
   assignedCourier: z.string().trim().max(100).optional(),
   deliveryTimeWindow: z.string().trim().max(100).optional(),
-  logisticsNote: z.string().trim().max(500).optional()
+  logisticsNote: z.string().trim().max(500).optional(),
+  deliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
 });
 
 export async function updateLogisticsDetails(orderId: string, formData: FormData) {
@@ -45,13 +46,16 @@ export async function updateLogisticsDetails(orderId: string, formData: FormData
   const data = logisticsSchema.parse({
     assignedCourier: formData.get("assignedCourier") || undefined,
     deliveryTimeWindow: formData.get("deliveryTimeWindow") || undefined,
-    logisticsNote: formData.get("logisticsNote") || undefined
+    logisticsNote: formData.get("logisticsNote") || undefined,
+    deliveryDate: formData.get("deliveryDate") || undefined
   });
   const order = await prisma.order.findUnique({ where: { id: orderId }, select: { id: true } });
   if (!order) throw new Error("No encontramos el pedido.");
+  const { deliveryDate, ...logisticsData } = data;
   await prisma.order.update({ where: { id: orderId }, data: {
-    ...data,
-    activities: { create: { action: "LOGISTICS_UPDATED", detail: "Se actualizaron los datos operativos de logística." } }
+    ...logisticsData,
+    deliveryDate: deliveryDate ? new Date(`${deliveryDate}T12:00:00.000Z`) : undefined,
+    activities: { create: { action: "LOGISTICS_UPDATED", detail: deliveryDate ? `Se programó la entrega para el ${deliveryDate.split("-").reverse().join("/")}.` : "Se actualizaron los datos operativos de logística." } }
   } });
   revalidatePath("/logistica"); revalidatePath("/pedidos");
 }
