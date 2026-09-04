@@ -55,6 +55,8 @@ model Customer {
   deliveryAddress String?
   postalCode      String?
   requestedDate   DateTime?
+  lastMessagePreview String?
+  lastMessageAt   DateTime?
   notes           String?
   conversations   Conversation[]
   orders          Order[]

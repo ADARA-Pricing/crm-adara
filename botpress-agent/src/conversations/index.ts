@@ -1,4 +1,4 @@
-import { Conversation, z } from '@botpress/runtime'
+import { configuration, Conversation, secrets, z } from '@botpress/runtime'
 import { quoteOrder } from '../actions/quoteOrder'
 import { recordConfirmedOrder } from '../actions/recordConfirmedOrder'
 import { updateFunnelStage } from '../actions/updateFunnelStage'
@@ -13,9 +13,25 @@ export default new Conversation({
   channel: '*',
   state: z.object({
     hasAskedForDeliveryMethod: z.boolean().default(false),
+    crmContactCreated: z.boolean().default(false),
   }),
   handler: async ({ message, state, conversation, execute }) => {
     if (message?.type !== 'text') return
+
+    const whatsappPhone = conversation.tags['whatsapp:userPhone']
+    const messageText = (message as unknown as { payload?: { text?: string } }).payload?.text
+    const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
+    await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/leads/stage`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-adara-signature': secrets.CRM_WEBHOOK_SECRET },
+      body: JSON.stringify({
+        stage: state.crmContactCreated ? undefined : 'FIRST_CONTACT',
+        phone: whatsappPhone,
+        lastMessagePreview: typeof messageText === 'string' ? messageText : undefined,
+        botpressConversationId: conversation.id,
+      }),
+    })
+    state.crmContactCreated = true
 
     if (!state.hasAskedForDeliveryMethod) {
       state.hasAskedForDeliveryMethod = true
