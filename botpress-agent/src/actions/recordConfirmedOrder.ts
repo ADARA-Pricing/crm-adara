@@ -21,7 +21,8 @@ export const recordConfirmedOrder = new Action({
   }),
   async handler({ input }) {
     const conversation = context.get('conversation', { optional: true })
-    const response = await fetch(`${configuration.crmApiBaseUrl.replace(/\/$/, '')}/api/orders/confirm`, {
+    const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
+    const response = await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/orders/confirm`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
