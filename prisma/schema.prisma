@@ -50,6 +50,11 @@ model Customer {
   funnelStage     FunnelStage      @default(FIRST_CONTACT)
   funnelNote      String?
   funnelUpdatedAt DateTime         @default(now())
+  deliveryPreference String?
+  locality        String?
+  deliveryAddress String?
+  postalCode      String?
+  requestedDate   DateTime?
   notes           String?
   conversations   Conversation[]
   orders          Order[]
