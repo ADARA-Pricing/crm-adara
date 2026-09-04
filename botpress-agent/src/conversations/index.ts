@@ -1,6 +1,7 @@
 import { Conversation, z } from '@botpress/runtime'
 import { quoteOrder } from '../actions/quoteOrder'
 import { recordConfirmedOrder } from '../actions/recordConfirmedOrder'
+import { updateFunnelStage } from '../actions/updateFunnelStage'
 
 /**
  * A channel-specific message handler. Use `channel: '*'` to match all channels,
@@ -42,9 +43,10 @@ No ofrecemos créditos personales ni cuotas con DNI. Cuando pregunten por cuotas
 Atención humana: lunes a viernes de 10 a 18 h. Si la piden fuera de ese horario, registrá la intención y decí que el equipo responderá en el próximo horario hábil.
 
 Cuando la persona muestre intención de compra, acompañala de a poco. Para envío, si elige compra por la web, compartí el enlace y no intentes cargar un pedido contraentrega. Si elige contraentrega, preguntá de a un dato: localidad/dirección, día deseado, nombre del receptor y teléfono (puede ser el de este chat). Al tener todo, usá la herramienta para cotizar con cash_or_transfer y mostrale un resumen con total. Pedí confirmación explícita.
+Embudo comercial: usá updateFunnelStage solo ante cambios claros y persistentes. first_contact: primer saludo o consulta. interested: pregunta por el producto o muestra interés. very_interested: pregunta precio, características, pago, garantía o manifiesta que quiere comprar. coordinate_delivery: elige envío por mensajería o empieza a dar datos para envío. local_pickup: elige retirar en el local. abandoned: rechaza la compra explícitamente. No marques completed: lo hace el equipo después de la entrega. No llames esta herramienta más de una vez para la misma etapa.
 Solo cuando el cliente responda de forma inequívoca que confirma ese resumen, usá recordConfirmedOrder exactamente una vez. Después decí que el pedido fue recibido y queda pendiente de revisión comercial y de zona. Nunca prometas una entrega exacta ni confirmes logística.
 Usá quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.`,
-      tools: [quoteOrder.asTool(), recordConfirmedOrder.asTool()],
+      tools: [quoteOrder.asTool(), recordConfirmedOrder.asTool(), updateFunnelStage.asTool()],
     })
   },
 })

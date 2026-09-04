@@ -47,15 +47,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Producto no disponible" }, { status: 409 });
   }
   const terms = getPrice(data.deliveryMethod as DeliveryMethod, data.paymentMethod as PaymentMethod, product);
-  const customer = data.phone
-    ? await prisma.customer.upsert({
-        where: { phone: data.phone },
-        update: { fullName: data.recipientName, whatsappId: data.whatsappId },
-        create: { phone: data.phone, fullName: data.recipientName, whatsappId: data.whatsappId }
-      })
-    : await prisma.customer.create({
-        data: { fullName: data.recipientName, whatsappId: data.whatsappId }
-      });
+  const existingCustomer = await prisma.customer.findFirst({ where: { OR: [{ whatsappId: data.whatsappId }, ...(data.phone ? [{ phone: data.phone }] : [])] } });
+  const funnelStage = data.deliveryMethod === "COURIER" ? "COORDINATE_DELIVERY" : "LOCAL_PICKUP";
+  const customer = existingCustomer
+    ? await prisma.customer.update({ where: { id: existingCustomer.id }, data: { fullName: data.recipientName, phone: data.phone || existingCustomer.phone, whatsappId: data.whatsappId || existingCustomer.whatsappId, funnelStage, funnelUpdatedAt: new Date() } })
+    : await prisma.customer.create({ data: { fullName: data.recipientName, phone: data.phone, whatsappId: data.whatsappId, funnelStage } });
 
   const order = await prisma.order.create({
     data: {

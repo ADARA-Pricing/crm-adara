@@ -13,6 +13,16 @@ enum CustomerStatus {
   INACTIVE
 }
 
+enum FunnelStage {
+  FIRST_CONTACT
+  INTERESTED
+  VERY_INTERESTED
+  COORDINATE_DELIVERY
+  LOCAL_PICKUP
+  COMPLETED
+  ABANDONED
+}
+
 enum OrderStatus {
   DRAFT
   AWAITING_CUSTOMER_CONFIRMATION
@@ -37,6 +47,9 @@ model Customer {
   fullName        String?
   email           String?          @unique
   status          CustomerStatus   @default(LEAD)
+  funnelStage     FunnelStage      @default(FIRST_CONTACT)
+  funnelNote      String?
+  funnelUpdatedAt DateTime         @default(now())
   notes           String?
   conversations   Conversation[]
   orders          Order[]

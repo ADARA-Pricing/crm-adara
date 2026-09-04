@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 type CrmShellProps = { active: string; children: ReactNode };
 
 const groups = [
-  { label: "Principal", links: [["Inicio", "/"], ["Pedidos", "/pedidos"], ["Entregas", "/entregas"]] },
+  { label: "Principal", links: [["Inicio", "/"], ["Embudo", "/embudo"], ["Pedidos", "/pedidos"], ["Entregas", "/entregas"]] },
   { label: "Atención", links: [["Bandeja WhatsApp", "/bandeja"], ["Clientes", "/clientes"], ["Seguimientos", "/seguimientos"]] },
   { label: "Catálogo", links: [["Productos", "/productos"], ["Categorías", "/categorías"], ["Zonas de entrega", "/zonas"]] },
   { label: "Gestión", links: [["Reportes", "/reportes"], ["Configuración", "/configuración"]] }
