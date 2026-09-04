@@ -5,7 +5,6 @@ export const PRODUCT = {
   warrantyMonths: 12
 } as const;
 
-export const FLEX_SHIPPING_CENTS = 700_000;
 export const LOCAL_CARD_SURCHARGE_RATE = 0.07;
 export const LOCAL_ADDRESS = "Av. Cramer 2548, CABA";
 
@@ -18,7 +17,7 @@ const flexLocalities = [
   "malvinas argentinas", "jose c paz", "san miguel", "moreno"
 ];
 
-export type DeliveryMethod = "FLEX" | "PICKUP";
+export type DeliveryMethod = "COURIER" | "PICKUP";
 export type PaymentMethod = "CASH_OR_TRANSFER" | "CARD_ONE_PAYMENT";
 
 export function normalizeLocation(value: string) {
@@ -29,25 +28,29 @@ export function normalizeLocation(value: string) {
     .trim();
 }
 
-export function isFlexLocation(location: string) {
+export function isDeliveryLocation(location: string) {
   const normalized = normalizeLocation(location);
   return flexLocalities.some((locality) => normalized.includes(locality));
 }
 
-export function getPrice(deliveryMethod: DeliveryMethod, paymentMethod: PaymentMethod) {
-  if (deliveryMethod === "FLEX") {
+export function getPrice(
+  deliveryMethod: DeliveryMethod,
+  paymentMethod: PaymentMethod,
+  product: { priceCents: number; shippingCents: number }
+) {
+  if (deliveryMethod === "COURIER") {
     return {
-      productCents: PRODUCT.priceCents,
-      shippingCents: FLEX_SHIPPING_CENTS,
-      totalCents: PRODUCT.priceCents + FLEX_SHIPPING_CENTS
+      productCents: product.priceCents,
+      shippingCents: product.shippingCents,
+      totalCents: product.priceCents + product.shippingCents
     };
   }
 
   const totalCents = paymentMethod === "CARD_ONE_PAYMENT"
-    ? Math.round((PRODUCT.priceCents * (1 + LOCAL_CARD_SURCHARGE_RATE)) / 100) * 100
-    : PRODUCT.priceCents;
+    ? Math.round((product.priceCents * (1 + LOCAL_CARD_SURCHARGE_RATE)) / 100) * 100
+    : product.priceCents;
 
-  return { productCents: PRODUCT.priceCents, shippingCents: 0, totalCents };
+  return { productCents: product.priceCents, shippingCents: 0, totalCents };
 }
 
 export function formatArs(cents: number) {

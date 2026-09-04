@@ -7,9 +7,9 @@
 - Garantía: 12 meses.
 - El bot solo informa accesorios si la persona pregunta específicamente qué incluye.
 
-## Entrega Flex
+## Envío por mensajería privada
 
-- Costo: $7.000.
+- El costo se configura en cada producto.
 - Franja habitual: 18 a 21 h, según recorrido y zona.
 - Pedido para el mismo día: confirmado antes de las 12:00 y con zona validada.
 - Domingo: no hay entregas.

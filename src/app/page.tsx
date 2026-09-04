@@ -8,7 +8,7 @@ export default async function Home() {
   const pendingOrders = await prisma.order.count({ where: { status: "PENDING_REVIEW" } });
   const cards = [
     ["Pedidos para revisar", String(pendingOrders), "Confirmados por el cliente y pendientes de validación."],
-    ["Entrega Flex", formatArs(700_000), "Costo fijo para este canal."],
+    ["Mensajería privada", "Por producto", "El envío se cotiza desde cada ficha comercial."],
     ["Atención humana", getHumanSupportSchedule(), "Derivación desde el bot."],
     ["Retiro en local", LOCAL_ADDRESS, getPickupSchedule()]
   ];

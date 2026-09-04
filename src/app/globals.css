@@ -19,9 +19,8 @@ button { font: inherit; }
 
 .crm-shell { min-height: 100vh; display: grid; grid-template-columns: 252px minmax(0, 1fr); }
 .sidebar { padding: 22px 14px; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 26px; }
-.brand { display: flex; align-items: center; gap: 10px; padding: 4px 9px; font-family: Georgia, serif; font-size: 25px; letter-spacing: -.04em; }
-.brand-mark { width: 27px; height: 30px; border: 2px solid var(--brand-dark); border-radius: 14px 14px 5px 5px; position: relative; }
-.brand-mark::after { content: ""; position: absolute; width: 2px; height: 19px; background: var(--brand-dark); top: 5px; left: 11px; box-shadow: -6px 4px 0 -0.2px var(--brand-dark), 6px 4px 0 -0.2px var(--brand-dark); }
+.brand { display: block; padding: 1px 9px; line-height: 0; }
+.brand img { width: 158px; height: auto; }
 .nav-group { display: grid; gap: 3px; }
 .nav-label { color: #9a918a; padding: 0 11px 6px; font-size: 10px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
 .nav-item { display: flex; align-items: center; justify-content: space-between; min-height: 38px; padding: 0 11px; border-radius: 8px; color: #5c5651; font-size: 14px; }

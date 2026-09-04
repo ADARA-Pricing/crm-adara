@@ -4,13 +4,14 @@ import {
   formatArs,
   getPickupSchedule,
   getPrice,
-  isFlexLocation,
+  isDeliveryLocation,
   type DeliveryMethod,
   type PaymentMethod
 } from "@/lib/sales-policy";
+import { prisma } from "@/lib/prisma";
 
 const quoteSchema = z.object({
-  deliveryMethod: z.enum(["FLEX", "PICKUP"]),
+  deliveryMethod: z.enum(["COURIER", "PICKUP"]),
   paymentMethod: z.enum(["CASH_OR_TRANSFER", "CARD_ONE_PAYMENT"]),
   locality: z.string().trim().min(2).optional()
 });
@@ -26,10 +27,12 @@ export async function POST(request: NextRequest) {
     paymentMethod: PaymentMethod;
     locality?: string;
   };
-  const price = getPrice(deliveryMethod, paymentMethod);
+  const product = await prisma.product.findFirst({ where: { isActive: true, isAvailableForBot: true }, orderBy: { createdAt: "asc" } });
+  if (!product) return NextResponse.json({ error: "No hay producto disponible para cotizar" }, { status: 409 });
+  const price = getPrice(deliveryMethod, paymentMethod, product);
   const coverage = deliveryMethod === "PICKUP"
     ? "NOT_REQUIRED"
-    : locality && isFlexLocation(locality) ? "PRELIMINARY_MATCH" : "REVIEW_REQUIRED";
+    : locality && isDeliveryLocation(locality) ? "PRELIMINARY_MATCH" : "REVIEW_REQUIRED";
 
   return NextResponse.json({
     ...price,

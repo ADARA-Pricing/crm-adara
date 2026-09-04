@@ -7,7 +7,7 @@ import { isValidBotpressWebhook } from "@/lib/webhook-auth";
 export const runtime = "nodejs";
 
 const confirmationSchema = z.object({
-  deliveryMethod: z.enum(["FLEX", "PICKUP"]),
+  deliveryMethod: z.enum(["COURIER", "PICKUP"]),
   paymentMethod: z.enum(["CASH_OR_TRANSFER", "CARD_ONE_PAYMENT"]),
   recipientName: z.string().trim().min(2).max(120),
   phone: z.string().trim().min(6).max(40).optional(),
@@ -38,7 +38,11 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
-  const terms = getPrice(data.deliveryMethod as DeliveryMethod, data.paymentMethod as PaymentMethod);
+  const product = await prisma.product.findFirst({ where: { sku: PRODUCT.sku, isActive: true, isAvailableForBot: true } });
+  if (!product) {
+    return NextResponse.json({ error: "Producto no disponible" }, { status: 409 });
+  }
+  const terms = getPrice(data.deliveryMethod as DeliveryMethod, data.paymentMethod as PaymentMethod, product);
   const customer = data.phone
     ? await prisma.customer.upsert({
         where: { phone: data.phone },
@@ -48,11 +52,6 @@ export async function POST(request: NextRequest) {
     : await prisma.customer.create({
         data: { fullName: data.recipientName, whatsappId: data.whatsappId }
       });
-
-  const product = await prisma.product.findUnique({ where: { sku: PRODUCT.sku } });
-  if (!product) {
-    return NextResponse.json({ error: "Producto no disponible" }, { status: 409 });
-  }
 
   const order = await prisma.order.create({
     data: {

@@ -4,7 +4,7 @@ export const recordConfirmedOrder = new Action({
   name: 'recordConfirmedOrder',
   description: 'Registra en CRM un pedido que el cliente ya revisó y confirmó explícitamente. El resultado siempre queda pendiente de revisión comercial.',
   input: z.object({
-    deliveryMethod: z.enum(['flex', 'pickup']).describe('Modalidad confirmada por el cliente.'),
+    deliveryMethod: z.enum(['courier', 'pickup']).describe('Modalidad confirmada por el cliente.'),
     paymentMethod: z.enum(['cash_or_transfer', 'card_one_payment']).describe('Medio de pago confirmado.'),
     recipientName: z.string().min(2).describe('Nombre completo de quien recibe o retira.'),
     phone: z.string().min(6).optional().describe('Teléfono de contacto; puede ser el mismo de WhatsApp.'),
@@ -30,7 +30,7 @@ export const recordConfirmedOrder = new Action({
       },
       body: JSON.stringify({
         ...input,
-        deliveryMethod: input.deliveryMethod === 'flex' ? 'FLEX' : 'PICKUP',
+        deliveryMethod: input.deliveryMethod === 'courier' ? 'COURIER' : 'PICKUP',
         paymentMethod: input.paymentMethod === 'cash_or_transfer' ? 'CASH_OR_TRANSFER' : 'CARD_ONE_PAYMENT',
         botpressConversationId: conversation?.id,
       }),
