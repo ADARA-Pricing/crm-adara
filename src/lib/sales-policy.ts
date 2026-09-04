@@ -8,7 +8,7 @@ export const PRODUCT = {
 export const LOCAL_CARD_SURCHARGE_RATE = 0.07;
 export const LOCAL_ADDRESS = "Av. Cramer 2548, CABA";
 
-const flexLocalities = [
+const courierCoverageLocalities = [
   "caba", "ciudad autonoma de buenos aires", "buenos aires",
   "vicente lopez", "san martin", "tres de febrero", "hurlingham", "ituzaingo",
   "moron", "la matanza", "merlo", "lanus", "avellaneda", "quilmes", "berazategui",
@@ -30,7 +30,7 @@ export function normalizeLocation(value: string) {
 
 export function isDeliveryLocation(location: string) {
   const normalized = normalizeLocation(location);
-  return flexLocalities.some((locality) => normalized.includes(locality));
+  return courierCoverageLocalities.some((locality) => normalized.includes(locality));
 }
 
 export function getPrice(

@@ -5,10 +5,10 @@ import type { ReactNode } from "react";
 type CrmShellProps = { active: string; children: ReactNode };
 
 const groups = [
-  { label: "Principal", links: [["Inicio", "/"], ["Embudo", "/embudo"], ["Pedidos", "/pedidos"], ["Entregas", "/entregas"]] },
-  { label: "Atención", links: [["Bandeja WhatsApp", "/bandeja"], ["Clientes", "/clientes"], ["Seguimientos", "/seguimientos"]] },
-  { label: "Catálogo", links: [["Productos", "/productos"], ["Categorías", "/categorías"], ["Zonas de entrega", "/zonas"]] },
-  { label: "Gestión", links: [["Reportes", "/reportes"], ["Configuración", "/configuración"]] }
+  { label: "Principal", links: [["Dashboard", "/"]] },
+  { label: "Atención", links: [["Clientes", "/clientes"], ["Embudo comercial", "/embudo"]] },
+  { label: "Ventas", links: [["Pedidos", "/pedidos"]] },
+  { label: "Catálogo", links: [["Productos", "/productos"]] }
 ];
 
 export function CrmShell({ active, children }: CrmShellProps) {
@@ -18,10 +18,10 @@ export function CrmShell({ active, children }: CrmShellProps) {
       {groups.map((group) => <nav key={group.label} className="nav-group" aria-label={group.label}>
         <span className="nav-label">{group.label}</span>
         {group.links.map(([name, href]) => <Link key={href} href={href} className={`nav-item ${active === href ? "active" : ""}`}>
-          {name}{name === "Pedidos" ? <small>Revisar</small> : null}
+          {name}
         </Link>)}
       </nav>)}
-      <div className="sidebar-footer"><strong>Equipo Adara</strong>Operación de ventas · Argentina</div>
+      <div className="sidebar-footer"><strong>Adara group</strong>CRM interno · Argentina</div>
     </aside>
     <main className="workspace">{children}</main>
   </div>;
