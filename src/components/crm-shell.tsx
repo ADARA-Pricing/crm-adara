@@ -9,7 +9,7 @@ const groups = [
   { label: "Principal", links: [["Dashboard", "/"]] },
   { label: "Atención", links: [["Bandeja WhatsApp", "/bandeja"], ["Clientes", "/clientes"], ["Embudo comercial", "/embudo"]] },
   { label: "Ventas", links: [["Pedidos", "/pedidos"]] },
-  { label: "Operación", links: [["Logística", "/logistica"]] },
+  { label: "Operación", links: [["Logística", "/logistica"], ["Cobertura", "/cobertura"]] },
   { label: "Trabajo", links: [["Tareas", "/tareas"]] },
   { label: "Catálogo", links: [["Productos", "/productos"]] }
 ];

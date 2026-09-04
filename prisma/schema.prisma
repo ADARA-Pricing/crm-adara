@@ -122,6 +122,21 @@ model Product {
   updatedAt       DateTime         @updatedAt
 }
 
+model DeliveryCoverageZone {
+  id              String   @id @default(cuid())
+  provider        String   @default("mercadolibre_flex")
+  providerZoneId  String   @unique
+  name            String
+  normalizedName  String   @unique
+  weekCutoffHour  Int?
+  isActive        Boolean  @default(true)
+  sourceUpdatedAt DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive, normalizedName])
+}
+
 model Order {
   id              String           @id @default(cuid())
   saleNumber      Int              @unique @default(autoincrement())
