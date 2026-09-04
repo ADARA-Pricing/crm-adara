@@ -23,7 +23,7 @@ insert into crm."DeliveryCoverageZone" (id, "providerZoneId", name, "normalizedN
   ('coverage_avellaneda', 'Avellaneda', 'Avellaneda', 'avellaneda', 12),
   ('coverage_berazategui', 'Berazategui', 'Berazategui', 'berazategui', 12),
   ('coverage_tres_de_febrero', 'Tres_De_Febrero', 'Tres de Febrero', 'tres de febrero', 12),
-  ('coverage_caba', 'CABA', 'CABA', 'caba', 16),
+  ('coverage_caba', 'CABA', 'CABA', 'caba', 12),
   ('coverage_lomas_de_zamora', 'Lomas_de_Zamora', 'Lomas de Zamora', 'lomas de zamora', 12),
   ('coverage_esteban_echeverria', 'Esteban_Echeverria', 'Esteban Echeverría', 'esteban echeverria', 12),
   ('coverage_malvinas_argentinas', 'Malvinas_Argentinas', 'Malvinas Argentinas', 'malvinas argentinas', 12),
