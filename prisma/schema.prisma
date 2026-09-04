@@ -60,6 +60,7 @@ model Customer {
   notes           String?
   conversations   Conversation[]
   orders          Order[]
+  attributions    AcquisitionAttribution[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 }
@@ -111,10 +112,36 @@ model Order {
   totalCents      Int              @default(0)
   currency        String           @default("ARS")
   source          String           @default("whatsapp")
+  attributionId   String?
+  attribution     AcquisitionAttribution? @relation(fields: [attributionId], references: [id])
   items           OrderItem[]
   activities      OrderActivity[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+}
+
+model AcquisitionAttribution {
+  id              String   @id @default(cuid())
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  source          String?
+  referrer        String?
+  utmSource       String?
+  utmCampaign     String?
+  utmContent      String?
+  campaignId      String?
+  campaignName    String?
+  adsetId         String?
+  adsetName       String?
+  adId            String?
+  adName          String?
+  capturedAt      DateTime @default(now())
+  orders          Order[]
+
+  @@index([customerId, capturedAt])
+  @@index([campaignId])
+  @@index([adsetId])
+  @@index([adId])
 }
 
 model OrderActivity {

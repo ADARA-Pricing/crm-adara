@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
   const customer = existingCustomer
     ? await prisma.customer.update({ where: { id: existingCustomer.id }, data: { fullName: data.recipientName, phone: data.phone || existingCustomer.phone, whatsappId: data.whatsappId || existingCustomer.whatsappId, funnelStage, funnelUpdatedAt: new Date(), deliveryPreference: data.deliveryMethod, locality: data.locality, deliveryAddress: data.deliveryAddress, postalCode: data.postalCode, requestedDate: data.requestedDate ? new Date(data.requestedDate) : existingCustomer.requestedDate } })
     : await prisma.customer.create({ data: { fullName: data.recipientName, phone: data.phone, whatsappId: data.whatsappId, funnelStage, deliveryPreference: data.deliveryMethod, locality: data.locality, deliveryAddress: data.deliveryAddress, postalCode: data.postalCode, requestedDate: data.requestedDate ? new Date(data.requestedDate) : undefined } });
+  const attribution = await prisma.acquisitionAttribution.findFirst({ where: { customerId: customer.id }, orderBy: { capturedAt: "desc" }, select: { id: true, source: true } });
 
   const order = await prisma.order.create({
     data: {
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
       shippingCents: terms.shippingCents,
       totalCents: terms.totalCents,
       riskReview: true,
-      source: "whatsapp",
+      source: attribution?.source || "whatsapp",
+      attributionId: attribution?.id,
       items: { create: { productId: product.id, quantity: 1, unitPriceCents: terms.productCents } }
     }
   });
