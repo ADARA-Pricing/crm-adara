@@ -1,5 +1,6 @@
 import { formatArs, getHumanSupportSchedule, getPickupSchedule, LOCAL_ADDRESS, PRODUCT } from "@/lib/sales-policy";
 import { prisma } from "@/lib/prisma";
+import { CrmShell } from "@/components/crm-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -12,26 +13,16 @@ export default async function Home() {
     ["Retiro en local", LOCAL_ADDRESS, getPickupSchedule()]
   ];
 
-  return (
-    <main style={{ maxWidth: 980, margin: "0 auto", padding: "48px 24px", fontFamily: "Arial, sans-serif", color: "#221b18" }}>
-      <p style={{ color: "#8c5d2e", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase" }}>CRM Adara</p>
-      <h1 style={{ fontSize: 40, margin: "8px 0" }}>Operación de ventas por WhatsApp</h1>
-      <p style={{ fontSize: 18, maxWidth: 680, lineHeight: 1.5 }}>
-        Primera campaña: {PRODUCT.name} · {formatArs(PRODUCT.priceCents)} · validación previa antes de logística.
-      </p>
-      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 16, marginTop: 32 }}>
+  return <CrmShell active="/">
+    <header className="topbar"><div><p className="eyebrow">Vista de operación</p><h1>Lo que necesita atención hoy</h1><p className="topbar-copy">Ventas por WhatsApp, validación y coordinación de entregas.</p></div></header>
+      <section className="metric-grid">
         {cards.map(([title, value, detail]) => (
-          <article key={title} style={{ border: "1px solid #e8ddd1", borderRadius: 16, padding: 20, background: "#fffaf5" }}>
-            <p style={{ margin: 0, color: "#745e4a", fontSize: 14 }}>{title}</p>
-            <strong style={{ display: "block", fontSize: 22, margin: "10px 0" }}>{value}</strong>
-            <small style={{ color: "#745e4a", lineHeight: 1.4 }}>{detail}</small>
+          <article key={title} className="metric">
+            <span className="metric-label">{title}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span>
           </article>
         ))}
       </section>
-      <section style={{ marginTop: 32, borderRadius: 16, padding: 24, background: "#2b2018", color: "#fff" }}>
-        <h2 style={{ marginTop: 0 }}>Flujo de pedido</h2>
-        <p style={{ marginBottom: 0 }}>Datos del cliente → confirmación explícita → revisión comercial y de riesgo → logística → entrega.</p>
-      </section>
-    </main>
-  );
+      <div className="section-heading"><h2>Flujo operativo</h2></div>
+      <section className="operations-grid"><article className="panel"><h3>Pedidos: un embudo operativo, no de marketing</h3><p>El pedido entra solo cuando el cliente ya confirmó los datos y el total. Así logística recibe información accionable.</p><div className="flow"><span className="flow-step">En conversación</span><span className="flow-arrow">→</span><span className="flow-step">Confirmado · revisar</span><span className="flow-arrow">→</span><span className="flow-step">Logística</span><span className="flow-arrow">→</span><span className="flow-step">Entregado</span></div></article><article className="panel"><h3>Reglas activas</h3><div className="policy-list"><div>Cada pedido confirmado pasa por revisión interna.<span>Protege a Adara antes de asignarlo a logística.</span></div><div>El bot no promete disponibilidad sin validación.<span>Stock y zonas quedan bajo control operativo.</span></div></div></article></section>
+  </CrmShell>;
 }
