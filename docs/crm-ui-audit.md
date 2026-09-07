@@ -121,3 +121,29 @@ npm audit --json reportó 10 paquetes afectados (4 moderados, 5 altos, 1 crític
 Pendiente: actualización acotada de herramientas de pruebas y comprobación de compatibilidad. Las actualizaciones de Next/Prisma necesitan revisión separada porque comparten runtime y contratos con APIs del bot; quedan fuera de implementación por la restricción expresa del usuario. El reporte npm no equivale a una evaluación completa de explotabilidad en producción.
 
 No se modificaron prompts, flujos, configuraciones ni comportamiento del bot. La auditoría integral continúa abierta, incluyendo revisión visual desktop/tablet y cierre de dependencias.
+
+## Publicación autorizada y continuación
+
+Con autorización del usuario se publicó el commit b1511bf en main. Compilación de producción correcta; Vercel confirmó Ready en Production para ese commit y crm-adara.vercel.app. Se verificó el dashboard publicado con sesión de administrador, incluyendo buscador en menú y agenda. Esto no sustituye la revisión visual completa de todos los módulos.
+
+Continuación local posterior a la publicación: Vitest actualizado de 2.1.9 a 3.2.7, con dependencias de pruebas resueltas mediante npm install --ignore-scripts. No se modificó ninguna versión existente de dependencias de producción, verificado comparando package-lock con el commit publicado. 165 pruebas, lint y typecheck aprobados. npm audit pasa de 10 paquetes afectados a 5 (1 moderado, 4 altos); restantes: next, postcss, prisma, @prisma/config y deepmerge-ts. Sin alertas críticas en el reporte actualizado. La actualización de herramientas y esta nota quedan locales, posteriores al despliegue b1511bf.
+
+Referencia del aviso de Vitest: https://github.com/vitest-dev/vitest/security/advisories/GHSA-5xrq-8626-4rwp. No se habilitó servidor UI, API ni Browser Mode de Vitest. Se mantiene pendiente cualquier actualización del runtime compartido con el bot.
+
+### Correcciones de presentación posteriores
+
+Revisión de escritorio del catálogo publicado con sesión administrador: tabla, filtros y acciones visibles. En código se detectó que envío cero se mostraba como dato faltante; ahora se formatea como $0 sin cambiar el valor almacenado. Listado y ficha de Productos muestran controles de escritura únicamente a ADMIN, alineados con las guardas existentes; otros perfiles conservan acceso de lectura. Las acciones de guardado y configuración del bot permanecen intactas.
+
+Ficha de Pedidos: fecha de venta, programada, solicitada, entrega efectiva, revisión e historial usan crmDate con zona horaria argentina. No se modifican las fechas almacenadas ni su interpretación en acciones comerciales.
+
+165 pruebas, lint y typecheck aprobados. Pendiente verificación visual local de estas correcciones: el puerto 3001 ya estaba ocupado y la navegación local demoró. No se modificaron perfiles ni productos reales para QA, ni se publicó esta tanda. La auditoría visual completa continúa pendiente.
+
+### Catálogo: preparación para próxima publicación
+
+El usuario pidió continuar y publicar en el próximo paso; no se publica esta tanda. El editor conserva el valor cero en importes existentes, en lugar de presentarlo como vacío. Los filtros de Productos ignoran parámetros duplicados o inválidos y limitan el texto a 120 caracteres. La ficha muestra descripción corta y completa por separado, sin ocultar la completa cuando existe un resumen. Nuevos helpers exclusivos de presentación en crm-product-display.ts y tres pruebas de regresión. Sin cambios en acciones, campos, modelos ni respuestas del bot.
+
+Validación: 168 pruebas en 23 archivos, lint y typecheck aprobados. Compilación final y verificación visual de esta última tanda pendientes para el paso de publicación. No se guardaron productos reales durante las pruebas.
+
+### Verificación final de la segunda tanda
+
+168 pruebas aprobadas y compilación de producción completa, incluyendo lint y TypeScript. Se resolvió un bloqueo local de la DLL de Prisma deteniendo únicamente el servidor de desarrollo del CRM; no se modificaron versiones de Prisma ni su esquema. La compilación servida localmente permite abrir la ficha y muestra descripción corta y completa por separado. Comparación del lockfile: ninguna dependencia de producción existente cambió de versión. Publicación autorizada por el usuario para este paso; sin cambios en prompts, flujos, configuración ni comportamiento del bot.

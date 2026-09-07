@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { productMoneyInput as money } from "@/lib/crm-product-display";
 import type { Product } from "@prisma/client";
 import { createProduct, updateProduct } from "@/app/productos/actions";
 
 type ProductEditorProps = { product?: Product };
 
-function money(value?: number) { return value ? String(value / 100) : ""; }
 function specs(product?: Product) {
   if (!product?.technicalSpecs || typeof product.technicalSpecs !== "object" || Array.isArray(product.technicalSpecs)) return "";
   return Object.entries(product.technicalSpecs as Record<string, unknown>).map(([key, value]) => `${key}: ${String(value)}`).join("\n");
