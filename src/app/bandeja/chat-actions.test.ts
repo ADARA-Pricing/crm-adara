@@ -1,15 +1,16 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ auth: vi.fn(), find: vi.fn(), update: vi.fn(), event: vi.fn(), reserve: vi.fn(), transaction: vi.fn(), lock: vi.fn(), writeEvent: vi.fn(), request: vi.fn(), recent: vi.fn(), list: vi.fn(), events: vi.fn(), customer: vi.fn() }));
+const mocks = vi.hoisted(() => ({ auth: vi.fn(), find: vi.fn(), findMany: vi.fn(), cache: vi.fn(), update: vi.fn(), event: vi.fn(), reserve: vi.fn(), transaction: vi.fn(), lock: vi.fn(), writeEvent: vi.fn(), request: vi.fn(), recent: vi.fn(), list: vi.fn(), events: vi.fn(), customer: vi.fn() }));
 vi.mock("@/lib/auth", () => ({ requireCrmUser: mocks.auth }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/botpress", () => ({ BotpressConnectionError: class extends Error {}, botpressRequest: mocks.request, hasRecentIncoming: mocks.recent, listMessages: mocks.list }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
-  conversation: { findUniqueOrThrow: mocks.find, update: mocks.update },
+  conversation: { findUniqueOrThrow: mocks.find, findMany: mocks.findMany, update: mocks.update },
+  conversationMessageCache: { upsert: mocks.cache },
   conversationEvent: { findUnique: mocks.event, create: mocks.reserve, findMany: mocks.events },
   customer: { update: mocks.customer }, $transaction: mocks.transaction,
 } }));
-import { readConversation, sendConversationMessage, setConversationBotPaused } from "./chat-actions";
+import { readConversation, sendConversationMessage, setConversationBotPaused, warmInboxConversations } from "./chat-actions";
 
 const input = { conversationId: "conversation", text: "Hola", requestId: "272b33cf-a477-4990-b992-dc0d50411996" };
 beforeEach(() => {
@@ -17,6 +18,7 @@ beforeEach(() => {
   mocks.auth.mockResolvedValue({ id: "operator", email: "operator@example.test" });
   mocks.find.mockResolvedValue({ id: "conversation", botPaused: true, botpressId: "remote", customerId: "customer", customer: { whatsappProfileName: null } });
   mocks.event.mockResolvedValue(null); mocks.recent.mockResolvedValue(true);
+  mocks.cache.mockResolvedValue(undefined);
   mocks.lock.mockResolvedValue([{ botPaused: true }]);
   mocks.request.mockResolvedValue({ message: { id: "sent-message" } });
   mocks.transaction.mockImplementation(fn => fn({ $queryRaw: mocks.lock, conversationEvent: { update: mocks.writeEvent }, conversation: { update: mocks.update } }));
@@ -76,4 +78,19 @@ it("reads both message directions and backfills the WhatsApp tag without changin
   expect(result).toMatchObject({ ok: true, profileName: "Nombre de perfil", nextToken: "older" });
   expect(result.ok && result.messages.length).toBe(2);
   expect(mocks.customer).toHaveBeenCalledWith({ where: { id: "customer" }, data: { whatsappProfileName: "Nombre de perfil" } });
+  expect(mocks.cache).toHaveBeenCalledOnce();
+});
+it("reuses a fresh shared snapshot without contacting Botpress", async () => {
+  mocks.findMany.mockResolvedValue([{ id: "conversation", customer: { whatsappProfileName: "Perfil" }, messageCache: { payload: { messages: [], nextToken: "older" }, syncedAt: new Date() } }]);
+  expect(await warmInboxConversations(["conversation"])).toMatchObject([{ id: "conversation", ok: true, nextToken: "older" }]);
+  expect(mocks.list).not.toHaveBeenCalled();
+});
+it("limits background batches before reading the database", async () => {
+  await expect(warmInboxConversations(["1", "2", "3", "4", "5"])).rejects.toThrow();
+  expect(mocks.findMany).not.toHaveBeenCalled();
+});
+it("never overwrites the recent page cache when loading older history", async () => {
+  mocks.list.mockResolvedValue({ messages: [], meta: {} }); mocks.events.mockResolvedValue([]);
+  expect((await readConversation("conversation", "older")).ok).toBe(true);
+  expect(mocks.cache).not.toHaveBeenCalled();
 });

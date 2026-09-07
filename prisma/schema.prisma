@@ -250,8 +250,16 @@ model Conversation {
   botPaused       Boolean            @default(false)
   summary         String?
   events          ConversationEvent[]
+  messageCache    ConversationMessageCache?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+}
+
+model ConversationMessageCache {
+  conversationId String       @id
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  payload        Json
+  syncedAt       DateTime     @default(now())
 }
 
 model ConversationEvent {

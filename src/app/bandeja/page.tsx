@@ -4,6 +4,8 @@ import { manageConversation } from "./actions";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ConversationChat } from "./conversation-chat";
+import { InboxPreloader } from "./inbox-preloader";
+import { parseInboxSnapshot } from "@/lib/inbox-cache";
 
 export const dynamic = "force-dynamic";
 
@@ -19,17 +21,18 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     take: 80,
     where: filter === "human" ? { status: "HUMAN_HANDOFF" } : filter === "closed" ? { status: "CLOSED" } : undefined,
     orderBy: { updatedAt: "desc" },
-    include: { events: { where: { direction: "INTERNAL" }, orderBy: { createdAt: "desc" }, take: 30 }, customer: { include: { _count: { select: { orders: true } } } } }
+    include: { messageCache: true, events: { where: { direction: "INTERNAL" }, orderBy: { createdAt: "desc" }, take: 30 }, customer: { include: { _count: { select: { orders: true } } } } }
   });
   const selected = conversations.find((item) => item.id === conversation) ?? conversations[0];
 
   return <CrmShell active="/bandeja">
     <header className="topbar"><div><p className="eyebrow">Atención</p><h1>Bandeja WhatsApp</h1><p className="topbar-copy">Consultá el contexto comercial sin perder el historial del cliente.</p></div></header>
     <div className="topbar-actions" style={{ marginBottom: 16 }}><Link className="button secondary" href="/bandeja">Todas</Link><Link className="button secondary" href="/bandeja?filter=human">Derivadas a humano</Link><Link className="button secondary" href="/bandeja?filter=closed">Resueltas</Link></div>
+    <InboxPreloader conversations={conversations.map(c => ({ id: c.id, profileName: c.customer.whatsappProfileName }))} initial={Object.fromEntries(conversations.flatMap(c => { const cached = parseInboxSnapshot(c.messageCache?.payload); return cached ? [[c.id, cached]] : []; }))}>
     <section className="inbox-layout">
       <aside className="inbox-list" aria-label="Conversaciones">
         <div className="inbox-list-heading"><strong>Conversaciones</strong><span>{conversations.length}</span></div>
-        {conversations.length ? conversations.map((item) => <Link key={item.id} href={`/bandeja?conversation=${item.id}&filter=${filter || "all"}`} className={`inbox-contact ${selected?.id === item.id ? "selected" : ""}`}>
+        {conversations.length ? conversations.map((item) => <Link prefetch={true} key={item.id} href={`/bandeja?conversation=${item.id}&filter=${filter || "all"}`} className={`inbox-contact ${selected?.id === item.id ? "selected" : ""}`}>
           <span><strong>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{item.customer.phone ?? "WhatsApp por identificar"}</small></span>
           <small>{item.updatedAt.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}</small>
           <p>{item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}</p>
@@ -54,5 +57,6 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         {selected ? <><h2>Ficha del cliente</h2><dl><div><dt>Etapa</dt><dd>{stageLabels[selected.customer.funnelStage]}</dd></div><div><dt>Teléfono</dt><dd>{selected.customer.phone ?? "Pendiente"}</dd></div><div><dt>Ubicación</dt><dd>{selected.customer.locality ?? "Pendiente"}</dd></div><div><dt>Modalidad</dt><dd>{selected.customer.deliveryPreference === "PICKUP" ? "Retiro en local" : selected.customer.deliveryPreference === "COURIER" ? "Mensajería privada" : "Sin definir"}</dd></div><div><dt>Pedidos</dt><dd>{selected.customer._count.orders}</dd></div></dl>{selected.customer.funnelNote ? <div className="context-note"><small>Nota comercial</small><p>{selected.customer.funnelNote}</p></div> : null}</> : <><h2>Ficha del cliente</h2><p className="muted">El contexto aparecerá al seleccionar una conversación.</p></>}
       </aside>
     </section>
+    </InboxPreloader>
   </CrmShell>;
 }

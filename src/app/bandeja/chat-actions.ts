@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { BotpressConnectionError, botpressRequest, hasRecentIncoming, listMessages } from "@/lib/botpress";
+import { parseInboxSnapshot } from "@/lib/inbox-cache";
 
 const idSchema = z.string().min(1).max(160);
 
@@ -33,11 +34,32 @@ export async function readConversation(id: string, cursor?: string) {
         }
       } catch { /* Optional profile must not hide the conversation. */ }
     }
-    return { ok: true as const, botPaused: conversation.botPaused, profileName,
-      messages: page.messages.map(m => ({ ...m, author: authors.get(m.id) || null })), nextToken: page.meta?.nextToken };
+    const snapshot = { messages: page.messages.map(m => ({ ...m, author: authors.get(m.id) || null })), ...(page.meta?.nextToken ? { nextToken: page.meta.nextToken } : {}) };
+    if (!cursor) {
+      // This cache is a recent page, not the source of truth for bot control or sending.
+      await prisma.conversationMessageCache.upsert({ where: { conversationId: id },
+        create: { conversationId: id, payload: JSON.parse(JSON.stringify(snapshot)), syncedAt: new Date() },
+        update: { payload: JSON.parse(JSON.stringify(snapshot)), syncedAt: new Date() },
+      }).catch(() => { /* Cache failures must not hide live messages. */ });
+    }
+    return { ok: true as const, botPaused: conversation.botPaused, profileName, ...snapshot };
   } catch (error) {
     return { ok: false as const, error: error instanceof BotpressConnectionError ? error.message : "No se pudo cargar el historial. Probá actualizar en unos segundos." };
   }
+}
+
+export async function warmInboxConversations(ids: string[]) {
+  await requireCrmUser();
+  const parsed = z.array(idSchema).max(4).parse(ids);
+  const conversations = await prisma.conversation.findMany({ where: { id: { in: parsed }, botpressId: { not: null } }, include: { messageCache: true, customer: { select: { whatsappProfileName: true } } } });
+  const results = await Promise.all(conversations.map(async conversation => {
+    const cached = parseInboxSnapshot(conversation.messageCache?.payload);
+    if (cached && conversation.messageCache!.syncedAt.getTime() > Date.now() - 30000)
+      return { id: conversation.id, ok: true as const, ...cached, profileName: conversation.customer.whatsappProfileName };
+    const result = await readConversation(conversation.id);
+    return { id: conversation.id, ...result };
+  }));
+  return results;
 }
 
 export async function setConversationBotPaused(id: string, paused: boolean) {

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BotpressMessage } from "@/lib/botpress";
 import { readConversation, sendConversationMessage, setConversationBotPaused } from "./chat-actions";
+import { useInboxCache } from "./inbox-preloader";
+import { mergeInboxMessages } from "@/lib/inbox-cache";
 
 type Message = BotpressMessage & { author: string | null };
 function safeUrl(value: unknown) {
@@ -24,10 +26,11 @@ function MessageContent({ message }: { message: Message }) {
 
 export function ConversationChat({ id, initialPaused }: { id: string; initialPaused: boolean }) {
   const router = useRouter();
-  const [messages, setMessages] = useState<Message[]>([]);
+  const cached = useInboxCache()[id];
+  const [messages, setMessages] = useState<Message[]>(cached?.messages ?? []);
   const [paused, setPaused] = useState(initialPaused);
-  const [cursor, setCursor] = useState<string>();
-  const [loading, setLoading] = useState(true);
+  const [cursor, setCursor] = useState<string | undefined>(cached?.nextToken);
+  const [loading, setLoading] = useState(!cached);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [historyError, setHistoryError] = useState("");
@@ -35,24 +38,30 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
   const [text, setText] = useState("");
   const alive = useRef(true);
   const busyRef = useRef(false);
+  const refreshing = useRef(false);
   const version = useRef(0);
   const loaded = useRef(false);
   const request = useRef<{ text: string; id: string } | undefined>(undefined);
   const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!cached) return;
+    setMessages(previous => mergeInboxMessages(previous, cached.messages));
+    setLoading(false);
+    if (!loaded.current) setCursor(cached.nextToken);
+  }, [cached]);
 
   async function refresh(older = false) {
+    if (refreshing.current) return;
+    refreshing.current = true;
     const expectedVersion = version.current;
     const result = await readConversation(id, older ? cursor : undefined).catch(() => ({ ok: false as const, error: "No se pudo actualizar el historial. Revisá tu conexión y tu sesión." }));
+    refreshing.current = false;
     if (!alive.current || expectedVersion !== version.current) return;
     setLoading(false);
     if (!result.ok) { setHistoryError(result.error); return; }
     setHistoryError("");
     setPaused(result.botPaused);
-    setMessages(previous => {
-      const merged = new Map(previous.map(m => [m.id, m]));
-      result.messages.forEach(m => merged.set(m.id, m));
-      return [...merged.values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id));
-    });
+    setMessages(previous => mergeInboxMessages(previous, result.messages));
     if (older || !loaded.current) setCursor(result.nextToken);
     if (!loaded.current) {
       loaded.current = true;
@@ -62,6 +71,7 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
   }
   useEffect(() => {
     alive.current = true;
+    if (body.current) body.current.scrollTop = body.current.scrollHeight;
     void refresh();
     const timer = setInterval(() => { if (!busyRef.current && document.visibilityState === "visible") void refresh(); }, 10000);
     return () => { alive.current = false; clearInterval(timer); };
