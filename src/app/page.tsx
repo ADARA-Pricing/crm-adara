@@ -15,9 +15,9 @@ export default async function Home() {
     prisma.conversation.count({ where: { status: { in: ["OPEN", "HUMAN_HANDOFF"] } } }),
     prisma.customer.count({ where: { status: "LEAD", createdAt: { gte: dayStart } } }),
     prisma.order.count({ where: { status: "PENDING_REVIEW" } }),
-    prisma.order.count({ where: { status: { in: ["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED"] } } }),
-    prisma.order.aggregate({ where: { status: "DELIVERED", updatedAt: { gte: dayStart } }, _sum: { totalCents: true } }),
-    prisma.order.aggregate({ where: { status: "DELIVERED", updatedAt: { gte: weekStart } }, _sum: { totalCents: true } }),
+    prisma.order.count({ where: { status: { in: ["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "READY_FOR_PICKUP"] } } }),
+    prisma.order.aggregate({ where: { status: "DELIVERED", deliveredAt: { gte: dayStart } }, _sum: { totalCents: true } }),
+    prisma.order.aggregate({ where: { status: "DELIVERED", deliveredAt: { gte: weekStart } }, _sum: { totalCents: true } }),
     prisma.order.findMany({ take: 6, orderBy: { updatedAt: "desc" }, include: { customer: true, items: { include: { product: true } } } }),
     prisma.customer.findMany({ take: 5, orderBy: { lastMessageAt: "desc" }, select: { id: true, fullName: true, phone: true, funnelStage: true, lastMessagePreview: true, lastMessageAt: true } })
   ]);

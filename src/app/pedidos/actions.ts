@@ -1,40 +1,42 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/auth";
+import { orderActions, orderStatusLabel } from "@/lib/order-status";
 
-const statusSchema = z.enum(["PREPARING", "SHIPPED", "DELIVERED", "CANCELLED"]);
-const allowedTransitions: Record<string, string[]> = {
-  PENDING_REVIEW: ["CANCELLED"],
-  APPROVED_FOR_LOGISTICS: ["PREPARING"],
-  PREPARING: ["SHIPPED"],
-  SHIPPED: ["DELIVERED"]
-};
+const statusSchema = z.enum(["PREPARING", "SHIPPED", "READY_FOR_PICKUP", "DELIVERED", "CANCELLED"]);
 
-const labels: Record<string, string> = {
-  APPROVED_FOR_LOGISTICS: "Aprobado para logística", PREPARING: "En preparación", SHIPPED: "En reparto", DELIVERED: "Entregado", CANCELLED: "Cancelado"
-};
-
-export async function updateOrderStatus(orderId: string, nextStatus: string) {
+export async function updateOrderStatus(orderId: string, nextStatus: string, confirmed = false) {
   const user = await requireCrmUser();
   const status = statusSchema.parse(nextStatus);
   if (status === "CANCELLED" && user.role === "LOGISTICS") throw new Error("La cancelación comercial requiere un vendedor o administrador.");
-  const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true, deliveryDate: true } });
-  if (!order || !allowedTransitions[order.status]?.includes(status)) throw new Error("El pedido ya no permite ese cambio de estado.");
+  if ((status === "DELIVERED" || status === "CANCELLED") && confirmed !== true) throw new Error("Confirmá la operación antes de guardar.");
+  const original = await prisma.order.findUnique({ where: { id: orderId }, select: { customerId: true } });
+  if (!original) throw new Error("No encontramos el pedido.");
   const now = new Date();
   await prisma.$transaction(async tx => {
-  const changed = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: {
-    status,
-    deliveredAt: status === "DELIVERED" ? now : undefined,
-    deliveryDate: status === "DELIVERED" && !order.deliveryDate ? now : undefined,
-  } });
-  if (!changed.count) throw new Error("El pedido cambió mientras lo estabas gestionando. Actualizá la página.");
-  await tx.orderActivity.create({ data: { orderId, action: "STATUS_CHANGED", detail: `${user.displayName || user.email}: estado actualizado a ${labels[status]}.` } });
+    // Serialize closing different orders for the same customer.
+    await tx.$queryRaw`SELECT id FROM crm."Customer" WHERE id = ${original.customerId} FOR UPDATE`;
+    const order = await tx.order.findUnique({ where: { id: orderId } });
+    if (!order || !orderActions(order.status, order.deliveryMethod).some(action => action.status === status)) throw new Error("El pedido ya no permite ese cambio de estado.");
+    const changed = await tx.order.updateMany({ where: { id: orderId, status: order.status, deliveryMethod: order.deliveryMethod }, data: {
+      status, deliveredAt: status === "DELIVERED" ? now : undefined,
+    } });
+    if (!changed.count) throw new Error("El pedido cambió mientras lo estabas gestionando. Actualizá la página.");
+    let closure = "";
+    if (status === "DELIVERED") {
+      const pending = await tx.order.count({ where: { customerId: order.customerId, id: { not: orderId }, status: { notIn: ["DELIVERED", "CANCELLED"] } } });
+      await tx.customer.update({ where: { id: order.customerId }, data: {
+        status: "ACTIVE",
+        ...(pending === 0 ? { funnelStage: "COMPLETED", funnelUpdatedAt: now, funnelNote: `Venta #${order.saleNumber} ${order.deliveryMethod === "PICKUP" ? "retirada en el local" : "entregada"}.` } : {}),
+      } });
+      await tx.task.updateMany({ where: { orderId, type: { in: ["ORDER_REVIEW", "LOGISTICS", "DELIVERY_CONFIRMATION"] }, status: { in: ["OPEN", "IN_PROGRESS"] } }, data: { status: "DONE", completedAt: now } });
+      closure = ` El operador confirmó entrega/retiro y cobro. Cliente actualizado como activo. ${pending ? "Se conserva la etapa del embudo porque tiene otros pedidos pendientes." : "Embudo finalizado."}`;
+    }
+    await tx.orderActivity.create({ data: { orderId, action: "STATUS_CHANGED", detail: `${user.displayName || user.email} (${user.id}): estado actualizado a ${orderStatusLabel(status, order.deliveryMethod)}.${closure}` } });
   });
-  revalidatePath(`/pedidos/${orderId}`);
-  revalidatePath("/"); revalidatePath("/pedidos"); revalidatePath("/logistica");
+  for (const path of ["/", "/pedidos", `/pedidos/${orderId}`, "/logistica", "/embudo", "/clientes", `/clientes/${original.customerId}`, "/tareas"]) revalidatePath(path);
 }
 
 const logisticsSchema = z.object({
