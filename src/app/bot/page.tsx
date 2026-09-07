@@ -41,7 +41,7 @@ export default async function BotPage({ searchParams }: { searchParams: Promise<
       <div className="topbar-actions"><Link className={`button ${range.days === "7" ? "" : "secondary"}`} href="/bot?days=7">Últimos 7 días</Link><Link className={`button ${range.days === "30" ? "" : "secondary"}`} href="/bot?days=30">Últimos 30 días</Link></div>
       <form className="bot-date-form" action="/bot"><input type="hidden" name="days" value="custom" /><label>Desde<input type="date" name="from" defaultValue={range.from} required /></label><label>Hasta<input type="date" name="to" defaultValue={range.to} required /></label><button className="button secondary" type="submit">Aplicar rango</button></form>
       <p>Período: {range.from} al {range.to} · Calendario UTC de Botpress (3 horas por delante de Argentina). Hoy puede estar incompleto.</p>
-      <p>{"syncedAt" in analytics ? `Última consulta: ${new Date(analytics.syncedAt).toLocaleString("es-AR", { timeZone: "America/Buenos_Aires" })}. Caché de 5 minutos; se renueva al consultar el panel. Botpress puede demorar en consolidar los datos.` : "Sin sincronización disponible."}</p>
+      <p>{"syncedAt" in analytics ? `Última consulta: ${new Date(analytics.syncedAt).toLocaleString("es-AR", { timeZone: "America/Buenos_Aires", hourCycle: "h23" })} (Argentina). Caché de 5 minutos; se renueva al consultar el panel. Botpress puede demorar en consolidar los datos.` : "Sin sincronización disponible."}</p>
     </section>
     {"error" in analytics && <section className="panel" role="alert">{analytics.error}</section>}
     {!records.length && !("error" in analytics) && <section className="panel">Botpress no devolvió registros para este período. Esto no confirma consumo cero.</section>}
