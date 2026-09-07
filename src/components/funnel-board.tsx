@@ -17,6 +17,7 @@ export function FunnelBoard({ customers }: { customers: Contact[] }) {
   const [target, setTarget] = useState<FunnelStage | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const busy = useRef(false);
+  const draggedId = useRef<string | null>(null);
   const [message, setMessage] = useState("");
   useEffect(() => { setPeople(customers); }, [customers]);
   async function move(id: string, stage: FunnelStage) {
@@ -38,12 +39,12 @@ export function FunnelBoard({ customers }: { customers: Contact[] }) {
     <section className="funnel-board" aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{funnelStages.map(([stage, title, description]) => {
       const contacts = people.filter((person) => person.funnelStage === stage);
       return <article key={stage} className={`funnel-column${target === stage ? " funnel-drop-target" : ""}`}
-        onDragOver={(event) => { if (dragging && !busy.current) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setTarget(stage); } }}
-        onDrop={(event) => { event.preventDefault(); const id = dragging; setDragging(null); setTarget(null); if (id) void move(id, stage); }}>
+        onDragOver={(event) => { if (draggedId.current && !busy.current) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setTarget(stage); } }}
+        onDrop={(event) => { event.preventDefault(); const id = event.dataTransfer.getData("text/plain") || draggedId.current; draggedId.current = null; setDragging(null); setTarget(null); if (id) void move(id, stage); }}>
         <div className="funnel-column-head"><div><h2>{title}</h2><p>{description}</p></div><span>{contacts.length}</span></div>
         <div className="funnel-cards">{contacts.map((person) => <div key={person.id} className={`funnel-person${dragging === person.id ? " funnel-dragging" : ""}`} draggable={!saving}
-          onDragStart={(event) => { if (busy.current) { event.preventDefault(); return; } setDragging(person.id); event.dataTransfer.setData("text/plain", person.id); event.dataTransfer.effectAllowed = "move"; }}
-          onDragEnd={() => { setDragging(null); setTarget(null); }}>
+          onDragStart={(event) => { if (busy.current) { event.preventDefault(); return; } draggedId.current = person.id; setDragging(person.id); event.dataTransfer.setData("text/plain", person.id); event.dataTransfer.effectAllowed = "move"; }}
+          onDragEnd={() => { draggedId.current = null; setDragging(null); setTarget(null); }}>
           <strong>{person.fullName || "Contacto sin nombre"}</strong><span>{person.phone || "WhatsApp por identificar"}</span>
           {person.locality ? <small>{person.locality}{person.postalCode ? ` · CP ${person.postalCode}` : ""}</small> : null}
           {person.deliveryPreference ? <small>{person.deliveryPreference === "PICKUP" ? "Retiro en local" : "Mensajería privada"}</small> : null}

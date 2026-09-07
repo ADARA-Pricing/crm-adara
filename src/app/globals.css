@@ -98,7 +98,8 @@ td { padding: 15px 17px; border-top: 1px solid #eee8e4; font-size: 13px; vertica
 .funnel-cards { padding: 9px; display: grid; gap: 8px; }.funnel-person { background: #fff; border: 1px solid #e7e1dc; border-radius: 9px; padding: 11px; box-shadow: 0 1px 1px rgba(39, 32, 29, .03); }.funnel-person strong, .funnel-person span, .funnel-person small { display: block; }.funnel-person strong { font-size: 13px; }.funnel-person span { color: var(--muted); font-size: 11px; margin-top: 5px; overflow-wrap: anywhere; }.funnel-person small { color: #835430; font-size: 11px; margin-top: 7px; line-height: 1.35; }.funnel-person footer { border-top: 1px solid #f0ece9; margin-top: 10px; padding-top: 8px; color: var(--muted); display: flex; justify-content: space-between; font-size: 10px; }.funnel-empty { color: #9b918b; font-size: 12px; padding: 14px 5px; text-align: center; }
 .funnel-person .private-detail { color: #6e665f; border-left: 2px solid #dfc4ad; padding-left: 6px; }
 .funnel-person .message-preview { color: #5f6f78; font-style: italic; }
-.funnel-feedback { min-height: 24px; font-size: 13px; color: var(--muted); }
+.funnel-feedback { min-height: 24px; font-size: 13px; color: var(--muted); position: sticky; top: 0; z-index: 2; background: #fff; padding: 10px; }
+.funnel-board { align-items: stretch; }
 .funnel-person[draggable="true"] { cursor: grab; }
 .funnel-dragging { opacity: .5; }
 .funnel-column.funnel-drop-target { border-color: #835430; background: #eadfd4; box-shadow: inset 0 0 0 1px #835430; }

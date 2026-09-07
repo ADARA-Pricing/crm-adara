@@ -19,7 +19,8 @@ export async function moveFunnelContact(input: unknown) {
   try {
     const now = new Date();
     const result = await prisma.customer.updateMany({
-      where: { id, funnelUpdatedAt: new Date(updatedAt) },
+      // PostgreSQL may store microseconds; browser Date preserves milliseconds only.
+      where: { id, funnelUpdatedAt: { gte: new Date(updatedAt), lt: new Date(new Date(updatedAt).getTime() + 1) } },
       data: { funnelStage: stage, funnelUpdatedAt: now },
     });
     if (!result.count) return { ok: false as const, message: "El contacto cambió mientras lo movías. Actualizamos el embudo; intentá nuevamente." };

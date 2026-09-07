@@ -11,7 +11,7 @@ beforeEach(() => { vi.resetAllMocks(); mocks.auth.mockResolvedValue({ id: "opera
 it("persists the stage only if the contact version still matches", async () => {
   mocks.update.mockResolvedValue({ count: 1 });
   expect((await moveFunnelContact(input)).ok).toBe(true);
-  expect(mocks.update).toHaveBeenCalledWith({ where: { id: input.id, funnelUpdatedAt: new Date(input.updatedAt) }, data: { funnelStage: "INTERESTED", funnelUpdatedAt: expect.any(Date) } });
+  expect(mocks.update).toHaveBeenCalledWith({ where: { id: input.id, funnelUpdatedAt: { gte: new Date(input.updatedAt), lt: new Date(new Date(input.updatedAt).getTime() + 1) } }, data: { funnelStage: "INTERESTED", funnelUpdatedAt: expect.any(Date) } });
   expect(mocks.revalidate).toHaveBeenCalledWith("/clientes/contact-1");
 });
 it("rejects stale contact changes", async () => {
