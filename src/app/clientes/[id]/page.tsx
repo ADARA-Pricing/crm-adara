@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { CrmShell } from "@/components/crm-shell";
 import { prisma } from "@/lib/prisma";
 import { formatArs, LOCAL_ADDRESS } from "@/lib/sales-policy";
+import { requireCrmUser } from "@/lib/auth";
+import { DeleteCustomerButton } from "@/components/lead-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,7 @@ const orderLabels: Record<string, string> = { PENDING_REVIEW: "Para revisar", AP
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const user = await requireCrmUser();
   const customer = await prisma.customer.findUnique({ where: { id }, include: { conversations: { orderBy: { updatedAt: "desc" }, include: { _count: { select: { events: true } } } }, orders: { orderBy: { createdAt: "desc" }, include: { items: { include: { product: true } }, activities: { orderBy: { createdAt: "desc" }, take: 5 } } } } });
   if (!customer) notFound();
   const hasPickup = customer.deliveryPreference === "PICKUP";
@@ -19,5 +22,6 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
     <section className="customer-detail-grid"><article className="panel detail-panel"><h2>Contacto</h2><dl className="detail-list"><div><dt>Teléfono</dt><dd>{customer.phone ?? "Pendiente de identificar"}</dd></div><div><dt>WhatsApp</dt><dd>{customer.whatsappId ?? "Pendiente"}</dd></div><div><dt>Estado comercial</dt><dd><span className="badge neutral">{stageLabels[customer.funnelStage]}</span></dd></div><div><dt>Último contacto</dt><dd>{(customer.lastMessageAt ?? customer.updatedAt).toLocaleString("es-AR")}</dd></div></dl>{customer.lastMessagePreview ? <div className="context-note"><small>Último mensaje</small><p>{customer.lastMessagePreview}</p></div> : null}{customer.notes ? <div className="context-note"><small>Notas internas</small><p>{customer.notes}</p></div> : null}</article>
       <article className="panel detail-panel"><h2>Entrega preferida</h2><dl className="detail-list"><div><dt>Modalidad</dt><dd>{hasPickup ? "Retiro en local" : customer.deliveryPreference === "COURIER" ? "Mensajería privada" : "Sin definir"}</dd></div><div><dt>Destino</dt><dd>{hasPickup ? LOCAL_ADDRESS : customer.deliveryAddress ?? "Pendiente"}</dd></div><div><dt>Localidad / CP</dt><dd>{[customer.locality, customer.postalCode].filter(Boolean).join(" · ") || "Pendiente"}</dd></div><div><dt>Fecha deseada</dt><dd>{customer.requestedDate?.toLocaleDateString("es-AR") ?? "A coordinar"}</dd></div></dl>{customer.funnelNote ? <div className="context-note"><small>Nota comercial</small><p>{customer.funnelNote}</p></div> : null}</article></section>
     <section className="section-heading"><h2>Pedidos</h2><Link href="/pedidos">Ir a pedidos</Link></section><section className="panel detail-panel">{customer.orders.length ? <div className="history-list">{customer.orders.map((order) => <article key={order.id}><header><div><strong>{order.items.map((item) => item.product.name).join(", ") || "Pedido"}</strong><small>{order.createdAt.toLocaleString("es-AR")}</small></div><div><b>{formatArs(order.totalCents)}</b><span className="badge neutral">{orderStatusLabel(order.status, order.deliveryMethod)}</span></div></header><p>{order.deliveryMethod === "PICKUP" ? "Retiro en Av. Cramer" : `${order.deliveryAddress}, ${order.locality}`}</p>{order.activities.length ? <footer>{order.activities.map((activity) => <span key={activity.id}>{activity.detail}</span>)}</footer> : null}</article>)}</div> : <div className="empty">Este contacto todavía no tiene pedidos.</div>}</section>
+    <section className="panel"><Link className="button" href={`/embudo?lead=${customer.id}`}>Abrir ficha con chat y tareas</Link>{user.role === "ADMIN" && <DeleteCustomerButton id={customer.id} updatedAt={customer.updatedAt.toISOString()} />}</section>
   </CrmShell>;
 }

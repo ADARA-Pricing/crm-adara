@@ -145,3 +145,13 @@ td { padding: 15px 17px; border-top: 1px solid #eee8e4; font-size: 13px; vertica
 .bot-table-scroll { overflow-x: auto; }
 .bot-table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .bot-table th, .bot-table td { text-align: left; padding: 12px; border-bottom: 1px solid #e8e0d9; white-space: nowrap; }
+.lead-dialog { width: min(1500px, 96vw); max-width: 96vw; max-height: 94vh; padding: 20px; border: 1px solid #dfd7d0; border-radius: 16px; background: #f7f5f3; color: #27221e; }
+.lead-dialog::backdrop { background: #24170d80; }
+.lead-dialog-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.lead-workspace { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(360px, 1.6fr) minmax(230px, 1fr); gap: 16px; align-items: start; }
+.lead-workspace .panel { min-width: 0; overflow-wrap: anywhere; }
+.lead-task-form, .lead-task-form label { display: grid; gap: 8px; }
+.lead-task-form input, .lead-task-form select, .lead-task-form textarea { width: 100%; padding: 9px; border: 1px solid #dfd7d0; border-radius: 8px; }
+.lead-chat .chat-messages { max-height: 50vh; }
+.funnel-person:focus-visible { outline: 2px solid #815734; outline-offset: 2px; }
+@media(max-width: 1000px) { .lead-workspace { grid-template-columns: 1fr; } }
