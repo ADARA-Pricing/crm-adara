@@ -3,6 +3,7 @@ import { CrmShell } from "@/components/crm-shell";
 import { manageConversation } from "./actions";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { ConversationChat } from "./conversation-chat";
 
 export const dynamic = "force-dynamic";
 
@@ -37,7 +38,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       <article className="inbox-thread">
         {selected ? <>
           <header className="thread-heading"><div><strong>{selected.customer.fullName || selected.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{selected.customer.phone ?? "Número pendiente de identificar"}</small></div><span className={`badge ${selected.status === "HUMAN_HANDOFF" ? "warning" : "neutral"}`}>{selected.status === "HUMAN_HANDOFF" ? "Derivado a humano" : selected.status === "CLOSED" ? "Resuelta" : "Abierta"}</span></header>
-          <div className="thread-body"><div className="message-note"><small>Último mensaje registrado</small><p>{selected.customer.lastMessagePreview ?? selected.summary ?? "Aún no se registró el contenido de mensajes de esta conversación."}</p><time>{(selected.customer.lastMessageAt ?? selected.updatedAt).toLocaleString("es-AR")}</time></div></div>
+          <ConversationChat key={selected.id} id={selected.id} initialPaused={selected.botPaused} />
           <section className="inbox-management">
             <h2>Gestión interna</h2>
             {selected.summary ? <p>{selected.summary}</p> : null}
@@ -46,7 +47,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
             <p className="muted">Estas acciones registran la gestión interna. No envían mensajes ni pausan o reactivan el bot. Las tareas se gestionan en Trabajo → Tareas.</p>
             {selected.events.map((event) => { const payload = event.payload as { detail?: string; author?: string }; return <div className="context-note" key={event.id}><p>{payload.detail}</p><small>{payload.author} · {event.createdAt.toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" })}</small></div>; })}
           </section>
-          <footer className="thread-readonly">La respuesta desde CRM se habilitará cuando la integración de WhatsApp permita enviar mensajes de forma auditada.</footer>
+          <footer className="thread-readonly">Historial disponible en Botpress. Los mensajes manuales enviados desde esta bandeja identifican al operador. Los envíos ya aceptados por WhatsApp no se pueden cancelar al pausar.</footer>
         </> : <div className="empty">Elegí una conversación para ver su detalle.</div>}
       </article>
       <aside className="customer-context">

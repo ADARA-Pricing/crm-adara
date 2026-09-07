@@ -1,0 +1,110 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { BotpressMessage } from "@/lib/botpress";
+import { readConversation, sendConversationMessage, setConversationBotPaused } from "./chat-actions";
+
+type Message = BotpressMessage & { author: string | null };
+function safeUrl(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  try { const url = new URL(value); return url.protocol === "https:" ? url.href : undefined; } catch { return undefined; }
+}
+function MessageContent({ message }: { message: Message }) {
+  const p = message.payload;
+  const text = typeof p.text === "string" ? p.text : typeof p.title === "string" ? p.title : "";
+  const url = safeUrl(p.imageUrl || p.audioUrl || p.videoUrl || p.fileUrl);
+  return <>
+    {text ? <p>{text}</p> : null}
+    {url ? <a href={url} target="_blank" rel="noopener noreferrer">Ver {message.type === "image" ? "imagen" : message.type === "audio" ? "audio" : message.type === "video" ? "video" : "archivo"}</a> : null}
+    {!text && !url ? <p className="muted">Mensaje de tipo {message.type} (contenido no disponible en esta vista)</p> : null}
+    {Array.isArray(p.options) ? <p>{p.options.map(o => typeof o === "object" && o && "label" in o ? String(o.label) : "").filter(Boolean).join(" · ")}</p> : null}
+  </>;
+}
+
+export function ConversationChat({ id, initialPaused }: { id: string; initialPaused: boolean }) {
+  const router = useRouter();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [paused, setPaused] = useState(initialPaused);
+  const [cursor, setCursor] = useState<string>();
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [text, setText] = useState("");
+  const alive = useRef(true);
+  const busyRef = useRef(false);
+  const version = useRef(0);
+  const loaded = useRef(false);
+  const request = useRef<{ text: string; id: string } | undefined>(undefined);
+  const body = useRef<HTMLDivElement>(null);
+
+  async function refresh(older = false) {
+    const expectedVersion = version.current;
+    const result = await readConversation(id, older ? cursor : undefined);
+    if (!alive.current || expectedVersion !== version.current) return;
+    setLoading(false);
+    if (!result.ok) { setError(result.error); return; }
+    setPaused(result.botPaused);
+    setMessages(previous => {
+      const merged = new Map(previous.map(m => [m.id, m]));
+      result.messages.forEach(m => merged.set(m.id, m));
+      return [...merged.values()].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt) || a.id.localeCompare(b.id));
+    });
+    if (older || !loaded.current) setCursor(result.nextToken);
+    if (!loaded.current) {
+      loaded.current = true;
+      if (result.profileName) router.refresh();
+      setTimeout(() => { if (body.current) body.current.scrollTop = body.current.scrollHeight; }, 50);
+    }
+  }
+  useEffect(() => {
+    alive.current = true;
+    void refresh();
+    const timer = setInterval(() => { if (!busyRef.current && document.visibilityState === "visible") void refresh(); }, 10000);
+    return () => { alive.current = false; clearInterval(timer); };
+    // Each conversation gets its own component instance (key=id).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  async function changeControl() {
+    if (busyRef.current) return;
+    busyRef.current = true; setBusy(true); version.current++; setError(""); setNotice("");
+    try {
+      const result = await setConversationBotPaused(id, !paused);
+      if (!result.ok) setError(result.error);
+      else { setPaused(!paused); setNotice(paused ? "El bot responderá al próximo mensaje; no contesta los pendientes automáticamente." : "Bot pausado. Podés atender esta conversación."); router.refresh(); }
+    } catch { setError("No se pudo confirmar el cambio. Actualizá el estado antes de responder."); }
+    finally { busyRef.current = false; setBusy(false); }
+  }
+  async function send(event: React.FormEvent) {
+    event.preventDefault();
+    if (busyRef.current || !text.trim() || !paused) return;
+    busyRef.current = true; setBusy(true); version.current++; setError(""); setNotice("");
+    const content = text.trim();
+    if (request.current?.text !== content) request.current = { text: content, id: crypto.randomUUID() };
+    try {
+      const result = await sendConversationMessage({ conversationId: id, text: content, requestId: request.current.id });
+      if (!result.ok) setError(result.error);
+      else { setText(""); request.current = undefined; setNotice("Mensaje aceptado por Botpress para envío. Esto no confirma entrega o lectura."); }
+      await refresh();
+      setTimeout(() => { if (body.current) body.current.scrollTop = body.current.scrollHeight; }, 50);
+    } catch { setError("No pudimos confirmar el envío. Revisá el historial antes de repetirlo."); }
+    finally { busyRef.current = false; setBusy(false); }
+  }
+  return <section aria-label="Chat de la conversación">
+    <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button></div>
+    <div className="chat-messages" ref={body} aria-label="Historial de mensajes" aria-busy={loading}>
+      {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}
+      {loading ? <p className="muted">Cargando conversación…</p> : !messages.length ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
+      {messages.map(m => <div key={m.id} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time>{new Date(m.createdAt).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</time></div>)}
+    </div>
+    <form className="chat-composer" onSubmit={send}>
+      <label htmlFor="reply">Respuesta al cliente</label>
+      <textarea id="reply" rows={3} maxLength={4000} value={text} onChange={e => setText(e.target.value)} disabled={busy || !paused} placeholder={paused ? "Escribí tu respuesta…" : "Pausá el bot para responder desde acá."} />
+      <button className="button" disabled={busy || !paused || !text.trim()}>Enviar mensaje</button>
+      <small>El envío manual requiere un mensaje del cliente en las últimas 24 h. No reactiva el bot.</small>
+      {error ? <p role="alert">{error}</p> : null}{notice ? <p role="status">{notice}</p> : null}
+    </form>
+  </section>;
+}

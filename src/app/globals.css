@@ -63,6 +63,17 @@ h1 { font-size: 28px; letter-spacing: -.045em; margin: 0; }
 .compact-row .row-end { text-align: right; justify-items: end; }
 .inbox-layout { min-height: 620px; display: grid; grid-template-columns: minmax(235px, .85fr) minmax(340px, 1.5fr) minmax(230px, .8fr); background: var(--paper); border: 1px solid var(--line); border-radius: 13px; overflow: hidden; }
 .inbox-list, .inbox-thread { border-right: 1px solid var(--line); min-width: 0; }
+.chat-controls { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px; align-items: center; border-bottom: 1px solid var(--line); }
+.chat-messages { height: 500px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 18px; background: #fbfaf9; }
+.chat-bubble { max-width: 90%; padding: 12px 14px; border-radius: 12px; overflow-wrap: anywhere; flex-shrink: 0; }
+.chat-bubble.incoming { align-self: flex-start; background: #eee9e4; border-bottom-left-radius: 3px; }
+.chat-bubble.outgoing { align-self: flex-end; background: #e1efe7; border-bottom-right-radius: 3px; }
+.chat-bubble p { white-space: pre-wrap; font-size: 13px; line-height: 1.5; margin: 6px 0; }
+.chat-bubble small, .chat-bubble time { font-size: 10px; color: var(--muted); display: block; }
+.chat-composer { padding: 16px; display: grid; gap: 9px; border-top: 1px solid var(--line); }
+.chat-composer textarea { width: 100%; resize: vertical; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+.chat-composer small { color: var(--muted); font-size: 11px; }
+.chat-composer [role=alert] { color: #a52a21; }
 .inbox-list-heading { height: 57px; padding: 0 15px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; font-size: 13px; }.inbox-list-heading span { display: grid; place-items: center; min-width: 21px; height: 21px; border-radius: 12px; background: #f1edea; color: var(--muted); font-size: 11px; }
 .inbox-contact { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 8px; padding: 13px 14px; border-bottom: 1px solid #f0ece9; }.inbox-contact:hover, .inbox-contact.selected { background: #f9f2ed; }.inbox-contact strong, .inbox-contact small { display: block; }.inbox-contact strong { font-size: 12px; }.inbox-contact small, .inbox-contact p { color: var(--muted); font-size: 11px; }.inbox-contact p { grid-column: 1 / -1; margin: 1px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .thread-heading { height: 57px; padding: 0 17px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); }.thread-heading strong, .thread-heading small { display: block; }.thread-heading strong { font-size: 13px; }.thread-heading small { color: var(--muted); font-size: 11px; margin-top: 3px; }

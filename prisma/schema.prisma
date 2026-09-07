@@ -247,6 +247,7 @@ model Conversation {
   botpressId      String?            @unique
   channel         String             @default("whatsapp")
   status          ConversationStatus @default(OPEN)
+  botPaused       Boolean            @default(false)
   summary         String?
   events          ConversationEvent[]
   createdAt       DateTime           @default(now())

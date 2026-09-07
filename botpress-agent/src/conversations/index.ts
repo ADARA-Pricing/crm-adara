@@ -5,6 +5,7 @@ import { updateFunnelStage } from '../actions/updateFunnelStage'
 import { checkDeliveryCoverage } from '../actions/checkDeliveryCoverage'
 import { requestHumanHandoff } from '../actions/requestHumanHandoff'
 import { getProductInfo } from '../actions/getProductInfo'
+import { ControlledChat } from '../utils/bot-control'
 
 /**
  * A channel-specific message handler. Use `channel: '*'` to match all channels,
@@ -14,6 +15,7 @@ import { getProductInfo } from '../actions/getProductInfo'
  */
 export default new Conversation({
   channel: '*',
+  chat: ({ context }) => new ControlledChat(context),
   state: z.object({
     hasAskedForDeliveryMethod: z.boolean().default(false),
     crmContactCreated: z.boolean().default(false),
@@ -26,23 +28,26 @@ export default new Conversation({
     if (whatsappPhone && message.userId) {
       try {
         const { user } = await client.getUser({ id: message.userId })
-        whatsappProfileName = user.name?.trim().slice(0, 120) || undefined
+        whatsappProfileName = (user.name || user.tags['whatsapp:name'] || user.tags['whatsapp:username'])?.trim().slice(0, 120) || undefined
       } catch { /* Profile is optional; continue processing the message. */ }
     }
     const messageText = (message as unknown as { payload?: { text?: string } }).payload?.text
     const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
-    await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/leads/stage`, {
+    const registration = await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/leads/stage`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-adara-signature': secrets.CRM_WEBHOOK_SECRET },
       body: JSON.stringify({
         stage: state.crmContactCreated ? undefined : 'FIRST_CONTACT',
         phone: whatsappPhone,
         whatsappProfileName,
-        lastMessagePreview: typeof messageText === 'string' ? messageText : undefined,
+        lastMessagePreview: typeof messageText === 'string' ? messageText.slice(0, 500) : undefined,
         botpressConversationId: conversation.id,
       }),
     })
+    if (!registration.ok) return
+    const control = await registration.json() as { botPaused?: boolean }
     state.crmContactCreated = true
+    if (control.botPaused !== false) return
     if (message.type !== 'text') return
 
     if (!state.hasAskedForDeliveryMethod) {

@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const customer = existing
     ? await prisma.customer.update({ where: { id: existing.id }, data: { ...values, funnelStage: data.stage || existing.funnelStage, fullName: data.fullName || existing.fullName, phone: data.phone || existing.phone, whatsappId: data.botpressConversationId, deliveryPreference: data.deliveryPreference || existing.deliveryPreference, locality: data.locality || existing.locality, deliveryAddress: data.deliveryAddress || existing.deliveryAddress, postalCode: data.postalCode || existing.postalCode, requestedDate: data.requestedDate ? new Date(data.requestedDate) : existing.requestedDate, lastMessagePreview: data.lastMessagePreview || existing.lastMessagePreview, lastMessageAt: data.lastMessagePreview ? new Date() : existing.lastMessageAt } })
     : await prisma.customer.create({ data: { ...values, funnelStage: data.stage || "FIRST_CONTACT", phone: data.phone, whatsappId: data.botpressConversationId } });
-  await prisma.conversation.upsert({ where: { botpressId: data.botpressConversationId }, update: { customerId: customer.id }, create: { customerId: customer.id, botpressId: data.botpressConversationId } });
+  const conversation = await prisma.conversation.upsert({ where: { botpressId: data.botpressConversationId }, update: { customerId: customer.id }, create: { customerId: customer.id, botpressId: data.botpressConversationId } });
   if (data.attribution && Object.values(data.attribution).some(Boolean)) {
     await prisma.acquisitionAttribution.create({ data: { customerId: customer.id, ...data.attribution } });
   }
@@ -58,5 +58,5 @@ export async function POST(request: NextRequest) {
     const categories = catalog.map((p) => p.category!).filter((c) => requested.has(normalize(c)));
     if (categories.length) await prisma.$executeRaw`UPDATE crm."Customer" SET "interestCategories" = ARRAY(SELECT DISTINCT unnest("interestCategories" || ${categories}::text[])) WHERE id = ${customer.id}`;
   }
-  return NextResponse.json({ customerId: customer.id, stage: customer.funnelStage });
+  return NextResponse.json({ customerId: customer.id, stage: customer.funnelStage, botPaused: conversation.botPaused });
 }
