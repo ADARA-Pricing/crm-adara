@@ -5,9 +5,9 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireCrmUser } from "@/lib/auth";
 
-const statusSchema = z.enum(["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "DELIVERED", "CANCELLED"]);
+const statusSchema = z.enum(["PREPARING", "SHIPPED", "DELIVERED", "CANCELLED"]);
 const allowedTransitions: Record<string, string[]> = {
-  PENDING_REVIEW: ["APPROVED_FOR_LOGISTICS", "CANCELLED"],
+  PENDING_REVIEW: ["CANCELLED"],
   APPROVED_FOR_LOGISTICS: ["PREPARING"],
   PREPARING: ["SHIPPED"],
   SHIPPED: ["DELIVERED"]
@@ -18,19 +18,22 @@ const labels: Record<string, string> = {
 };
 
 export async function updateOrderStatus(orderId: string, nextStatus: string) {
-  await requireCrmUser();
+  const user = await requireCrmUser();
   const status = statusSchema.parse(nextStatus);
+  if (status === "CANCELLED" && user.role === "LOGISTICS") throw new Error("La cancelación comercial requiere un vendedor o administrador.");
   const order = await prisma.order.findUnique({ where: { id: orderId }, select: { status: true, deliveryDate: true } });
   if (!order || !allowedTransitions[order.status]?.includes(status)) throw new Error("El pedido ya no permite ese cambio de estado.");
   const now = new Date();
-  await prisma.order.update({ where: { id: orderId }, data: {
+  await prisma.$transaction(async tx => {
+  const changed = await tx.order.updateMany({ where: { id: orderId, status: order.status }, data: {
     status,
-    reviewedAt: status === "APPROVED_FOR_LOGISTICS" ? now : undefined,
     deliveredAt: status === "DELIVERED" ? now : undefined,
     deliveryDate: status === "DELIVERED" && !order.deliveryDate ? now : undefined,
-    riskReview: status === "APPROVED_FOR_LOGISTICS" ? false : undefined,
-    activities: { create: { action: "STATUS_CHANGED", detail: `Estado actualizado a ${labels[status]}.` } }
   } });
+  if (!changed.count) throw new Error("El pedido cambió mientras lo estabas gestionando. Actualizá la página.");
+  await tx.orderActivity.create({ data: { orderId, action: "STATUS_CHANGED", detail: `${user.displayName || user.email}: estado actualizado a ${labels[status]}.` } });
+  });
+  revalidatePath(`/pedidos/${orderId}`);
   revalidatePath("/"); revalidatePath("/pedidos"); revalidatePath("/logistica");
 }
 
