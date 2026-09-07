@@ -30,6 +30,7 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [historyError, setHistoryError] = useState("");
   const [notice, setNotice] = useState("");
   const [text, setText] = useState("");
   const alive = useRef(true);
@@ -41,10 +42,11 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
 
   async function refresh(older = false) {
     const expectedVersion = version.current;
-    const result = await readConversation(id, older ? cursor : undefined);
+    const result = await readConversation(id, older ? cursor : undefined).catch(() => ({ ok: false as const, error: "No se pudo actualizar el historial. Revisá tu conexión y tu sesión." }));
     if (!alive.current || expectedVersion !== version.current) return;
     setLoading(false);
-    if (!result.ok) { setError(result.error); return; }
+    if (!result.ok) { setHistoryError(result.error); return; }
+    setHistoryError("");
     setPaused(result.botPaused);
     setMessages(previous => {
       const merged = new Map(previous.map(m => [m.id, m]));
@@ -96,7 +98,8 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
     <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button></div>
     <div className="chat-messages" ref={body} aria-label="Historial de mensajes" aria-busy={loading}>
       {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}
-      {loading ? <p className="muted">Cargando conversación…</p> : !messages.length ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
+      {loading ? <p className="muted">Cargando conversación…</p> : !messages.length && !historyError ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
+      {historyError ? <p role="alert">{historyError}</p> : null}
       {messages.map(m => <div key={m.id} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time>{new Date(m.createdAt).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</time></div>)}
     </div>
     <form className="chat-composer" onSubmit={send}>
