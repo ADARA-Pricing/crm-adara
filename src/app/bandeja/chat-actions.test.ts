@@ -3,7 +3,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ auth: vi.fn(), find: vi.fn(), update: vi.fn(), event: vi.fn(), reserve: vi.fn(), transaction: vi.fn(), lock: vi.fn(), writeEvent: vi.fn(), request: vi.fn(), recent: vi.fn(), list: vi.fn(), events: vi.fn(), customer: vi.fn() }));
 vi.mock("@/lib/auth", () => ({ requireCrmUser: mocks.auth }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
-vi.mock("@/lib/botpress", () => ({ botpressRequest: mocks.request, hasRecentIncoming: mocks.recent, listMessages: mocks.list }));
+vi.mock("@/lib/botpress", () => ({ BotpressConnectionError: class extends Error {}, botpressRequest: mocks.request, hasRecentIncoming: mocks.recent, listMessages: mocks.list }));
 vi.mock("@/lib/prisma", () => ({ prisma: {
   conversation: { findUniqueOrThrow: mocks.find, update: mocks.update },
   conversationEvent: { findUnique: mocks.event, create: mocks.reserve, findMany: mocks.events },

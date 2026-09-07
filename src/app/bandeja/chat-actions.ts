@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { botpressRequest, hasRecentIncoming, listMessages } from "@/lib/botpress";
+import { BotpressConnectionError, botpressRequest, hasRecentIncoming, listMessages } from "@/lib/botpress";
 
 const idSchema = z.string().min(1).max(160);
 
@@ -36,7 +36,7 @@ export async function readConversation(id: string, cursor?: string) {
     return { ok: true as const, botPaused: conversation.botPaused, profileName,
       messages: page.messages.map(m => ({ ...m, author: authors.get(m.id) || null })), nextToken: page.meta?.nextToken };
   } catch (error) {
-    return { ok: false as const, error: error instanceof Error && error.message.startsWith("Botpress") ? error.message : "No se pudo cargar el historial. Probá actualizar en unos segundos." };
+    return { ok: false as const, error: error instanceof BotpressConnectionError ? error.message : "No se pudo cargar el historial. Probá actualizar en unos segundos." };
   }
 }
 
