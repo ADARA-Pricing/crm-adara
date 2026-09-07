@@ -7,15 +7,18 @@ import agentConfig from "../../botpress-agent/agent.json";
 const fetchAnalytics = unstable_cache(async (botId: string, workspaceId: string, start: string, end: string) => {
   const token = process.env.BOTPRESS_API_TOKEN?.trim();
   if (!token) throw new Error("missing-config");
-  const query = new URLSearchParams({ startDate: start, endDate: end });
+  // The live endpoint requires different calendar dates, even for a single day.
+  // Request the following midnight and exclude any bucket starting at that boundary.
+  const endExclusive = new Date(Date.parse(end) + 1).toISOString();
+  const query = new URLSearchParams({ startDate: start, endDate: endExclusive });
   const response = await fetch(`https://api.botpress.cloud/v1/admin/bots/${encodeURIComponent(botId)}/analytics?${query}`, {
     headers: { Authorization: `Bearer ${token}`, "x-workspace-id": workspaceId },
     cache: "no-store", signal: AbortSignal.timeout(15000),
   });
   if (!response.ok) throw new Error(`upstream-${response.status}`);
   const parsed = analyticsSchema.parse(await response.json());
-  return { records: parsed.records, syncedAt: new Date().toISOString() };
-}, ["bot-analytics-v1"], { revalidate: 300 });
+  return { records: parsed.records.filter(r => Date.parse(r.startDateTimeUtc) >= Date.parse(start) && Date.parse(r.startDateTimeUtc) < Date.parse(endExclusive)), syncedAt: new Date().toISOString() };
+}, ["bot-analytics-v2"], { revalidate: 300 });
 
 export async function getBotAnalytics(start: string, end: string) {
   const botId = process.env.BOTPRESS_BOT_ID?.trim();

@@ -17,6 +17,8 @@ vacíos muestran Sin datos, no cero. Los registros existentes se suman sin relle
 fechas; Botpress puede consolidar con demora. No se guardan transcripciones.
 
 Filtros por días UTC (7, 30 o hasta 90 personalizados); calendario rotulado en UI.
+La API exige fechas de calendario distintas: se consulta hasta medianoche siguiente
+y se excluyen buckets que comiencen fuera del rango. Verificado con un solo día real.
 El consumo incluye todos los canales, no solamente WhatsApp. La referencia del CRM
 agrupa conversaciones por canal y fecha de creación local, con el mismo rango UTC;
 las ventas concretadas incluyen todos los orígenes y filtran deliveredAt.
