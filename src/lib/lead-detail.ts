@@ -12,6 +12,6 @@ export async function readLeadDetail(id: string) {
     prisma.userProfile.findMany({ where: { isActive: true }, select: { id: true, displayName: true, email: true } }),
   ]);
   if (!customer) return null;
-  return { customer: { ...customer, updatedAt: customer.updatedAt.toISOString(), tasks: customer.tasks.map(t => ({ ...t, dueAt: t.dueAt?.toISOString() ?? null })) }, members };
+  return { customer: { ...customer, updatedAt: customer.updatedAt.toISOString(), tasks: customer.tasks.map(t => ({ ...t, updatedAt: t.updatedAt.toISOString(), dueAt: t.dueAt?.toISOString() ?? null })) }, members };
 }
 export type LeadDetail = NonNullable<Awaited<ReturnType<typeof readLeadDetail>>> & { user: { id: string; role: string } };

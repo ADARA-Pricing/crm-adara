@@ -71,6 +71,7 @@ model UserProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   assignedTasks Task[] @relation("TaskAssignee")
+  assignedCustomers Customer[] @relation("CustomerAssignee")
 }
 
 model Customer {
@@ -93,12 +94,18 @@ model Customer {
   lastMessagePreview String?
   lastMessageAt   DateTime?
   notes           String?
+  assigneeId      String?
+  assignee        UserProfile? @relation("CustomerAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  automationRuns AutomationRun[]
+  funnelTransitions FunnelTransition[]
   conversations   Conversation[]
   orders          Order[]
   attributions    AcquisitionAttribution[]
   tasks           Task[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
+
+  @@index([assigneeId])
 }
 
 model Product {
@@ -250,11 +257,52 @@ model Conversation {
   channel         String             @default("whatsapp")
   status          ConversationStatus @default(OPEN)
   botPaused       Boolean            @default(false)
+  lastIncomingAt  DateTime?
+  lastOutgoingAt  DateTime?
+  activitySyncedAt DateTime?
   summary         String?
   events          ConversationEvent[]
   messageCache    ConversationMessageCache?
   createdAt       DateTime           @default(now())
   updatedAt       DateTime           @updatedAt
+  @@index([lastIncomingAt])
+}
+
+model AutomationRule {
+  id String @id @default(cuid())
+  name String
+  enabled Boolean @default(false)
+  stage FunnelStage
+  category String?
+  action String
+  content String
+  dueHours Int @default(24)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  runs AutomationRun[]
+}
+
+model AutomationRun {
+  id String @id
+  ruleId String
+  rule AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  stage FunnelStage
+  content String
+  status String
+  createdAt DateTime @default(now())
+  @@index([customerId, createdAt])
+}
+
+model FunnelTransition {
+  id String @id
+  customerId String
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  fromStage FunnelStage?
+  toStage FunnelStage
+  createdAt DateTime @default(now())
+  @@index([createdAt, toStage])
 }
 
 model ConversationMessageCache {

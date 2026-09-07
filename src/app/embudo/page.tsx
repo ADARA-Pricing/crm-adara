@@ -5,15 +5,16 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function FunnelPage({ searchParams }: { searchParams: Promise<{ category?: string; lead?: string; conversation?: string }> }) {
-  const { category } = await searchParams;
-  await requireCrmUser();
+export default async function FunnelPage({ searchParams }: { searchParams: Promise<{ category?: string; lead?: string; conversation?: string; owner?: string }> }) {
+  const { category, owner } = await searchParams;
+  const user = await requireCrmUser();
+  const members = await prisma.userProfile.findMany({ where: { isActive: true }, select: { id: true, displayName: true, email: true } });
   const categories = await prisma.product.findMany({ where: { category: { not: null } }, distinct: ["category"], select: { category: true } });
-  const customers = await prisma.customer.findMany({ where: category ? { interestCategories: { has: category } } : undefined, orderBy: [{ lastMessageAt: "desc" }, { funnelUpdatedAt: "desc" }], take: 100, include: { _count: { select: { orders: true } } } });
+  const customers = await prisma.customer.findMany({ where: { ...(category ? { interestCategories: { has: category } } : {}), ...(owner ? { assigneeId: owner === "mine" ? user.id : owner === "none" ? null : owner } : {}) }, orderBy: [{ lastMessageAt: "desc" }, { funnelUpdatedAt: "desc" }], take: 100, include: { assignee: true, _count: { select: { orders: true } } } });
   return <CrmShell active="/embudo"><header className="topbar"><div><p className="eyebrow">Seguimiento comercial</p><h1>Embudo de ventas</h1><p className="topbar-copy">Mové los contactos entre etapas para actualizar su seguimiento. Los pedidos y las entregas se gestionan por separado.</p></div></header>
-    <form className="topbar-actions" style={{ marginBottom: 16 }}><label>Categoría de interés <select name="category" defaultValue={category || ""}><option value="">Todas</option>{categories.map((item) => <option key={item.category} value={item.category!}>{item.category}</option>)}</select></label><button className="button secondary" type="submit">Filtrar</button></form>
+    <form className="topbar-actions" style={{ marginBottom: 16 }}><label>Categoría de interés <select name="category" defaultValue={category || ""}><option value="">Todas</option>{categories.map((item) => <option key={item.category} value={item.category!}>{item.category}</option>)}</select></label><label>Responsable <select name="owner" defaultValue={owner || ""}><option value="">Todos</option><option value="mine">Mis clientes</option><option value="none">Sin asignar</option>{members.map(m=><option key={m.id} value={m.id}>{m.displayName || m.email}</option>)}</select></label><button className="button secondary" type="submit">Filtrar</button></form>
     <FunnelBoard category={category} customers={customers.map((customer) => ({
-      id: customer.id, fullName: customer.fullName || customer.whatsappProfileName,
+      id: customer.id, fullName: customer.fullName || customer.whatsappProfileName, assigneeName: customer.assignee?.displayName || customer.assignee?.email || null,
       interestCategories: customer.interestCategories, phone: customer.phone,
       locality: customer.locality, postalCode: customer.postalCode,
       deliveryPreference: customer.deliveryPreference, deliveryAddress: customer.deliveryAddress,

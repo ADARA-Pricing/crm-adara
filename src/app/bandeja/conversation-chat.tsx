@@ -6,6 +6,8 @@ import type { BotpressMessage } from "@/lib/botpress";
 import { readConversation, sendConversationMessage, setConversationBotPaused } from "./chat-actions";
 import { useInboxCache } from "./inbox-preloader";
 import { mergeInboxMessages } from "@/lib/inbox-cache";
+import { messageActivity } from "@/lib/conversation-activity";
+import { ReplyWindow } from "@/components/reply-window";
 
 type Message = BotpressMessage & { author: string | null };
 function safeUrl(value: unknown) {
@@ -24,7 +26,7 @@ function MessageContent({ message }: { message: Message }) {
   </>;
 }
 
-export function ConversationChat({ id, initialPaused, refreshPage = true }: { id: string; initialPaused: boolean; refreshPage?: boolean }) {
+export function ConversationChat({ id, initialPaused, refreshPage = true, channel = "whatsapp", suggestedDraft }: { id: string; initialPaused: boolean; refreshPage?: boolean; channel?: string; suggestedDraft?: { id: string; content: string } }) {
   const router = useRouter();
   const cached = useInboxCache()[id];
   const [messages, setMessages] = useState<Message[]>(() => mergeInboxMessages([], cached?.messages ?? []));
@@ -36,6 +38,8 @@ export function ConversationChat({ id, initialPaused, refreshPage = true }: { id
   const [historyError, setHistoryError] = useState("");
   const [notice, setNotice] = useState("");
   const [text, setText] = useState("");
+  const [draftId, setDraftId] = useState<string | undefined>();
+  const [usedDraft, setUsedDraft] = useState<string | undefined>();
   const alive = useRef(true);
   const busyRef = useRef(false);
   const refreshing = useRef(false);
@@ -96,15 +100,17 @@ export function ConversationChat({ id, initialPaused, refreshPage = true }: { id
     const content = text.trim();
     if (request.current?.text !== content) request.current = { text: content, id: crypto.randomUUID() };
     try {
-      const result = await sendConversationMessage({ conversationId: id, text: content, requestId: request.current.id });
+      const result = await sendConversationMessage({ conversationId: id, text: content, requestId: request.current.id, draftId });
       if (!result.ok) setError(result.error);
-      else { setText(""); request.current = undefined; setNotice("Mensaje aceptado por Botpress para envío. Esto no confirma entrega o lectura."); }
+      else { setText(""); setUsedDraft(draftId); setDraftId(undefined); request.current = undefined; setNotice("Mensaje aceptado por Botpress para envío. Esto no confirma entrega o lectura."); }
       await refresh();
       setTimeout(() => { if (body.current) body.current.scrollTop = body.current.scrollHeight; }, 50);
     } catch { setError("No pudimos confirmar el envío. Revisá el historial antes de repetirlo."); }
     finally { busyRef.current = false; setBusy(false); }
   }
   return <section aria-label="Chat de la conversación">
+    <ReplyWindow activity={{ ...messageActivity(messages), channel }} />
+    {suggestedDraft && usedDraft !== suggestedDraft.id && <section className="context-note"><p>Borrador de regla: {suggestedDraft.content}</p><button className="button secondary" disabled={busy || !paused || !!text} onClick={() => { setText(suggestedDraft.content); setDraftId(suggestedDraft.id); }}>Usar borrador (no envía)</button></section>}
     <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button></div>
     <div className="chat-messages" ref={body} aria-label="Historial de mensajes" aria-busy={loading}>
       {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}

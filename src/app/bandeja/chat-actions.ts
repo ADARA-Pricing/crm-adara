@@ -6,6 +6,7 @@ import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { BotpressConnectionError, botpressRequest, hasRecentIncoming, listMessages } from "@/lib/botpress";
 import { parseInboxSnapshot } from "@/lib/inbox-cache";
+import { syncConversationActivity } from "@/lib/conversation-activity-server";
 
 const idSchema = z.string().min(1).max(160);
 
@@ -17,6 +18,7 @@ export async function readConversation(id: string, cursor?: string) {
     const conversation = await prisma.conversation.findUniqueOrThrow({ where: { id }, include: { customer: true } });
     if (!conversation.botpressId) throw new Error("Esta conversación no tiene un historial de Botpress vinculado.");
     const page = await listMessages(conversation.botpressId, cursor);
+    await syncConversationActivity(id, page.messages).catch(() => {});
     const events = await prisma.conversationEvent.findMany({ where: { conversationId: id, direction: "OUTGOING", type: "HUMAN_MESSAGE" }, orderBy: { createdAt: "desc" }, take: 500 });
     const authors = new Map(events.map(e => {
       const p = e.payload as { messageId?: string; author?: string };
@@ -54,8 +56,10 @@ export async function warmInboxConversations(ids: string[]) {
   const conversations = await prisma.conversation.findMany({ where: { id: { in: parsed }, botpressId: { not: null } }, include: { messageCache: true, customer: { select: { whatsappProfileName: true } } } });
   const results = await Promise.all(conversations.map(async conversation => {
     const cached = parseInboxSnapshot(conversation.messageCache?.payload);
-    if (cached && conversation.messageCache!.syncedAt.getTime() > Date.now() - 30000)
+    if (cached && conversation.messageCache!.syncedAt.getTime() > Date.now() - 30000) {
+      await syncConversationActivity(conversation.id, cached.messages).catch(() => {});
       return { id: conversation.id, ok: true as const, ...cached, profileName: conversation.customer.whatsappProfileName };
+    }
     const result = await readConversation(conversation.id);
     return { id: conversation.id, ...result };
   }));
@@ -79,12 +83,13 @@ export async function setConversationBotPaused(id: string, paused: boolean) {
   } catch { return { ok: false as const, error: "No se pudo cambiar el estado del bot. No se aplicó la acción." }; }
 }
 
-export async function sendConversationMessage(input: { conversationId: string; text: string; requestId: string }) {
+export async function sendConversationMessage(input: { conversationId: string; text: string; requestId: string; draftId?: string }) {
   const user = await requireCrmUser();
-  const parsed = z.object({ conversationId: idSchema, text: z.string().trim().min(1).max(4000), requestId: z.string().uuid() }).safeParse(input);
+  const parsed = z.object({ conversationId: idSchema, text: z.string().trim().min(1).max(4000), requestId: z.string().uuid(), draftId: idSchema.optional() }).safeParse(input);
   if (!parsed.success) return { ok: false as const, error: "Escribí un mensaje de hasta 4000 caracteres." };
-  const { conversationId, text, requestId } = parsed.data;
-  const eventId = `human-${requestId}`;
+  const { conversationId, text, requestId, draftId } = parsed.data;
+  // One durable attempt per draft, even if an operator clicks again with a new UUID.
+  const eventId = draftId ? `human-draft-${draftId}` : `human-${requestId}`;
   const author = user.displayName || user.email;
   let reserved = false;
   try {
@@ -97,6 +102,7 @@ export async function sendConversationMessage(input: { conversationId: string; t
     const conversation = await prisma.conversation.findUniqueOrThrow({ where: { id: conversationId } });
     if (!conversation.botPaused) return { ok: false as const, error: "Pausá el bot antes de responder manualmente." };
     if (!conversation.botpressId) return { ok: false as const, error: "No hay una conversación de Botpress vinculada." };
+    if (draftId && !await prisma.automationRun.findFirst({ where: { id: draftId, customerId: conversation.customerId, status: "DRAFT" } })) return { ok: false as const, error: "El borrador no pertenece a este cliente o ya fue utilizado." };
     if (!(await hasRecentIncoming(conversation.botpressId))) return { ok: false as const, error: "No hay un mensaje del cliente en las últimas 24 horas. Esperá a que vuelva a escribir; el envío de plantillas todavía no está habilitado." };
     // Durable reservation: even a timeout or process crash must not send the same request twice.
     await prisma.conversationEvent.create({ data: { id: eventId, conversationId, direction: "OUTGOING", type: "HUMAN_MESSAGE", payload: { state: "SENDING", text, author, authorId: user.id } } });
@@ -105,16 +111,22 @@ export async function sendConversationMessage(input: { conversationId: string; t
       // Serialize manual sends with pause/resume to avoid a concurrent operator resuming mid-send.
       const rows = await tx.$queryRaw<{ botPaused: boolean }[]>`SELECT "botPaused" FROM crm."Conversation" WHERE id = ${conversationId} FOR UPDATE`;
       if (!rows[0]?.botPaused) throw new Error("Bot resumed before send");
+      if (draftId) {
+        const claimed = await tx.automationRun.updateMany({ where: { id: draftId, customerId: conversation.customerId, status: "DRAFT" }, data: { status: "SENDING" } });
+        if (!claimed.count) throw new Error("Draft already used");
+      }
       const result = await botpressRequest<{ message: { id: string } }>("messages", {
         conversationId: conversation.botpressId, userId: process.env.BOTPRESS_BOT_ID,
         type: "text", payload: { text }, tags: {},
       });
       await tx.conversationEvent.update({ where: { id: eventId }, data: { payload: { state: "ACCEPTED", text, author, authorId: user.id, messageId: result.message.id } } });
-      await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date() } });
+      await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date(), lastOutgoingAt: new Date() } });
+      if (draftId) await tx.automationRun.update({ where: { id: draftId }, data: { status: "ACCEPTED" } });
     }, { maxWait: 5000, timeout: 20000 });
     revalidatePath("/bandeja");
     return { ok: true as const };
   } catch {
+    if (reserved && draftId) await prisma.automationRun.updateMany({ where: { id: draftId, status: { in: ["DRAFT", "SENDING"] } }, data: { status: "UNCERTAIN" } }).catch(() => {});
     return { ok: false as const, uncertain: reserved, error: reserved
       ? "No pudimos confirmar el resultado. Revisá el historial antes de volver a enviar para evitar duplicados."
       : "No se pudo preparar el envío. Actualizá la conversación y volvé a intentar." };

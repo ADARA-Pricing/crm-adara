@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Datos de embudo inválidos" }, { status: 400 });
   const data = parsed.data;
   const existing = await prisma.customer.findFirst({ where: { OR: [{ whatsappId: data.botpressConversationId }, ...(data.phone ? [{ phone: data.phone }] : [])] } });
+  let acceptedCategories: string[] = [];
+  if (data.interestCategories?.length) {
+    const catalog = await prisma.product.findMany({ where: { category: { not: null } }, select: { category: true }, distinct: ["category"] });
+    const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+    const requested = new Set(data.interestCategories.map(normalize));
+    acceptedCategories = catalog.map(p=>p.category!).filter(c=>requested.has(normalize(c)));
+    // Categories must be present when the stage-change trigger evaluates the rule.
+    if(existing && acceptedCategories.length) await prisma.$executeRaw`UPDATE crm."Customer" SET "interestCategories" = ARRAY(SELECT DISTINCT unnest("interestCategories" || ${acceptedCategories}::text[])) WHERE id = ${existing.id}`;
+  }
   const values = {
     whatsappProfileName: data.whatsappProfileName,
     funnelNote: data.note, funnelUpdatedAt: new Date(), fullName: data.fullName,
@@ -46,17 +55,10 @@ export async function POST(request: NextRequest) {
   };
   const customer = existing
     ? await prisma.customer.update({ where: { id: existing.id }, data: { ...values, funnelStage: data.stage || existing.funnelStage, fullName: data.fullName || existing.fullName, phone: data.phone || existing.phone, whatsappId: data.botpressConversationId, deliveryPreference: data.deliveryPreference || existing.deliveryPreference, locality: data.locality || existing.locality, deliveryAddress: data.deliveryAddress || existing.deliveryAddress, postalCode: data.postalCode || existing.postalCode, requestedDate: data.requestedDate ? new Date(data.requestedDate) : existing.requestedDate, lastMessagePreview: data.lastMessagePreview || existing.lastMessagePreview, lastMessageAt: data.lastMessagePreview ? new Date() : existing.lastMessageAt } })
-    : await prisma.customer.create({ data: { ...values, funnelStage: data.stage || "FIRST_CONTACT", phone: data.phone, whatsappId: data.botpressConversationId } });
+    : await prisma.customer.create({ data: { ...values, interestCategories: acceptedCategories, funnelStage: data.stage || "FIRST_CONTACT", phone: data.phone, whatsappId: data.botpressConversationId } });
   const conversation = await prisma.conversation.upsert({ where: { botpressId: data.botpressConversationId }, update: { customerId: customer.id }, create: { customerId: customer.id, botpressId: data.botpressConversationId } });
   if (data.attribution && Object.values(data.attribution).some(Boolean)) {
     await prisma.acquisitionAttribution.create({ data: { customerId: customer.id, ...data.attribution } });
-  }
-  if (data.interestCategories?.length) {
-    const catalog = await prisma.product.findMany({ where: { category: { not: null } }, select: { category: true }, distinct: ["category"] });
-    const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
-    const requested = new Set(data.interestCategories.map(normalize));
-    const categories = catalog.map((p) => p.category!).filter((c) => requested.has(normalize(c)));
-    if (categories.length) await prisma.$executeRaw`UPDATE crm."Customer" SET "interestCategories" = ARRAY(SELECT DISTINCT unnest("interestCategories" || ${categories}::text[])) WHERE id = ${customer.id}`;
   }
   return NextResponse.json({ customerId: customer.id, stage: customer.funnelStage, botPaused: conversation.botPaused });
 }
