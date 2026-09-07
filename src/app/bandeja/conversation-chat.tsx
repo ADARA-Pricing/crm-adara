@@ -27,7 +27,7 @@ function MessageContent({ message }: { message: Message }) {
 export function ConversationChat({ id, initialPaused }: { id: string; initialPaused: boolean }) {
   const router = useRouter();
   const cached = useInboxCache()[id];
-  const [messages, setMessages] = useState<Message[]>(cached?.messages ?? []);
+  const [messages, setMessages] = useState<Message[]>(() => mergeInboxMessages([], cached?.messages ?? []));
   const [paused, setPaused] = useState(initialPaused);
   const [cursor, setCursor] = useState<string | undefined>(cached?.nextToken);
   const [loading, setLoading] = useState(!cached);
