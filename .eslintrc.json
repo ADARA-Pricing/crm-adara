@@ -1,0 +1,4 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "ignorePatterns": ["botpress-agent/**", "node_modules/**", ".next/**"]
+}

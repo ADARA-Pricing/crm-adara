@@ -8,6 +8,8 @@ import { useInboxCache } from "./inbox-preloader";
 import { mergeInboxMessages } from "@/lib/inbox-cache";
 import { messageActivity } from "@/lib/conversation-activity";
 import { ReplyWindow } from "@/components/reply-window";
+import { SafeMessage } from "@/components/safe-message";
+import { crmDate } from "@/lib/crm-display";
 
 type Message = BotpressMessage & { author: string | null };
 function safeUrl(value: unknown) {
@@ -19,7 +21,7 @@ function MessageContent({ message }: { message: Message }) {
   const text = typeof p.text === "string" ? p.text : typeof p.title === "string" ? p.title : "";
   const url = safeUrl(p.imageUrl || p.audioUrl || p.videoUrl || p.fileUrl);
   return <>
-    {text ? <p>{text}</p> : null}
+    {text ? <SafeMessage text={text} /> : null}
     {url ? <a href={url} target="_blank" rel="noopener noreferrer">Ver {message.type === "image" ? "imagen" : message.type === "audio" ? "audio" : message.type === "video" ? "video" : "archivo"}</a> : null}
     {!text && !url ? <p className="muted">Mensaje de tipo {message.type} (contenido no disponible en esta vista)</p> : null}
     {Array.isArray(p.options) ? <p>{p.options.map(o => typeof o === "object" && o && "label" in o ? String(o.label) : "").filter(Boolean).join(" · ")}</p> : null}
@@ -116,7 +118,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
       {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}
       {loading ? <p className="muted">Cargando conversación…</p> : !messages.length && !historyError ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
       {historyError ? <p role="alert">{historyError}</p> : null}
-      {messages.map(m => <div key={m.id} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time>{new Date(m.createdAt).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</time></div>)}
+      {messages.map(m => <div key={m.id} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time dateTime={m.createdAt}>{crmDate(m.createdAt, true)}</time></div>)}
     </div>
     <form className="chat-composer" onSubmit={send}>
       <label htmlFor="reply">Respuesta al cliente</label>

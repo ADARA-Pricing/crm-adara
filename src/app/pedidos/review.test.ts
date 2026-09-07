@@ -26,7 +26,7 @@ it("holds with a reason without completing tasks", async () => {
   expect(await reviewOrder({}, form({decision:"HOLD",note:"Falta verificar dirección",recipient:"",deliveryDate:"",timeWindow:""}))).toEqual({saved:true,approved:false});
   expect(m.tasks).not.toHaveBeenCalled();
 });
-it.each([{recipient:""},{risk:""},{deliveryDate:"2020-01-01"},{deliveryDate:"2099-02-31"},{decision:"HOLD",note:""}])("rejects incomplete review %j", async values => {
+it.each<Record<string, string>>([{recipient:""},{risk:""},{deliveryDate:"2020-01-01"},{deliveryDate:"2099-02-31"},{decision:"HOLD",note:""}])("rejects incomplete review %j", async values => {
   expect((await reviewOrder({},form(values))).error).toBeTruthy(); expect(m.tx).not.toHaveBeenCalled();
 });
 it("blocks stale reviews", async () => {

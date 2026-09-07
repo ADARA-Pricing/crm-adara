@@ -1,0 +1,6 @@
+import { CrmShell } from "@/components/crm-shell";
+import { requireAdmin } from "@/lib/auth";
+export default async function MarketingPage() {
+  await requireAdmin();
+  return <CrmShell active="/marketing"><header className="topbar"><div><p className="eyebrow">Marketing · Solo lectura</p><h1>Meta Ads</h1><p className="topbar-copy">Rendimiento publicitario con datos reales de tu cuenta.</p></div></header><section className="panel"><span className="badge warning">Integración pendiente</span><h2>Conectar una cuenta publicitaria</h2><p>La aplicación todavía no tiene una integración de Meta Ads. No hay campañas ni métricas sincronizadas; esto no significa que tu cuenta no tenga campañas.</p><ol><li>Definir la cuenta publicitaria que querés consultar.</li><li>Autorizar acceso de lectura a campañas e informes.</li><li>Configurar credenciales exclusivas del servidor, sin reutilizar las del bot.</li></ol><p>Después de conectar podremos verificar qué métricas entrega la cuenta. No se mostrarán resultados, costos ni ROAS estimados como si fueran reales.</p><a className="button secondary" href="https://adsmanager.facebook.com/" target="_blank" rel="noopener noreferrer">Abrir administrador de anuncios</a></section></CrmShell>;
+}

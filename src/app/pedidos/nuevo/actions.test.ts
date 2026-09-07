@@ -30,7 +30,7 @@ it("blocks logistics users", async () => {
   m.auth.mockResolvedValue({ role: "LOGISTICS" });
   expect((await createOrderFromChat({}, form())).error).toBeTruthy(); expect(m.tx).not.toHaveBeenCalled();
 });
-it.each([{ confirmed: "" }, { paymentMethod: "CARD_ONE_PAYMENT" }, { requestedDate: "2020-01-01" }, { requestedDate: "2099-02-31" }])("rejects invalid conditions %j", async changes => {
+it.each<Record<string, string>>([{ confirmed: "" }, { paymentMethod: "CARD_ONE_PAYMENT" }, { requestedDate: "2020-01-01" }, { requestedDate: "2099-02-31" }])("rejects invalid conditions %j", async changes => {
   expect((await createOrderFromChat({}, form(changes))).error).toBeTruthy(); expect(m.create).not.toHaveBeenCalled();
 });
 it("blocks an active bot to prevent concurrent order taking", async () => {

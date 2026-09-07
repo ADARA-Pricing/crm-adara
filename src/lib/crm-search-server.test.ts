@@ -1,0 +1,10 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const m = vi.hoisted(() => ({ auth:vi.fn(), customer:vi.fn(), order:vi.fn(), product:vi.fn(), conversation:vi.fn() }));
+vi.mock("server-only",()=>({}));
+vi.mock("./auth",()=>({requireCrmUser:m.auth}));
+vi.mock("./prisma",()=>({prisma:{customer:{findMany:m.customer},order:{findMany:m.order},product:{findMany:m.product},conversation:{findMany:m.conversation}}}));
+import { searchCrm } from "./crm-search-server";
+beforeEach(()=>{vi.resetAllMocks();m.auth.mockResolvedValue({id:"operator"});for(const call of [m.customer,m.order,m.product,m.conversation])call.mockResolvedValue([]);});
+it("authenticates before any result query",async()=>{m.auth.mockRejectedValue(new Error("denied"));await expect(searchCrm("Walter")).rejects.toThrow("denied");for(const call of [m.customer,m.order,m.product,m.conversation])expect(call).not.toHaveBeenCalled();});
+it("does not query records on blank or invalid input",async()=>{await searchCrm("");await searchCrm("a");await searchCrm("x".repeat(121));for(const call of [m.customer,m.order,m.product,m.conversation])expect(call).not.toHaveBeenCalled();});
+it("bounds every section and uses explicit selections",async()=>{const result=await searchCrm("Walter");expect(result.results).not.toBeNull();for(const call of [m.customer,m.order,m.product,m.conversation])expect(call).toHaveBeenCalledWith(expect.objectContaining({take:11,select:expect.any(Object),orderBy:expect.any(Array)}));});

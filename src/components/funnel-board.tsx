@@ -15,7 +15,7 @@ type Contact = {
   funnelStage: FunnelStage; funnelUpdatedAt: string; dateLabel: string; orderCount: number;
 };
 
-export function FunnelBoard({ customers, category }: { customers: Contact[]; category?: string }) {
+export function FunnelBoard({ customers, category, visibleStage }: { customers: Contact[]; category?: string; visibleStage?: FunnelStage }) {
   const router = useRouter();
   const params = useSearchParams();
   const selectedId = params.get("lead");
@@ -54,7 +54,7 @@ export function FunnelBoard({ customers, category }: { customers: Contact[]; cat
     finally { busy.current = false; setSaving(null); }
   }
   return <><p className="funnel-feedback" role="status">{message || "Arrastrá una tarjeta a otra columna o usá su selector de etapa."}</p>
-    <section className="funnel-board" aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{funnelStages.map(([stage, title, description]) => {
+    <section className={`funnel-board${visibleStage ? " funnel-single-stage" : ""}`} aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{funnelStages.filter(([stage]) => !visibleStage || visibleStage === stage).map(([stage, title, description]) => {
       const contacts = people.filter((person) => person.funnelStage === stage);
       return <article key={stage} className={`funnel-column${target === stage ? " funnel-drop-target" : ""}`}
         onDragOver={(event) => { if (draggedId.current && !busy.current) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setTarget(stage); } }}

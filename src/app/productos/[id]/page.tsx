@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { requireCrmUser } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import { CrmShell } from "@/components/crm-shell";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +9,7 @@ import { DeleteProductButton } from "@/components/delete-product-button";
 export const dynamic = "force-dynamic";
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireCrmUser();
   const { id } = await params;
   const product = await prisma.product.findUnique({ where: { id }, include: { _count: { select: { orderItems: true } } } });
   if (!product) notFound();

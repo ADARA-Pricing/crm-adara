@@ -155,3 +155,66 @@ td { padding: 15px 17px; border-top: 1px solid #eee8e4; font-size: 13px; vertica
 .lead-chat .chat-messages { max-height: 50vh; }
 .funnel-person:focus-visible { outline: 2px solid #815734; outline-offset: 2px; }
 @media(max-width: 1000px) { .lead-workspace { grid-template-columns: 1fr; } }
+
+/* CRM presentation layer: does not change data or commercial behavior. */
+:root { --muted: #655c55; }
+:focus-visible { outline: 3px solid #91613c; outline-offset: 3px; }
+button, input, textarea, select { font: inherit; }
+button:disabled, .button:disabled { opacity: .55; cursor: not-allowed; }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+.button:hover:not(:disabled) { filter: brightness(.94); }
+.button.ghost { background: transparent; color: var(--brand-dark); }
+.button.success { background: #236346; color: white; }
+.button.danger { background: #9f3636; color: white; }
+.workspace, .workspace > *, .panel, .form-section, .task-form > *, .topbar > * { min-width: 0; }
+.topbar-actions, .table-search { flex-wrap: wrap; }
+.table-wrap { max-width: 100%; }
+th { position: sticky; top: 0; z-index: 1; color: #655c55; font-size: 12px; }
+tbody tr:hover { background: #fbf6f0; }
+.badge, .metric-detail, .compact-row small, .inbox-contact small, .inbox-contact p,
+.chat-bubble small, .chat-bubble time, .task-form label, .customer-context dt { font-size: 12px; }
+.inbox-contact strong, .compact-row strong, .task-table td strong { font-size: 14px; }
+.chat-messages { height: auto; min-height: 140px; max-height: min(48vh, 500px); }
+.chat-composer { background: var(--paper); }
+.safe-message { font-size: 14px; line-height: 1.6; }
+.safe-message a { text-decoration: underline; overflow-wrap: anywhere; }
+.safe-message ul { margin: 8px 0; padding-left: 20px; }
+.safe-message p { font-size: inherit; }
+.metric-link { display: block; margin-top: 12px; color: var(--brand-dark); font-weight: 700; text-decoration: underline; }
+.operational-shortcuts { display: grid; gap: 12px; margin-top: 14px; }
+.operational-shortcuts a { text-decoration: underline; font-size: 14px; }
+.search-results ul { list-style: none; padding: 0; margin: 14px 0 0; }
+.search-results li { display: grid; gap: 6px; padding: 14px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.search-results li a { font-weight: 700; text-decoration: underline; }
+.search-results li span { color: var(--muted); font-size: 13px; line-height: 1.5; }
+.logistics-overdue { margin: 0; padding: 12px 18px; color: #754307; background: #fff4df; border-bottom: 1px solid #e6cd9b; font-size: 14px; }
+.manual-order-form label:has(input[type="checkbox"]) { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: start; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.manual-order-form input[type="checkbox"] { width: 18px; height: 18px; margin: 2px 0 0; }
+.task-form { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.task-form input, .task-form select { width: 100%; }
+.task-form .task-description { grid-column: 1 / -1; }
+.funnel-board { width: 100%; max-width: 100%; overflow-x: auto; scroll-snap-type: x proximity; }
+.funnel-column { scroll-snap-align: start; }
+.funnel-board.funnel-single-stage { grid-template-columns: minmax(0, 1fr); overflow-x: visible; }
+.navigation-toggle { grid-column: 1 / -1; justify-self: start; margin: 12px 18px; }
+.navigation-collapsed { grid-template-columns: minmax(0, 1fr); }
+.navigation-collapsed .sidebar { display: none; }
+.skip-link { position: fixed; left: 12px; top: -100px; z-index: 100; padding: 12px; background: white; color: #392c25; }
+.skip-link:focus { top: 12px; }
+.skeleton { background: linear-gradient(90deg, #eee6de 25%, #faf7f3 50%, #eee6de 75%); background-size: 200% 100%; animation: crm-shimmer 1.8s infinite; border-radius: 12px; }
+.skeleton-table { height: 240px; margin-top: 24px; }
+@keyframes crm-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+@media (max-width: 1200px) { .inbox-layout { grid-template-columns: minmax(210px, .8fr) minmax(0, 1.5fr); }.customer-context { grid-column: 1 / -1; }.order-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 860px) {
+  .sidebar { position: static; display: flex; flex-direction: column; overflow: visible; }
+  .sidebar .brand { align-self: flex-start; }
+  .nav-group { flex-wrap: wrap; }
+  .sidebar-footer { display: block; }
+  .inbox-layout, .customer-detail-grid, .form-grid, .order-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .order-detail-grid > :nth-child(2) { grid-column: auto; }
+  .inbox-list { max-height: 300px; overflow-y: auto; }
+  .funnel-board { grid-template-columns: repeat(7, minmax(260px, 85vw)); }
+  .lead-dialog { padding: 12px; }
+  .topbar-actions { align-items: stretch; }
+}
