@@ -77,6 +77,8 @@ model Customer {
   whatsappId      String?          @unique
   phone           String?          @unique
   fullName        String?
+  whatsappProfileName String?
+  interestCategories String[] @default([])
   email           String?          @unique
   status          CustomerStatus   @default(LEAD)
   funnelStage     FunnelStage      @default(FIRST_CONTACT)

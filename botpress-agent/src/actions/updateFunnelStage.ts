@@ -7,6 +7,7 @@ export const updateFunnelStage = new Action({
     stage: z.enum(['first_contact', 'interested', 'very_interested', 'coordinate_delivery', 'local_pickup', 'abandoned']),
     note: z.string().max(240).optional().describe('Motivo comercial corto, interno y objetivo.'),
     fullName: z.string().min(2).optional(),
+    interestCategories: z.array(z.string().min(1).max(80)).max(20).optional().describe('Categorías del catálogo por las que el cliente mostró interés. Se agregan sin borrar las anteriores.'),
     phone: z.string().min(6).optional(),
     deliveryPreference: z.enum(['courier', 'pickup']).optional(),
     locality: z.string().min(2).optional(),

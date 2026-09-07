@@ -9,6 +9,8 @@ const stageSchema = z.object({
   stage: z.enum(["FIRST_CONTACT", "INTERESTED", "VERY_INTERESTED", "COORDINATE_DELIVERY", "LOCAL_PICKUP", "COMPLETED", "ABANDONED"]).optional(),
   note: z.string().trim().max(240).optional(),
   fullName: z.string().trim().min(2).max(120).optional(),
+  whatsappProfileName: z.string().trim().min(1).max(120).optional(),
+  interestCategories: z.array(z.string().trim().min(1).max(80)).max(20).optional(),
   phone: z.string().trim().min(6).max(40).optional(),
   deliveryPreference: z.enum(["COURIER", "PICKUP"]).optional(),
   locality: z.string().trim().min(2).max(120).optional(),
@@ -36,6 +38,7 @@ export async function POST(request: NextRequest) {
   const data = parsed.data;
   const existing = await prisma.customer.findFirst({ where: { OR: [{ whatsappId: data.botpressConversationId }, ...(data.phone ? [{ phone: data.phone }] : [])] } });
   const values = {
+    whatsappProfileName: data.whatsappProfileName,
     funnelNote: data.note, funnelUpdatedAt: new Date(), fullName: data.fullName,
     deliveryPreference: data.deliveryPreference, locality: data.locality, deliveryAddress: data.deliveryAddress,
     postalCode: data.postalCode, requestedDate: data.requestedDate ? new Date(data.requestedDate) : undefined,
@@ -47,6 +50,13 @@ export async function POST(request: NextRequest) {
   await prisma.conversation.upsert({ where: { botpressId: data.botpressConversationId }, update: { customerId: customer.id }, create: { customerId: customer.id, botpressId: data.botpressConversationId } });
   if (data.attribution && Object.values(data.attribution).some(Boolean)) {
     await prisma.acquisitionAttribution.create({ data: { customerId: customer.id, ...data.attribution } });
+  }
+  if (data.interestCategories?.length) {
+    const catalog = await prisma.product.findMany({ where: { category: { not: null } }, select: { category: true }, distinct: ["category"] });
+    const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+    const requested = new Set(data.interestCategories.map(normalize));
+    const categories = catalog.map((p) => p.category!).filter((c) => requested.has(normalize(c)));
+    if (categories.length) await prisma.$executeRaw`UPDATE crm."Customer" SET "interestCategories" = ARRAY(SELECT DISTINCT unnest("interestCategories" || ${categories}::text[])) WHERE id = ${customer.id}`;
   }
   return NextResponse.json({ customerId: customer.id, stage: customer.funnelStage });
 }

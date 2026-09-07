@@ -5,6 +5,7 @@ import { moveFunnelContact } from "@/app/embudo/actions";
 import { funnelStages, type FunnelStage } from "@/lib/funnel-stages";
 
 type Contact = {
+  interestCategories: string[];
   id: string; fullName: string | null; phone: string | null; locality: string | null; postalCode: string | null;
   deliveryPreference: string | null; deliveryAddress: string | null; lastMessagePreview: string | null; funnelNote: string | null;
   funnelStage: FunnelStage; funnelUpdatedAt: string; dateLabel: string; orderCount: number;
@@ -51,6 +52,7 @@ export function FunnelBoard({ customers }: { customers: Contact[] }) {
           {person.deliveryAddress ? <small className="private-detail">{person.deliveryAddress}</small> : null}
           {person.lastMessagePreview ? <small className="message-preview">“{person.lastMessagePreview}”</small> : null}
           {person.funnelNote ? <small>{person.funnelNote}</small> : null}
+          <small>{person.interestCategories.join(" · ")}</small>
           <footer>{person.orderCount ? `${person.orderCount} pedido(s)` : "Sin pedido"}<time>{person.dateLabel}</time></footer>
           <label className="funnel-stage-control">{saving === person.id ? "Guardando…" : "Mover a"}<select aria-label={`Etapa de ${person.fullName || person.phone || "contacto"}`} value={person.funnelStage} disabled={Boolean(saving)} onChange={(event) => void move(person.id, event.target.value as FunnelStage)}>{funnelStages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>)}{!contacts.length ? <div className="funnel-empty">{dragging ? "Soltá la tarjeta acá" : "Sin contactos"}</div> : null}</div>

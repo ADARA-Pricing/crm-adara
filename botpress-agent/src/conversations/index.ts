@@ -18,10 +18,17 @@ export default new Conversation({
     hasAskedForDeliveryMethod: z.boolean().default(false),
     crmContactCreated: z.boolean().default(false),
   }),
-  handler: async ({ message, state, conversation, execute }) => {
-    if (message?.type !== 'text') return
+  handler: async ({ message, state, conversation, execute, client }) => {
+    if (!message) return
 
     const whatsappPhone = conversation.tags['whatsapp:userPhone']
+    let whatsappProfileName: string | undefined
+    if (whatsappPhone && message.userId) {
+      try {
+        const { user } = await client.getUser({ id: message.userId })
+        whatsappProfileName = user.name?.trim().slice(0, 120) || undefined
+      } catch { /* Profile is optional; continue processing the message. */ }
+    }
     const messageText = (message as unknown as { payload?: { text?: string } }).payload?.text
     const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
     await fetch(`${crmApiBaseUrl.replace(/\/$/, '')}/api/leads/stage`, {
@@ -30,11 +37,13 @@ export default new Conversation({
       body: JSON.stringify({
         stage: state.crmContactCreated ? undefined : 'FIRST_CONTACT',
         phone: whatsappPhone,
+        whatsappProfileName,
         lastMessagePreview: typeof messageText === 'string' ? messageText : undefined,
         botpressConversationId: conversation.id,
       }),
     })
     state.crmContactCreated = true
+    if (message.type !== 'text') return
 
     if (!state.hasAskedForDeliveryMethod) {
       state.hasAskedForDeliveryMethod = true
@@ -76,7 +85,8 @@ Cuando la persona muestre intención de compra, acompañala de a poco. Para env�
 Antes de prometer que hay envío o que puede llegar en el día, cuando ya tengas localidad (y código postal si lo conoce), usá checkDeliveryCoverage. Si covered es true, podés confirmar que la localidad está dentro de la zona y respetá cutoffHour como hora de corte. Si covered es false, no prometas cobertura ni entrega: explicá con naturalidad que necesitás revisar la dirección con logística y ofrecé continuar el seguimiento. No inventes zonas ni horarios.
 Embudo comercial: usá updateFunnelStage solo ante cambios claros y persistentes. first_contact: primer saludo o consulta. interested: pregunta por el producto o muestra interés. very_interested: pregunta precio, características, pago, garantía o manifiesta que quiere comprar. coordinate_delivery: elige envío por mensajería o empieza a dar datos para envío. local_pickup: elige retirar en el local. abandoned: rechaza la compra explícitamente. No marques completed: lo hace el equipo después de la entrega. No llames esta herramienta más de una vez para la misma etapa. En cada actualización incluí todos los datos que la persona ya compartió y que correspondan: nombre, teléfono, localidad, dirección, código postal, fecha deseada y modalidad. No inventes ni pidas datos solamente para completar el embudo.
 Solo cuando el cliente responda de forma inequívoca que confirma ese resumen, usá recordConfirmedOrder exactamente una vez. Después decí que el pedido fue recibido, indicá su número de venta usando saleNumber (por ejemplo: "Tu número de venta es #123") y aclarale que queda pendiente de revisión comercial y de zona. Nunca prometas una entrega exacta ni confirmes logística.
-Usá quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.`,
+Usá quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.
+INTERESES: Cuando el cliente consulte o exprese interés por un producto, registrá su categoría en interestCategories de updateFunnelStage. Usá las categorías exactas de catalogCategories devueltas por getProductInfo. Podés registrar varias, incluso manteniendo la misma etapa: un interés nuevo permite otra llamada. No etiquetes por un saludo, por un producto que solo ofreciste vos ni por categorías que el cliente niegue querer. El nombre de perfil se captura automáticamente y no equivale al nombre confirmado ni al receptor del pedido.`,
       tools: [getProductInfo.asTool(), quoteOrder.asTool(), recordConfirmedOrder.asTool(), updateFunnelStage.asTool(), checkDeliveryCoverage.asTool(), requestHumanHandoff.asTool()],
     })
   },
