@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { InboxShortcuts, InboxShortcutsLoading } from "@/components/inbox-shortcuts";
+import { CRM_TIME_ZONE } from "@/lib/crm-display";
 import { CrmShell } from "@/components/crm-shell";
 import { manageConversation } from "./actions";
 import { requireCrmUser } from "@/lib/auth";
@@ -40,16 +43,17 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     <header className="topbar"><div><p className="eyebrow">Atención</p><h1>Bandeja WhatsApp</h1><p className="topbar-copy">Consultá el contexto comercial sin perder el historial del cliente.</p></div></header>
     <InboxFilters filters={filters} members={members} categories={categories.map(c=>c.category!)} />
     <p className="muted">Los filtros se combinan. Ventana calculada con mensajes sincronizados; se verifica nuevamente al enviar. No equivale a “no leído”. Los chats recientes se actualizan en segundo plano.</p>
-    <div className="topbar-actions"><Link href="/bandeja?window=open&attention=human&owner=mine">Mis chats para atender</Link><Link href="/bandeja?window=closing">Ventana por vencer</Link><Link href="/bandeja?stage=VERY_INTERESTED&window=open&bought=no">Muy interesados disponibles</Link></div>
+    <Suspense fallback={<InboxShortcutsLoading raw={raw} />}><InboxShortcuts raw={raw} /></Suspense>
 
     <InboxPreloader conversations={syncList} initial={Object.fromEntries(conversations.flatMap(c => { const cached = parseInboxSnapshot(c.messageCache?.payload); return cached ? [[c.id, cached]] : []; }))}>
     <section className="inbox-layout">
       <aside className="inbox-list" aria-label="Conversaciones">
         <div className="inbox-list-heading"><strong>Conversaciones</strong><span>{total} · página {filters.page}</span></div>
-        {conversations.length ? conversations.map((item) => <Link prefetch={true} key={item.id} href={`/bandeja?${query}&conversation=${item.id}`} className={`inbox-contact ${selected?.id === item.id ? "selected" : ""}`}>
-          <span><strong>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{item.customer.phone ?? "WhatsApp por identificar"}</small></span>
-          <small>{item.updatedAt.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit" })}</small>
-          <ReplyWindow compact activity={{ channel: item.channel, lastIncomingAt: item.lastIncomingAt?.toISOString() ?? null, lastOutgoingAt: item.lastOutgoingAt?.toISOString() ?? null }} /><small className="inbox-contact-meta">{stageLabels[item.customer.funnelStage]} · {item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · {item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}</small><p>{item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}</p>
+        {conversations.length ? conversations.map((item) => <Link prefetch={true} scroll={false} key={item.id} href={`/bandeja?${query}&conversation=${item.id}`} className={`inbox-contact ${selected?.id === item.id ? "selected" : ""}`}>
+          <strong className="inbox-contact-name" title={item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong>
+          <small className="inbox-contact-date">{item.updatedAt.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", timeZone: CRM_TIME_ZONE })}</small>
+          <small className="inbox-contact-phone">{item.customer.phone ?? "WhatsApp por identificar"}</small>
+          <ReplyWindow compact activity={{ channel: item.channel, lastIncomingAt: item.lastIncomingAt?.toISOString() ?? null, lastOutgoingAt: item.lastOutgoingAt?.toISOString() ?? null }} /><small className="inbox-contact-meta" title={`${stageLabels[item.customer.funnelStage]} · ${item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · ${item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}`}>{stageLabels[item.customer.funnelStage]} · {item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · {item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}</small><p title={item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}>{item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}</p>
         </Link>) : <div className="empty">Cuando llegue un mensaje por WhatsApp, aparecerá en esta bandeja.</div>}
         <div className="topbar-actions">{filters.page > 1 && <Link href={`/bandeja?${new URLSearchParams({ ...Object.fromEntries(query), page: String(filters.page-1) })}`}>Anterior</Link>}{filters.page*50 < total && <Link href={`/bandeja?${new URLSearchParams({ ...Object.fromEntries(query), page: String(filters.page+1) })}`}>Siguiente</Link>}</div>
       </aside>
