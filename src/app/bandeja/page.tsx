@@ -42,6 +42,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         {selected ? <>
           <header className="thread-heading"><div><strong>{selected.customer.fullName || selected.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{selected.customer.phone ?? "Número pendiente de identificar"}</small></div><span className={`badge ${selected.status === "HUMAN_HANDOFF" ? "warning" : "neutral"}`}>{selected.status === "HUMAN_HANDOFF" ? "Derivado a humano" : selected.status === "CLOSED" ? "Resuelta" : "Abierta"}</span></header>
           <ConversationChat key={selected.id} id={selected.id} initialPaused={selected.botPaused} />
+          <div className="inbox-management"><Link className="button" href={`/pedidos/nuevo?conversation=${selected.id}`}>Crear pedido desde este chat</Link></div>
           <section className="inbox-management">
             <h2>Gestión interna</h2>
             {selected.summary ? <p>{selected.summary}</p> : null}

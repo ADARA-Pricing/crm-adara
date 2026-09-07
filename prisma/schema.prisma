@@ -149,6 +149,7 @@ model Order {
   deliveryMethod  String
   paymentMethod   String
   recipientName   String
+  recipientPhone  String?
   deliveryAddress String
   postalCode      String?
   locality        String
