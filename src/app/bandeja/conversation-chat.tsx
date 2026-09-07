@@ -24,7 +24,7 @@ function MessageContent({ message }: { message: Message }) {
   </>;
 }
 
-export function ConversationChat({ id, initialPaused }: { id: string; initialPaused: boolean }) {
+export function ConversationChat({ id, initialPaused, refreshPage = true }: { id: string; initialPaused: boolean; refreshPage?: boolean }) {
   const router = useRouter();
   const cached = useInboxCache()[id];
   const [messages, setMessages] = useState<Message[]>(() => mergeInboxMessages([], cached?.messages ?? []));
@@ -65,7 +65,7 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
     if (older || !loaded.current) setCursor(result.nextToken);
     if (!loaded.current) {
       loaded.current = true;
-      if (result.profileName) router.refresh();
+      if (result.profileName && refreshPage) router.refresh();
       setTimeout(() => { if (body.current) body.current.scrollTop = body.current.scrollHeight; }, 50);
     }
   }
@@ -85,7 +85,7 @@ export function ConversationChat({ id, initialPaused }: { id: string; initialPau
     try {
       const result = await setConversationBotPaused(id, !paused);
       if (!result.ok) setError(result.error);
-      else { setPaused(!paused); setNotice(paused ? "El bot responderá al próximo mensaje; no contesta los pendientes automáticamente." : "Bot pausado. Podés atender esta conversación."); router.refresh(); }
+      else { setPaused(!paused); setNotice(paused ? "El bot responderá al próximo mensaje; no contesta los pendientes automáticamente." : "Bot pausado. Podés atender esta conversación."); if (refreshPage) router.refresh(); }
     } catch { setError("No se pudo confirmar el cambio. Actualizá el estado antes de responder."); }
     finally { busyRef.current = false; setBusy(false); }
   }

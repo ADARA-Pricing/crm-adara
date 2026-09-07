@@ -11,7 +11,8 @@ export const useInboxCache = () => useContext(InboxContext);
 
 // Memory is scoped to this authenticated page, never localStorage or a global
 // module cache that could expose a previous operator's conversations after logout.
-export function InboxPreloader({ conversations, initial, children }: {
+export function InboxPreloader({ conversations, initial, children, refreshPage = true }: {
+  refreshPage?: boolean;
   conversations: { id: string; profileName: string | null }[];
   initial: CachedInbox;
   children: React.ReactNode;
@@ -46,13 +47,13 @@ export function InboxPreloader({ conversations, initial, children }: {
         setCache(previous => ({ ...previous, ...Object.fromEntries(successful.map(r => [r.id, { messages: r.messages, nextToken: r.nextToken }])) }));
         const namesChanged = successful.some(r => r.profileName && r.profileName !== all.find(c => c.id === r.id)?.profileName);
         if (namesChanged || Date.now() - lastListRefresh > 30000) {
-          lastListRefresh = Date.now(); router.refresh();
+          lastListRefresh = Date.now(); if (refreshPage) router.refresh();
         }
       } catch { /* Keep cached chats visible; selected chat displays connection errors. */ }
       if (!stopped) timer = setTimeout(warm, offset < current.current.length ? 2500 : 10000);
     }
     void warm();
     return () => { stopped = true; clearTimeout(timer); };
-  }, [router]);
+  }, [router, refreshPage]);
   return <InboxContext.Provider value={cache}>{children}</InboxContext.Provider>;
 }

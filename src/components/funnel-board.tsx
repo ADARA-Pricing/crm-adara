@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { LeadDialog } from "./lead-dialog";
+import { LeadLoader } from "./lead-loader";
+import type { LeadDetail } from "@/lib/lead-detail";
 import { moveFunnelContact } from "@/app/embudo/actions";
 import { funnelStages, type FunnelStage } from "@/lib/funnel-stages";
 
@@ -13,6 +16,18 @@ type Contact = {
 
 export function FunnelBoard({ customers, category }: { customers: Contact[]; category?: string }) {
   const router = useRouter();
+  const params = useSearchParams();
+  const selectedId = params.get("lead");
+  // Memory belongs to this mounted board, never localStorage or a shared server cache.
+  const detailCache = useRef(new Map<string, LeadDetail>());
+  function openLead(id: string) {
+    const next = new URLSearchParams(params.toString()); next.set("lead", id); next.delete("conversation");
+    window.history.pushState(null, "", `/embudo?${next}`);
+  }
+  function closeLead() {
+    const next = new URLSearchParams(params.toString()); next.delete("lead"); next.delete("conversation");
+    window.history.replaceState(null, "", `/embudo${next.size ? `?${next}` : ""}`);
+  }
   const [people, setPeople] = useState(customers);
   const [dragging, setDragging] = useState<string | null>(null);
   const [target, setTarget] = useState<FunnelStage | null>(null);
@@ -46,8 +61,8 @@ export function FunnelBoard({ customers, category }: { customers: Contact[]; cat
         <div className="funnel-column-head"><div><h2>{title}</h2><p>{description}</p></div><span>{contacts.length}</span></div>
         <div className="funnel-cards">{contacts.map((person) => <div key={person.id} className={`funnel-person${dragging === person.id ? " funnel-dragging" : ""}`} draggable={!saving}
           role="button" tabIndex={0} aria-label={`Abrir ficha de ${person.fullName || person.phone || "contacto"}`}
-          onClick={event => { if (!draggedId.current && Date.now() - lastDragAt.current > 400 && !(event.target as HTMLElement).closest("select, label, button, a")) router.push(`/embudo?${new URLSearchParams({ ...(category ? { category } : {}), lead: person.id })}`, { scroll: false }); }}
-          onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); router.push(`/embudo?${new URLSearchParams({ ...(category ? { category } : {}), lead: person.id })}`, { scroll: false }); } }}
+          onClick={event => { if (!draggedId.current && Date.now() - lastDragAt.current > 400 && !(event.target as HTMLElement).closest("select, label, button, a")) openLead(person.id); }}
+          onKeyDown={event => { if (event.target === event.currentTarget && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); openLead(person.id); } }}
           onDragStart={(event) => { if (busy.current) { event.preventDefault(); return; } draggedId.current = person.id; setDragging(person.id); event.dataTransfer.setData("text/plain", person.id); event.dataTransfer.effectAllowed = "move"; }}
           onDragEnd={() => { lastDragAt.current = Date.now(); draggedId.current = null; setDragging(null); setTarget(null); }}>
           <strong>{person.fullName || "Contacto sin nombre"}</strong><span>{person.phone || "WhatsApp por identificar"}</span>
@@ -61,5 +76,5 @@ export function FunnelBoard({ customers, category }: { customers: Contact[]; cat
           <label className="funnel-stage-control">{saving === person.id ? "Guardando…" : "Mover a"}<select aria-label={`Etapa de ${person.fullName || person.phone || "contacto"}`} value={person.funnelStage} disabled={Boolean(saving)} onChange={(event) => void move(person.id, event.target.value as FunnelStage)}>{funnelStages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>)}{!contacts.length ? <div className="funnel-empty">{dragging ? "Soltá la tarjeta acá" : "Sin contactos"}</div> : null}</div>
       </article>;
-    })}</section></>;
+    })}</section>{selectedId && <LeadDialog onClose={closeLead}><LeadLoader key={selectedId} id={selectedId} preview={people.find(p => p.id === selectedId)} cache={detailCache.current} conversationId={params.get("conversation") || undefined} /></LeadDialog>}</>;
 }

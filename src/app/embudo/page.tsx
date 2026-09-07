@@ -2,13 +2,11 @@ import { CrmShell } from "@/components/crm-shell";
 import { FunnelBoard } from "@/components/funnel-board";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { LeadDialog } from "@/components/lead-dialog";
-import { LeadWorkspace } from "@/components/lead-workspace";
 
 export const dynamic = "force-dynamic";
 
 export default async function FunnelPage({ searchParams }: { searchParams: Promise<{ category?: string; lead?: string; conversation?: string }> }) {
-  const { category, lead, conversation } = await searchParams;
+  const { category } = await searchParams;
   await requireCrmUser();
   const categories = await prisma.product.findMany({ where: { category: { not: null } }, distinct: ["category"], select: { category: true } });
   const customers = await prisma.customer.findMany({ where: category ? { interestCategories: { has: category } } : undefined, orderBy: [{ lastMessageAt: "desc" }, { funnelUpdatedAt: "desc" }], take: 100, include: { _count: { select: { orders: true } } } });
@@ -24,6 +22,5 @@ export default async function FunnelPage({ searchParams }: { searchParams: Promi
       dateLabel: (customer.lastMessageAt || customer.funnelUpdatedAt).toLocaleDateString("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }),
       orderCount: customer._count.orders,
     }))} />
-    {lead && <LeadDialog closeHref={category ? `/embudo?category=${encodeURIComponent(category)}` : "/embudo"}><LeadWorkspace id={lead} conversationId={conversation} baseHref={`/embudo?${new URLSearchParams({ ...(category ? { category } : {}), lead })}`} /></LeadDialog>}
   </CrmShell>;
 }
