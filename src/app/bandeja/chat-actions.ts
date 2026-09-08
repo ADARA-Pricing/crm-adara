@@ -95,9 +95,9 @@ export async function sendConversationMessage(input: { conversationId: string; t
   try {
     const previous = await prisma.conversationEvent.findUnique({ where: { id: eventId } });
     if (previous) {
-      const p = previous.payload as { state?: string; text?: string; authorId?: string };
+      const p = previous.payload as { state?: string; text?: string; authorId?: string; messageId?: string };
       if (previous.conversationId !== conversationId || p.text !== text || p.authorId !== user.id) throw new Error("request conflict");
-      return p.state === "ACCEPTED" ? { ok: true as const } : { ok: false as const, uncertain: true, error: "El envío ya fue intentado. Actualizá el historial antes de intentar otro mensaje." };
+      return p.state === "ACCEPTED" ? { ok: true as const, messageId: p.messageId } : { ok: false as const, uncertain: true, error: "El envío ya fue intentado. Actualizá el historial antes de intentar otro mensaje." };
     }
     const conversation = await prisma.conversation.findUniqueOrThrow({ where: { id: conversationId } });
     if (!conversation.botPaused) return { ok: false as const, error: "Pausá el bot antes de responder manualmente." };
@@ -107,7 +107,7 @@ export async function sendConversationMessage(input: { conversationId: string; t
     // Durable reservation: even a timeout or process crash must not send the same request twice.
     await prisma.conversationEvent.create({ data: { id: eventId, conversationId, direction: "OUTGOING", type: "HUMAN_MESSAGE", payload: { state: "SENDING", text, author, authorId: user.id } } });
     reserved = true;
-    await prisma.$transaction(async tx => {
+    const messageId = await prisma.$transaction(async tx => {
       // Serialize manual sends with pause/resume to avoid a concurrent operator resuming mid-send.
       const rows = await tx.$queryRaw<{ botPaused: boolean }[]>`SELECT "botPaused" FROM crm."Conversation" WHERE id = ${conversationId} FOR UPDATE`;
       if (!rows[0]?.botPaused) throw new Error("Bot resumed before send");
@@ -122,9 +122,10 @@ export async function sendConversationMessage(input: { conversationId: string; t
       await tx.conversationEvent.update({ where: { id: eventId }, data: { payload: { state: "ACCEPTED", text, author, authorId: user.id, messageId: result.message.id } } });
       await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date(), lastOutgoingAt: new Date() } });
       if (draftId) await tx.automationRun.update({ where: { id: draftId }, data: { status: "ACCEPTED" } });
+      return result.message.id;
     }, { maxWait: 5000, timeout: 20000 });
     revalidatePath("/bandeja");
-    return { ok: true as const };
+    return { ok: true as const, messageId };
   } catch {
     if (reserved && draftId) await prisma.automationRun.updateMany({ where: { id: draftId, status: { in: ["DRAFT", "SENDING"] } }, data: { status: "UNCERTAIN" } }).catch(() => {});
     return { ok: false as const, uncertain: reserved, error: reserved

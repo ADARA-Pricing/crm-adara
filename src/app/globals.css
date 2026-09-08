@@ -240,6 +240,28 @@ tbody tr:hover { background: #fbf6f0; }
 .navigation-toggle { grid-column: 1 / -1; justify-self: start; margin: 12px 18px; }
 .navigation-collapsed { grid-template-columns: minmax(0, 1fr); }
 .navigation-collapsed .sidebar { display: none; }
+.inbox-unanswered { grid-column: 1 / -1; width: fit-content; border-radius: 6px; padding: 3px 7px; background: #fff0d7; color: #734006; font-size: 12px; font-weight: 600; }
+.inbox-contact:has(.inbox-unanswered) { border-left: 3px solid #ba771c; background: #fffaf1; }
+.inbox-contact.selected:has(.inbox-unanswered) { background: #f4e9d7; }
+.chat-stage { margin-left: auto; min-width: 180px; max-width: 100%; }
+.chat-stage label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; }
+.chat-stage select { max-width: 100%; padding: 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font: inherit; }
+.chat-stage small { display: block; max-width: 320px; font-size: 12px; }
+.funnel-view-switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.funnel-view-switch button[aria-pressed="true"] { background: var(--brand-dark); color: white; }
+.funnel-mobile-selector { display: none; }
+.funnel-board.funnel-board-focused { grid-template-columns: repeat(5, minmax(175px, 1fr)); overflow-x: auto; scrollbar-width: auto; scrollbar-color: #9e8674 #eee6df; }
+.funnel-board.funnel-closed-stages { grid-template-columns: repeat(2, minmax(175px, 1fr)); }
+.funnel-board-focused .funnel-column { min-width: 0; max-height: 75vh; overflow-y: auto; }
+.funnel-board-focused .funnel-column-head { position: sticky; top: 0; z-index: 1; background: #f1eeeb; padding: 12px 10px; }
+.funnel-board-focused .funnel-person { overflow-wrap: anywhere; }
+.funnel-board.funnel-board-focused.funnel-single-stage { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 860px) {
+  .funnel-mobile-selector { display: grid; gap: 6px; margin: 12px 0; }
+  .funnel-mobile-selector select { width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 8px; font: inherit; background: var(--paper); }
+  .funnel-board.funnel-board-focused { grid-template-columns: minmax(0, 1fr); overflow-x: hidden; }
+  .funnel-board-focused .funnel-column:not(.funnel-mobile-current) { display: none; }
+}
 .inbox-workspace .topbar { margin-bottom: 12px; }
 .inbox-workspace .inbox-filter-form { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 10px 12px; align-items: center; }
 .inbox-search-row { display: flex; align-items: flex-end; gap: 12px; flex: 1; }

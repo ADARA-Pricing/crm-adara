@@ -53,7 +53,7 @@ it("rechecks pause under lock and blocks a concurrent resume", async () => {
   expect(mocks.request).not.toHaveBeenCalled();
 });
 it("audits a manual send without reactivating the bot", async () => {
-  expect((await sendConversationMessage(input)).ok).toBe(true);
+  expect(await sendConversationMessage(input)).toMatchObject({ok:true,messageId:"sent-message"});
   expect(mocks.request).toHaveBeenCalledWith("messages", expect.objectContaining({ conversationId: "remote", payload: { text: "Hola" } }));
   expect(mocks.writeEvent).toHaveBeenCalledWith(expect.objectContaining({ data: { payload: expect.objectContaining({ state: "ACCEPTED", messageId: "sent-message", authorId: "operator" }) } }));
   expect(mocks.update).toHaveBeenCalledWith({ where: { id: "conversation" }, data: { updatedAt: expect.any(Date), lastOutgoingAt: expect.any(Date) } });

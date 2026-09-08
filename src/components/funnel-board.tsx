@@ -6,9 +6,11 @@ import { LeadLoader } from "./lead-loader";
 import type { LeadDetail } from "@/lib/lead-detail";
 import { moveFunnelContact } from "@/app/embudo/actions";
 import { funnelStages, type FunnelStage } from "@/lib/funnel-stages";
+import { lastContactLabel, visibleFunnelStages } from "@/lib/funnel-presentation";
 
 type Contact = {
   assigneeName?: string | null;
+  lastMessageAt?: string | null;
   interestCategories: string[];
   id: string; fullName: string | null; phone: string | null; locality: string | null; postalCode: string | null;
   deliveryPreference: string | null; deliveryAddress: string | null; lastMessagePreview: string | null; funnelNote: string | null;
@@ -19,6 +21,16 @@ export function FunnelBoard({ customers, category, visibleStage }: { customers: 
   const router = useRouter();
   const params = useSearchParams();
   const selectedId = params.get("lead");
+  const columns = visibleFunnelStages(params.get("viewGroup"), visibleStage);
+  const mobileStage = columns.find(([stage]) => stage === params.get("mobileStage"))?.[0] || columns[0]?.[0];
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); }, []);
+  function changeView(key: string, value: string) {
+    const next = new URLSearchParams(params.toString());
+    next.set(key, value);
+    if (key === "viewGroup") { next.delete("viewStage"); next.delete("mobileStage"); next.delete("page"); router.push(`/embudo?${next}`, { scroll: false }); }
+    else window.history.replaceState(null, "", `/embudo?${next}`);
+  }
   // Memory belongs to this mounted board, never localStorage or a shared server cache.
   const detailCache = useRef(new Map<string, LeadDetail>());
   function openLead(id: string) {
@@ -53,10 +65,12 @@ export function FunnelBoard({ customers, category, visibleStage }: { customers: 
     } catch { setMessage("No se pudo guardar el cambio. Volvé a intentarlo."); router.refresh(); }
     finally { busy.current = false; setSaving(null); }
   }
-  return <><p className="funnel-feedback" role="status">{message || "Arrastrá una tarjeta a otra columna o usá su selector de etapa."}</p>
-    <section className={`funnel-board${visibleStage ? " funnel-single-stage" : ""}`} aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{funnelStages.filter(([stage]) => !visibleStage || visibleStage === stage).map(([stage, title, description]) => {
+  return <><nav className="funnel-view-switch" aria-label="Vista del embudo"><button className="button secondary" aria-pressed={!visibleStage && params.get("viewGroup") !== "closed"} onClick={() => changeView("viewGroup", "active")}>Etapas activas</button><button className="button secondary" aria-pressed={!visibleStage && params.get("viewGroup") === "closed"} onClick={() => changeView("viewGroup", "closed")}>Finalizados y abandonados</button></nav>
+    <label className="funnel-mobile-selector">Etapa en pantalla<select value={mobileStage} onChange={event => changeView("mobileStage", event.target.value)}>{columns.map(([stage, title]) => <option key={stage} value={stage}>{title} ({people.filter(person => person.funnelStage === stage).length})</option>)}</select></label>
+    <p className="funnel-feedback" role="status">{message || "Arrastrá una tarjeta o usá su selector. Los contadores corresponden a los contactos cargados."}</p>
+    <section className={`funnel-board funnel-board-focused${visibleStage ? " funnel-single-stage" : ""}${columns.length === 2 ? " funnel-closed-stages" : ""}`} aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{columns.map(([stage, title, description]) => {
       const contacts = people.filter((person) => person.funnelStage === stage);
-      return <article key={stage} className={`funnel-column${target === stage ? " funnel-drop-target" : ""}`}
+      return <article key={stage} className={`funnel-column${mobileStage === stage ? " funnel-mobile-current" : ""}${target === stage ? " funnel-drop-target" : ""}`}
         onDragOver={(event) => { if (draggedId.current && !busy.current) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setTarget(stage); } }}
         onDrop={(event) => { event.preventDefault(); const id = event.dataTransfer.getData("text/plain") || draggedId.current; draggedId.current = null; setDragging(null); setTarget(null); if (id) void move(id, stage); }}>
         <div className="funnel-column-head"><div><h2>{title}</h2><p>{description}</p></div><span>{contacts.length}</span></div>
@@ -74,6 +88,7 @@ export function FunnelBoard({ customers, category, visibleStage }: { customers: 
           {person.funnelNote ? <small>{person.funnelNote}</small> : null}
           <small>{person.interestCategories.join(" · ")}</small>
           <small>Responsable: {person.assigneeName || "Sin asignar"}</small>
+          <small>{now === null ? "Último mensaje: pendiente de calcular" : lastContactLabel(person.lastMessageAt ?? null, now)}</small>
           <footer>{person.orderCount ? `${person.orderCount} pedido(s)` : "Sin pedido"}<time>{person.dateLabel}</time></footer>
           <label className="funnel-stage-control">{saving === person.id ? "Guardando…" : "Mover a"}<select aria-label={`Etapa de ${person.fullName || person.phone || "contacto"}`} value={person.funnelStage} disabled={Boolean(saving)} onChange={(event) => void move(person.id, event.target.value as FunnelStage)}>{funnelStages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>)}{!contacts.length ? <div className="funnel-empty">{dragging ? "Soltá la tarjeta acá" : "Sin contactos"}</div> : null}</div>

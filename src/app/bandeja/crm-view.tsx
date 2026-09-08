@@ -7,6 +7,7 @@ import { manageConversation } from "./actions";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ConversationChat } from "./conversation-chat";
+import { ChatStage } from "./chat-stage";
 import { InboxPreloader } from "./inbox-preloader";
 import { InboxSelection, InboxContact, InboxPanel } from "./inbox-selection";
 import { InboxFilters } from "@/components/inbox-filters";
@@ -14,6 +15,8 @@ import { ReplyWindow } from "@/components/reply-window";
 import { inboxWhere } from "@/lib/inbox-filters";
 import { needsReply } from "@/lib/conversation-activity";
 import { parseInboxSnapshot } from "@/lib/inbox-cache";
+import { inboxPriorityPage } from "@/lib/inbox-priority";
+import type { Prisma } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +32,21 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   if (filters.attention === "pending") where.AND = [{ lastIncomingAt: { not: null } }, { OR: [{ lastOutgoingAt: null }, { lastIncomingAt: { gt: prisma.conversation.fields.lastOutgoingAt } }] }];
   if (filters.attention === "answered") where.AND = [{ lastIncomingAt: { not: null } }, { lastOutgoingAt: { gte: prisma.conversation.fields.lastIncomingAt } }];
   const include = { messageCache: true, events: { where: { direction: "INTERNAL" }, orderBy: { createdAt: "desc" as const }, take: 30 }, customer: { include: { assignee: true, _count: { select: { orders: true } } } } };
+  async function priorityConversations() {
+    const unanswered: Prisma.ConversationWhereInput = { AND: [{ lastIncomingAt: { not: null } }, { OR: [{ lastOutgoingAt: null }, { lastIncomingAt: { gt: prisma.conversation.fields.lastOutgoingAt } }] }] };
+    const answered: Prisma.ConversationWhereInput = { OR: [{ lastIncomingAt: null }, { lastOutgoingAt: { gte: prisma.conversation.fields.lastIncomingAt } }] };
+    const pendingWhere = { AND: [where, unanswered] };
+    const count = await prisma.conversation.count({ where: pendingWhere });
+    const slice = inboxPriorityPage(count, filters.page);
+    const orderBy: Prisma.ConversationOrderByWithRelationInput[] = [{ lastIncomingAt: { sort: filters.sort === "oldest" ? "asc" : "desc", nulls: "last" } }, { id: "asc" }];
+    const [pending, rest] = await Promise.all([
+      slice.pendingTake ? prisma.conversation.findMany({where: pendingWhere, skip: slice.pendingSkip, take: slice.pendingTake, orderBy, include}) : [],
+      slice.restTake ? prisma.conversation.findMany({where: {AND:[where,answered]}, skip:slice.restSkip,take:slice.restTake,orderBy,include}) : [],
+    ]);
+    return [...pending, ...rest];
+  }
   const [conversations, total, members, categories, candidates] = await Promise.all([
-    prisma.conversation.findMany({ take: 50, skip: (filters.page-1)*50, where, orderBy: [{ lastIncomingAt: { sort: filters.sort === "oldest" ? "asc" : "desc", nulls: "last" } }, { id: "asc" }], include }),
+    priorityConversations(),
     prisma.conversation.count({ where }),
     prisma.userProfile.findMany({ where: { isActive: true }, select: { id: true, displayName: true, email: true } }),
     prisma.product.findMany({ where: { category: { not: null } }, distinct: ["category"], select: { category: true } }),
@@ -54,6 +70,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         <div className="inbox-list-heading"><strong>Conversaciones</strong><span>{total} · página {filters.page}</span></div>
         {conversations.length ? conversations.map((item) => <InboxContact key={item.id} id={item.id} href={`/bandeja?${query}&conversation=${item.id}`}>
           <strong className="inbox-contact-name" title={item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong>
+          {needsReply(item) && <span className="inbox-unanswered">Sin contestar</span>}
           <small className="inbox-contact-date">{item.updatedAt.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", timeZone: CRM_TIME_ZONE })}</small>
           <small className="inbox-contact-phone">{item.customer.phone ?? "WhatsApp por identificar"}</small>
           <ReplyWindow compact activity={{ channel: item.channel, lastIncomingAt: item.lastIncomingAt?.toISOString() ?? null, lastOutgoingAt: item.lastOutgoingAt?.toISOString() ?? null }} /><small className="inbox-contact-meta" title={`${stageLabels[item.customer.funnelStage]} · ${item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · ${item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}`}>{stageLabels[item.customer.funnelStage]} · {item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · {item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}</small><p title={item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}>{item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}</p>
@@ -63,7 +80,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       {[...new Map([...conversations, ...(selected ? [selected] : [])].map(item => [item.id, item])).values()].map(selected => <InboxPanel key={selected.id} id={selected.id}><article className="inbox-thread">
         {selected ? <>
           <header className="thread-heading"><div><strong>{selected.customer.fullName || selected.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{selected.customer.phone ?? "Número pendiente de identificar"}</small></div><span className={`badge ${selected.status === "HUMAN_HANDOFF" ? "warning" : "neutral"}`}>{selected.status === "HUMAN_HANDOFF" ? "Derivado a humano" : selected.status === "CLOSED" ? "Resuelta" : "Abierta"}</span></header>
-          <ConversationChat key={selected.id} id={selected.id} initialPaused={selected.botPaused} channel={selected.channel} refreshPage={false} suggestedDraft={draft && draft.id === raw.draft && selected.id === raw.conversation ? draft : undefined} />
+          <ConversationChat stageControl={<ChatStage conversationId={selected.id} stage={selected.customer.funnelStage} updatedAt={selected.customer.funnelUpdatedAt.toISOString()} />} key={selected.id} id={selected.id} initialPaused={selected.botPaused} channel={selected.channel} refreshPage={false} suggestedDraft={draft && draft.id === raw.draft && selected.id === raw.conversation ? draft : undefined} />
           <div className="inbox-management"><Link className="button" href={`/pedidos/nuevo?conversation=${selected.id}`}>Crear pedido desde este chat</Link></div>
           <details className="inbox-management">
             <summary>Gestión interna y notas</summary>

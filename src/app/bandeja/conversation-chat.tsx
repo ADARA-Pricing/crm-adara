@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BotpressMessage } from "@/lib/botpress";
-import { readConversation, sendConversationMessage, setConversationBotPaused } from "./chat-actions";
+import { sendConversationMessage, setConversationBotPaused } from "./chat-actions";
+import type { readConversation } from "./chat-actions";
 import { useInboxCache, useStoreInboxSnapshot } from "./inbox-preloader";
 import { mergeInboxMessages } from "@/lib/inbox-cache";
 import { messageActivity } from "@/lib/conversation-activity";
 import { ReplyWindow } from "@/components/reply-window";
 import { SafeMessage } from "@/components/safe-message";
 import { crmDate } from "@/lib/crm-display";
+import { shouldSubmitChat } from "@/lib/chat-keyboard";
 
 type Message = BotpressMessage & { author: string | null };
 function safeUrl(value: unknown) {
@@ -28,7 +30,7 @@ function MessageContent({ message }: { message: Message }) {
   </>;
 }
 
-export function ConversationChat({ id, initialPaused, refreshPage = true, channel = "whatsapp", suggestedDraft }: { id: string; initialPaused: boolean; refreshPage?: boolean; channel?: string; suggestedDraft?: { id: string; content: string } }) {
+export function ConversationChat({ id, initialPaused, refreshPage = true, channel = "whatsapp", suggestedDraft, stageControl }: { id: string; initialPaused: boolean; refreshPage?: boolean; channel?: string; suggestedDraft?: { id: string; content: string }; stageControl?: React.ReactNode }) {
   const router = useRouter();
   const cached = useInboxCache()[id];
   const storeSnapshot = useStoreInboxSnapshot();
@@ -40,6 +42,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
   const [error, setError] = useState("");
   const [historyError, setHistoryError] = useState("");
   const [notice, setNotice] = useState("");
+  const [pendingSend, setPendingSend] = useState<{ text: string; status: string } | null>(null);
   const [text, setText] = useState("");
   const [draftId, setDraftId] = useState<string | undefined>();
   const [usedDraft, setUsedDraft] = useState<string | undefined>();
@@ -61,7 +64,11 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     if (refreshing.current) return;
     refreshing.current = true;
     const expectedVersion = version.current;
-    const result = await readConversation(id, older ? cursor : undefined).catch(() => ({ ok: false as const, error: "No se pudo actualizar el historial. Revisá tu conexión y tu sesión." }));
+    const query = new URLSearchParams({ id });
+    if (older && cursor) query.set("cursor", cursor);
+    const result: Awaited<ReturnType<typeof readConversation>> = await fetch(`/api/inbox/messages?${query}`, { cache: "no-store", signal: AbortSignal.timeout(25000) })
+      .then(async response => { if (!response.ok) throw new Error("History unavailable"); return response.json(); })
+      .catch(() => ({ ok: false as const, error: "No se pudo actualizar el historial. Revisá tu conexión y tu sesión." }));
     refreshing.current = false;
     if (!alive.current || expectedVersion !== version.current) return;
     setLoading(false);
@@ -102,31 +109,46 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     if (busyRef.current || !text.trim() || !paused) return;
     busyRef.current = true; setBusy(true); version.current++; setError(""); setNotice("");
     const content = text.trim();
+    const sentAt = new Date().toISOString();
+    setPendingSend({ text: content, status: "Enviando…" });
+    setText("");
+    setTimeout(() => { if (body.current) body.current.scrollTop = body.current.scrollHeight; }, 0);
     if (request.current?.text !== content) request.current = { text: content, id: crypto.randomUUID() };
     try {
       const result = await sendConversationMessage({ conversationId: id, text: content, requestId: request.current.id, draftId });
-      if (!result.ok) setError(result.error);
-      else { setText(""); setUsedDraft(draftId); setDraftId(undefined); request.current = undefined; setNotice("Mensaje aceptado por Botpress para envío. Esto no confirma entrega o lectura."); }
-      await refresh();
+      if (!result.ok) {
+        setError(result.error);
+        setPendingSend({ text: content, status: "uncertain" in result && result.uncertain ? "Envío sin confirmar: revisá el historial antes de repetirlo" : "No enviado" });
+        setText(current => current || content);
+      } else {
+        if (result.messageId) {
+          const accepted: Message = { id: result.messageId, conversationId: id, userId: "", createdAt: sentAt, direction: "outgoing", type: "text", payload: { text: content }, author: "Vos" };
+          setMessages(current => mergeInboxMessages(current, [accepted]));
+          storeSnapshot(id, { messages: mergeInboxMessages(messages, [accepted]), nextToken: cursor });
+        }
+        setPendingSend(null); setUsedDraft(draftId); setDraftId(undefined); request.current = undefined;
+        setNotice("Mensaje aceptado para envío; entrega y lectura sin confirmar.");
+      }
       setTimeout(() => { if (body.current) body.current.scrollTop = body.current.scrollHeight; }, 50);
-    } catch { setError("No pudimos confirmar el envío. Revisá el historial antes de repetirlo."); }
-    finally { busyRef.current = false; setBusy(false); }
+    } catch { setPendingSend({text:content,status:"Envío sin confirmar"}); setText(current => current || content); setError("No pudimos confirmar el envío. Revisá el historial antes de repetirlo."); }
+    finally { busyRef.current = false; setBusy(false); void refresh(); }
   }
   return <section className="conversation-chat" aria-label="Chat de la conversación">
     <ReplyWindow activity={{ ...messageActivity(messages), channel }} />
     {suggestedDraft && usedDraft !== suggestedDraft.id && <section className="context-note"><p>Borrador de regla: {suggestedDraft.content}</p><button className="button secondary" disabled={busy || !paused || !!text} onClick={() => { setText(suggestedDraft.content); setDraftId(suggestedDraft.id); }}>Usar borrador (no envía)</button></section>}
-    <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button></div>
+    <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button>{stageControl}</div>
     <div className="chat-messages" ref={body} aria-label="Historial de mensajes" aria-busy={loading}>
       {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}
       {loading ? <p className="muted">Cargando conversación…</p> : !messages.length && !historyError ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
       {historyError ? <p role="alert">{historyError}</p> : null}
       {messages.map(m => <div key={m.id} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time dateTime={m.createdAt}>{crmDate(m.createdAt, true)}</time></div>)}
+      {pendingSend && <div className="chat-bubble outgoing" role="status"><small>{pendingSend.status}</small><SafeMessage text={pendingSend.text} /></div>}
     </div>
     <form className="chat-composer" onSubmit={send}>
       <label htmlFor="reply">Respuesta al cliente</label>
-      <textarea id="reply" rows={2} maxLength={4000} value={text} onChange={e => setText(e.target.value)} disabled={busy || !paused} placeholder={paused ? "Escribí tu respuesta…" : "Pausá el bot para responder desde acá."} />
+      <textarea id="reply" rows={2} maxLength={4000} value={text} onChange={e => setText(e.target.value)} onKeyDown={event => { if (shouldSubmitChat({ ...event, isComposing: event.nativeEvent.isComposing, keyCode: event.nativeEvent.keyCode })) { event.preventDefault(); if (!busyRef.current && paused && text.trim()) event.currentTarget.form?.requestSubmit(); } }} disabled={!paused} placeholder={paused ? "Escribí tu respuesta…" : "Pausá el bot para responder desde acá."} />
       <button className="button" disabled={busy || !paused || !text.trim()}>Enviar mensaje</button>
-      <small>El envío manual requiere un mensaje del cliente en las últimas 24 h. No reactiva el bot.</small>
+      <small>Enter para enviar · Shift+Enter para salto de línea. El envío manual requiere un mensaje del cliente en las últimas 24 h. No reactiva el bot.</small>
       {error ? <p role="alert">{error}</p> : null}{notice ? <p role="status">{notice}</p> : null}
     </form>
   </section>;
