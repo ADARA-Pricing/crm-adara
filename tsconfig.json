@@ -37,6 +37,7 @@
   ],
   "exclude": [
     "node_modules",
-    "botpress-agent"
+    "botpress-agent",
+    "**/*.test.ts"
   ]
 }
