@@ -1,0 +1,14 @@
+import { beforeEach, expect, it, vi } from "vitest";
+const m = vi.hoisted(() => ({ auth: vi.fn(), normalize: vi.fn(), upsert: vi.fn(), remove: vi.fn(), find: vi.fn() }));
+vi.mock("@/lib/auth", () => ({ requireCrmUser: m.auth }));
+vi.mock("@/lib/avatar-image", () => ({ normalizeAvatar: m.normalize }));
+vi.mock("@/lib/prisma", () => ({ prisma: { operatorAvatarPhoto: { upsert: m.upsert, deleteMany: m.remove, findUnique: m.find } } }));
+import { POST, GET, DELETE } from "./route";
+const request = (method = "POST", body?: Uint8Array) => new Request("https://crm.test/api/profile/avatar?id=other", { method, headers: { origin: "https://crm.test", "content-type": "application/octet-stream" }, body });
+beforeEach(() => { vi.resetAllMocks(); m.auth.mockResolvedValue({ id: "me" }); m.normalize.mockResolvedValue(Buffer.from("normalized")); });
+it("uploads exclusively to signed-in user", async () => { expect((await POST(request("POST", new Uint8Array([1])))).status).toBe(200); expect(m.upsert).toHaveBeenCalledWith(expect.objectContaining({ where: { userId: "me" } })); });
+it("rejects oversized bodies before decoding", async () => { expect((await POST(request("POST", new Uint8Array(750001)))).status).toBe(413); expect(m.normalize).not.toHaveBeenCalled(); });
+it("rejects foreign origin", async () => { expect((await POST(new Request("https://crm.test/api/profile/avatar", { method: "POST", headers: { origin: "https://evil.test" } }))).status).toBe(403); expect(m.auth).not.toHaveBeenCalled(); });
+it("requires login to view images", async () => { m.auth.mockRejectedValue(new Error("auth")); await expect(GET(request("GET"))).rejects.toThrow(); expect(m.find).not.toHaveBeenCalled(); });
+it("deletes only own photo", async () => { await DELETE(request("DELETE")); expect(m.remove).toHaveBeenCalledWith({ where: { userId: "me" } }); });
+it("serves only private non-cacheable images", async () => { m.find.mockResolvedValue({ image: Buffer.from("photo") }); const response = await GET(request("GET")); expect(response.headers.get("cache-control")).toBe("private, no-store"); expect(response.headers.get("content-type")).toBe("image/webp"); });

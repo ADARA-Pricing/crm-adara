@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useState, type ReactNode } from "react";
 import { NavigationIcon } from "./navigation-icon";
+import { OperatorAvatar } from "./operator-avatar";
 import "./crm-navigation.css";
 
 const groups = [
@@ -16,8 +17,8 @@ const groups = [
   { label: "Marketing", links: [["Meta Ads", "/marketing"]] }
 ];
 
-export function CrmFrame({ children, name, role, signOut }: {
-  children?: ReactNode; name: string; role: string; signOut: () => Promise<void>;
+export function CrmFrame({ children, name, role, signOut, avatarColor, userId }: {
+  children?: ReactNode; name: string; role: string; signOut: () => Promise<void>; avatarColor?: string; userId?: string;
 }) {
   const pathname = usePathname();
   const [menu, setMenu] = useState<"auto" | "open" | "closed">("auto");
@@ -38,7 +39,7 @@ export function CrmFrame({ children, name, role, signOut }: {
         })}
         </details>
       </nav>)}</div>
-      <div className="sidebar-footer"><strong>{name}</strong><span>{role === "ADMIN" ? "Administrador" : role === "SALES" ? "Ventas" : "Logística"}</span><form action={signOut}><button type="submit">Cerrar sesión</button></form></div>
+      <div className="sidebar-footer"><Link href="/perfil" title="Editar mi perfil"><OperatorAvatar userId={userId} name={name} color={avatarColor} /> Mi perfil</Link><strong>{name}</strong><span>{role === "ADMIN" ? "Administrador" : role === "SALES" ? "Ventas" : "Logística"}</span><form action={signOut}><button type="submit">Cerrar sesión</button></form></div>
     </aside>
     <main className="workspace" id="crm-content" tabIndex={-1}>{children}</main>
   </div>;

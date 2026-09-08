@@ -11,6 +11,7 @@ import { messageActivity } from "@/lib/conversation-activity";
 import { ReplyWindow } from "@/components/reply-window";
 import { SafeMessage } from "@/components/safe-message";
 import { crmDate } from "@/lib/crm-display";
+import { VisibleReadTracker } from "./operator-reads";
 import { shouldSubmitChat } from "@/lib/chat-keyboard";
 
 type Message = BotpressMessage & { author: string | null };
@@ -134,6 +135,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     finally { busyRef.current = false; setBusy(false); void refresh(); }
   }
   return <section className="conversation-chat" aria-label="Chat de la conversación">
+    <VisibleReadTracker id={id} revision={messages.map(m => m.id).join(",")} />
     <ReplyWindow activity={{ ...messageActivity(messages), channel }} />
     {suggestedDraft && usedDraft !== suggestedDraft.id && <section className="context-note"><p>Borrador de regla: {suggestedDraft.content}</p><button className="button secondary" disabled={busy || !paused || !!text} onClick={() => { setText(suggestedDraft.content); setDraftId(suggestedDraft.id); }}>Usar borrador (no envía)</button></section>}
     <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button>{stageControl}</div>
@@ -141,7 +143,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
       {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}
       {loading ? <p className="muted">Cargando conversación…</p> : !messages.length && !historyError ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
       {historyError ? <p role="alert">{historyError}</p> : null}
-      {messages.map(m => <div key={m.id} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time dateTime={m.createdAt}>{crmDate(m.createdAt, true)}</time></div>)}
+      {messages.map(m => <div key={m.id} data-incoming-id={m.direction === "incoming" ? m.id : undefined} className={`chat-bubble ${m.direction === "incoming" ? "incoming" : "outgoing"}`}><small>{m.direction === "incoming" ? "Cliente" : m.author ? `Equipo · ${m.author}` : "Adara / Bot"}</small><MessageContent message={m} /><time dateTime={m.createdAt}>{crmDate(m.createdAt, true)}</time></div>)}
       {pendingSend && <div className="chat-bubble outgoing" role="status"><small>{pendingSend.status}</small><SafeMessage text={pendingSend.text} /></div>}
     </div>
     <form className="chat-composer" onSubmit={send}>

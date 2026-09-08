@@ -1,0 +1,6 @@
+CREATE TABLE crm."OperatorAvatarPhoto" (
+  "userId" TEXT PRIMARY KEY REFERENCES crm."UserProfile"("id") ON DELETE CASCADE,
+  "image" BYTEA NOT NULL,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE crm."OperatorAvatarPhoto" ENABLE ROW LEVEL SECURITY;

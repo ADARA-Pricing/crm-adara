@@ -66,12 +66,27 @@ model UserProfile {
   id          String   @id
   email       String   @unique
   displayName String?
+  avatarColor String @default("brown")
   role        UserRole @default(SALES)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   assignedTasks Task[] @relation("TaskAssignee")
   assignedCustomers Customer[] @relation("CustomerAssignee")
+}
+
+model OperatorAvatarPhoto {
+  userId String @id
+  image Bytes
+  updatedAt DateTime @updatedAt
+}
+
+model OperatorMessageRead {
+  userId String
+  conversationId String
+  messageId String
+  readAt DateTime @default(now())
+  @@id([userId, conversationId, messageId])
 }
 
 model Customer {

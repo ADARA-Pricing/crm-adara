@@ -1,3 +1,5 @@
+import { OperatorAvatar } from "@/components/operator-avatar";
+import { UnreadCount } from "./operator-reads";
 import Link from "next/link";
 import { Suspense } from "react";
 import { InboxShortcuts, InboxShortcutsLoading } from "@/components/inbox-shortcuts";
@@ -74,6 +76,8 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         <div className="inbox-list-heading"><strong>Conversaciones</strong><span>{total} · página {filters.page}</span></div>
         {conversations.length ? conversations.map((item) => <InboxContact key={item.id} id={item.id} href={`/bandeja?${query}&conversation=${item.id}`}>
           <strong className="inbox-contact-name" title={item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong>
+          <UnreadCount id={item.id} />
+          {item.customer.assignee && <span className="contact-owner-avatar" title={`Responsable: ${item.customer.assignee.displayName || item.customer.assignee.email}`}><OperatorAvatar userId={item.customer.assignee.id} name={item.customer.assignee.displayName || item.customer.assignee.email} color={item.customer.assignee.avatarColor} /></span>}
           {needsReply(item) && <span className="inbox-unanswered">Sin contestar</span>}
           <small className="inbox-contact-date">{item.updatedAt.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", timeZone: CRM_TIME_ZONE })}</small>
           <small className="inbox-contact-phone">{item.customer.phone ?? "WhatsApp por identificar"}</small>

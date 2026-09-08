@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { assignLead } from "@/app/clientes/team-actions";
 
-type Member = { id: string; displayName: string | null; email: string };
+import { OperatorAvatar } from "@/components/operator-avatar";
+type Member = { id: string; displayName: string | null; email: string; avatarColor?: string };
 export function ChatOwner({ customerId, owner, userId, members }: { customerId: string; owner: Member | null; userId: string; members: Member[] }) {
   const router = useRouter();
   const [current, setCurrent] = useState(owner?.id || "");
@@ -26,7 +27,7 @@ export function ChatOwner({ customerId, owner, userId, members }: { customerId: 
     finally { busy.current = false; setSaving(false); }
   }
   return <section className="chat-owner" aria-label="Responsable de atención">
-    <div><strong title={assigned?.email}>Responsable: {assigned ? assigned.displayName || assigned.email : "Sin asignar"}</strong>
+    <div>{assigned && <OperatorAvatar userId={assigned.id} name={assigned.displayName || assigned.email} color={assigned.avatarColor} />} <strong title={assigned?.email}>Responsable: {assigned ? assigned.displayName || assigned.email : "Sin asignar"}</strong>
       {current && current !== userId && <small className="chat-owner-warning">Asignado a otro operador. Esto no indica si está conectado.</small>}</div>
     <div className="chat-owner-actions"><label>Responsable<select value={chosen} disabled={saving} onChange={event => setChosen(event.target.value)}><option value="">Sin asignar</option>{choices.map(m => <option key={m.id} value={m.id}>{m.displayName || m.email}</option>)}</select></label>
       <button className="button secondary" disabled={saving || chosen === current} onClick={() => void save(chosen)}>Guardar responsable</button>
