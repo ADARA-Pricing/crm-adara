@@ -1,4 +1,5 @@
 import React from "react";
+import { InboxLiveSearch } from "./inbox-live-search";
 import Link from "next/link";
 import { funnelStages } from "@/lib/funnel-stages";
 import type { inboxFilterSchema } from "@/lib/inbox-filters";
@@ -7,9 +8,7 @@ export function InboxFilters({ filters, members, categories }: { filters: z.infe
   const extraCount = [filters.stage, filters.category, filters.window, filters.bought, filters.sort !== "recent" ? filters.sort : ""].filter(Boolean).length;
   return <form action="/bandeja" className="panel inbox-filter-form">
     <div className="inbox-search-row task-form">
-    <label>Buscar<input name="q" defaultValue={filters.q} placeholder="Nombre, teléfono o localidad" /></label>
-    <button className="button">Buscar</button>
-    <Link href="/bandeja" scroll={false}>Limpiar</Link>
+    <InboxLiveSearch initial={filters.q} />
     </div>
     <details className="inbox-filter-drawer">
     <summary>Filtros{[filters.owner, filters.attention, filters.filter].filter(Boolean).length + extraCount ? ` (${[filters.owner, filters.attention, filters.filter].filter(Boolean).length + extraCount} activos)` : ""}</summary>

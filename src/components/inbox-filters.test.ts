@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
+vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 import { inboxFilterSchema } from "@/lib/inbox-filters";
 import { InboxFilters } from "./inbox-filters";
 
@@ -8,6 +9,7 @@ it("keeps only search outside the collapsed filters to prioritize chat space", (
   const html = renderToStaticMarkup(createElement(InboxFilters, { filters: inboxFilterSchema.parse({}), members: [], categories: [] }));
   const primary = html.split("<details")[0];
   expect(primary).toContain('name="q"');
+  expect(primary).not.toContain("<button");
   for (const name of ["owner", "attention", "filter", "stage", "category", "window", "bought", "sort"]) {
     expect(primary).not.toContain(`name="${name}"`);
     expect(html).toContain(`name="${name}"`);

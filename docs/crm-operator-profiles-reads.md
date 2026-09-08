@@ -1,5 +1,9 @@
 # Perfiles y lectura individual del CRM
 
+## Sustitución solicitada por el usuario
+
+Se retira UnreadCount de la lista y VisibleReadTracker del chat. Ya no se consulta ni registra lectura desde la bandeja; se preservan tabla y endpoint existentes sin borrar datos. En su lugar, PendingReply indica «Sin responder» usando últimos mensajes entrante/saliente, combinando cache y fechas del servidor para no perder actividad ante historial parcial. Una respuesta del bot o equipo posterior elimina el indicador. Sin número ni equivalencia con no leído. Bordes de disponibilidad preservados. Cambio local, pendiente publicación.
+
 ## Corrección de visibilidad y ventana (local)
 
 El registro ya no depende de document.hasFocus ni de callbacks de IntersectionObserver: revisa la intersección de burbujas con el área visible del chat y ventana mientras la pestaña está visible. Solo descarta reintentos de IDs confirmados en readIds del servidor; una respuesta available=false no cuenta como guardado. Contadores siguen representando lecturas de este operador en CRM, no lecturas externas de WhatsApp. No se oculta un contador para fingir éxito de escritura.

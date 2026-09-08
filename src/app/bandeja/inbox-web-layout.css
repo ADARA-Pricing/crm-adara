@@ -1,8 +1,9 @@
 /* Inbox presentation only. Filters, messaging and CRM actions keep their contracts. */
-.inbox-workspace .inbox-contact[data-availability] { border: 1px solid #b9b5af; border-left-width: 4px; margin: 3px 4px; border-radius: 7px; }
-.inbox-workspace .inbox-contact[data-availability="available"] { border-color: #247a52; }
-.inbox-workspace .inbox-contact[data-availability="warning"] { border-color: #a66a16; }
-.inbox-workspace .inbox-contact[data-availability="expired"] { border-color: #b33a3a; }
+.inbox-workspace .pending-reply-label { grid-column: 2 / -1; grid-row: 3; justify-self: start; background: #fff0d7; color: #734006; font-size: 11px; font-weight: 600; padding: 3px 7px; border-radius: 4px; }
+.inbox-workspace .inbox-contact[data-availability] { border: 0; box-shadow: inset 2px 0 #bbb7b1; margin: 3px 6px; border-radius: 7px; }
+.inbox-workspace .inbox-contact[data-availability="available"] { box-shadow: inset 2px 0 #89b69f; }
+.inbox-workspace .inbox-contact[data-availability="warning"] { box-shadow: inset 2px 0 #d0b07d; }
+.inbox-workspace .inbox-contact[data-availability="expired"] { box-shadow: inset 2px 0 #d19a9a; }
 .availability-legend { padding: 8px 12px; color: #706b66; font-size: 11px; line-height: 1.4; }
 .inbox-workspace .inbox-contact { grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; padding: 14px 12px; gap: 6px 12px; min-height: 80px; align-items: center; border-left: 0; }
 .inbox-workspace .contact-owner-avatar { grid-column: 1; grid-row: 1 / 3; display: grid; place-items: center; }
@@ -17,13 +18,21 @@
 .operator-unread { grid-column: 2; display: inline-grid; place-items: center; justify-self: end; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 12px; background: #247a52; color: white; font-size: 12px; font-weight: 600; }
 .persistent-shell > .workspace:has(.inbox-workspace) { padding: 12px; overflow: hidden; }
 .inbox-workspace { height: 100%; min-height: 0; }
-.inbox-workspace .inbox-layout { height: 100%; min-height: 0; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); align-items: stretch; overflow: hidden; border-radius: 8px; }
+.inbox-workspace .inbox-layout { height: 100%; min-height: 0; grid-template-columns: clamp(320px, 34%, 440px) minmax(0, 1fr); align-items: stretch; overflow: hidden; border-radius: 8px; }
 .inbox-workspace .inbox-list { display: flex; flex-direction: column; position: static; min-height: 0; max-height: none; overflow: hidden; background: #fff; }
 .inbox-left-tools { padding: 12px; flex-shrink: 0; max-height: 50%; overflow: auto; border-bottom: 1px solid var(--line); }
 .inbox-left-tools h1 { font-size: 20px; }
 .inbox-left-tools .inbox-filter-form { padding: 0; border: 0; border-radius: 0; }
 .inbox-left-tools .inbox-search-row { flex-wrap: wrap; gap: 8px; }
 .inbox-left-tools .inbox-search-row label { flex: 1 1 100%; max-width: none; }
+.inbox-left-tools .inbox-live-search { position: relative; display: block; width: 100%; }
+.inbox-live-search .search-accessible-label { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+.inbox-left-tools .inbox-live-search input { width: 100%; min-height: 42px; padding: 10px 14px 10px 36px; border: 0; border-radius: 22px; background: #f4f4f3; font-size: 13px; }
+.inbox-live-search .search-symbol { position: absolute; left: 13px; top: 8px; font-size: 22px; color: #706b66; }
+.inbox-live-search .search-progress { position: absolute; right: 14px; top: 13px; font-size: 11px; background: #f4f4f3; }
+.inbox-left-tools .inbox-filter-drawer > summary { font-size: 12px; padding: 4px 0; }
+.inbox-left-tools .inbox-shortcuts { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+.inbox-left-tools .inbox-shortcuts a { white-space: nowrap; flex-shrink: 0; }
 .inbox-left-tools .inbox-filter-grid { grid-template-columns: minmax(0, 1fr); }
 .inbox-left-tools .inbox-shortcuts { gap: 6px; }
 .inbox-left-tools .inbox-shortcuts a { font-size: 12px; border-radius: 16px; }

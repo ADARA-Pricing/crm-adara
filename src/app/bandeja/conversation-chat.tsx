@@ -11,7 +11,6 @@ import { messageActivity } from "@/lib/conversation-activity";
 import { ReplyWindow } from "@/components/reply-window";
 import { SafeMessage } from "@/components/safe-message";
 import { crmDate } from "@/lib/crm-display";
-import { VisibleReadTracker } from "./operator-reads";
 import { shouldSubmitChat } from "@/lib/chat-keyboard";
 
 type Message = BotpressMessage & { author: string | null };
@@ -135,7 +134,6 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     finally { busyRef.current = false; setBusy(false); void refresh(); }
   }
   return <section className="conversation-chat" aria-label="Chat de la conversación">
-    <VisibleReadTracker id={id} revision={messages.map(m => m.id).join(",")} />
     <ReplyWindow activity={{ ...messageActivity(messages), channel }} />
     {suggestedDraft && usedDraft !== suggestedDraft.id && <section className="context-note"><p>Borrador de regla: {suggestedDraft.content}</p><button className="button secondary" disabled={busy || !paused || !!text} onClick={() => { setText(suggestedDraft.content); setDraftId(suggestedDraft.id); }}>Usar borrador (no envía)</button></section>}
     <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button>{stageControl}</div>

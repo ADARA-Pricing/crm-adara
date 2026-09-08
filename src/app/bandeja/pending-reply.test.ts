@@ -1,0 +1,12 @@
+import React from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { beforeEach, expect, it, vi } from "vitest";
+const cache = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
+vi.mock("./inbox-preloader", () => ({ useInboxCache: () => cache.value }));
+import { PendingReply } from "./pending-reply";
+const activity = { lastIncomingAt: "2026-01-01T10:00:00Z", lastOutgoingAt: null };
+beforeEach(() => { cache.value = {}; });
+it("shows a label without a numerical unread counter", () => { expect(renderToStaticMarkup(React.createElement(PendingReply, { id: "c", activity }))).toContain("Sin responder"); });
+it("removes the label when the cache has a later response", () => { cache.value = { c: { messages: [{ direction: "outgoing", createdAt: "2026-01-01T11:00:00Z" }] } }; expect(renderToStaticMarkup(React.createElement(PendingReply, { id: "c", activity }))).toBe(""); });
+it("does not let older partial cache lose a recorded response", () => { cache.value = { c: { messages: [{ direction: "incoming", createdAt: "2026-01-01T09:00:00Z" }] } }; expect(renderToStaticMarkup(React.createElement(PendingReply, { id: "c", activity: { ...activity, lastOutgoingAt: "2026-01-01T12:00:00Z" } }))).toBe(""); });
+it("shows no pending response without incoming messages", () => { expect(renderToStaticMarkup(React.createElement(PendingReply, { id: "c", activity: { lastIncomingAt: null, lastOutgoingAt: null } }))).toBe(""); });
