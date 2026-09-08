@@ -1,7 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 vi.mock("@/lib/conversation-activity-server", () => ({ syncConversationActivity: async () => undefined }));
 
-const mocks = vi.hoisted(() => ({ draft: vi.fn(), draftClaim: vi.fn(), draftUpdate: vi.fn(), auth: vi.fn(), find: vi.fn(), findMany: vi.fn(), cache: vi.fn(), update: vi.fn(), event: vi.fn(), reserve: vi.fn(), transaction: vi.fn(), lock: vi.fn(), writeEvent: vi.fn(), request: vi.fn(), recent: vi.fn(), list: vi.fn(), events: vi.fn(), customer: vi.fn() }));
+const mocks = vi.hoisted(() => ({ assign: vi.fn(), assignmentEvent: vi.fn(), draft: vi.fn(), draftClaim: vi.fn(), draftUpdate: vi.fn(), auth: vi.fn(), find: vi.fn(), findMany: vi.fn(), cache: vi.fn(), update: vi.fn(), event: vi.fn(), reserve: vi.fn(), transaction: vi.fn(), lock: vi.fn(), writeEvent: vi.fn(), request: vi.fn(), recent: vi.fn(), list: vi.fn(), events: vi.fn(), customer: vi.fn() }));
 vi.mock("@/lib/auth", () => ({ requireCrmUser: mocks.auth }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/botpress", () => ({ BotpressConnectionError: class extends Error {}, botpressRequest: mocks.request, hasRecentIncoming: mocks.recent, listMessages: mocks.list }));
@@ -15,16 +15,32 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
 import { readConversation, sendConversationMessage, setConversationBotPaused, warmInboxConversations } from "./chat-actions";
 
 const input = { conversationId: "conversation", text: "Hola", requestId: "272b33cf-a477-4990-b992-dc0d50411996" };
+it("atomically assigns an unowned client after accepted manual send", async () => {
+  expect((await sendConversationMessage(input)).ok).toBe(true);
+  expect(mocks.assign).toHaveBeenCalledWith({where:{id:"customer",assigneeId:null},data:{assigneeId:"operator"}});
+  expect(mocks.assignmentEvent).toHaveBeenCalledWith({data:expect.objectContaining({type:"LEAD_ASSIGNED",payload:expect.objectContaining({authorId:"operator",assigneeId:"operator",source:"CRM_MANUAL_MESSAGE"})})});
+});
+it("preserves another owner's assignment without a misleading audit", async () => {
+  mocks.assign.mockResolvedValue({count:0});
+  expect((await sendConversationMessage(input)).ok).toBe(true);
+  expect(mocks.assignmentEvent).not.toHaveBeenCalled();
+});
+it("never assigns ownership on rejected or uncertain send", async () => {
+  mocks.request.mockRejectedValue(new Error("timeout"));
+  expect((await sendConversationMessage(input)).ok).toBe(false);
+  expect(mocks.assign).not.toHaveBeenCalled();
+});
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.auth.mockResolvedValue({ id: "operator", email: "operator@example.test" });
   mocks.find.mockResolvedValue({ id: "conversation", botPaused: true, botpressId: "remote", customerId: "customer", customer: { whatsappProfileName: null } });
   mocks.event.mockResolvedValue(null); mocks.recent.mockResolvedValue(true);
+  mocks.assign.mockResolvedValue({count:1});
   mocks.cache.mockResolvedValue(undefined);
   mocks.draft.mockResolvedValue({id:"draft"}); mocks.draftClaim.mockResolvedValue({count:1});
   mocks.lock.mockResolvedValue([{ botPaused: true }]);
   mocks.request.mockResolvedValue({ message: { id: "sent-message" } });
-  mocks.transaction.mockImplementation(fn => fn({ automationRun: { updateMany: mocks.draftClaim, update: mocks.draftUpdate }, $queryRaw: mocks.lock, conversationEvent: { update: mocks.writeEvent }, conversation: { update: mocks.update } }));
+  mocks.transaction.mockImplementation(fn => fn({ automationRun: { updateMany: mocks.draftClaim, update: mocks.draftUpdate }, $queryRaw: mocks.lock, customer: { updateMany: mocks.assign }, conversationEvent: { update: mocks.writeEvent, create: mocks.assignmentEvent }, conversation: { update: mocks.update } }));
 });
 it("requires authentication before every chat operation", async () => {
   mocks.auth.mockRejectedValue(new Error("unauthorized"));

@@ -121,6 +121,12 @@ export async function sendConversationMessage(input: { conversationId: string; t
       });
       await tx.conversationEvent.update({ where: { id: eventId }, data: { payload: { state: "ACCEPTED", text, author, authorId: user.id, messageId: result.message.id } } });
       await tx.conversation.update({ where: { id: conversationId }, data: { updatedAt: new Date(), lastOutgoingAt: new Date() } });
+      // CRM ownership only. Compare-and-set never steals another operator's lead.
+      const assigned = await tx.customer.updateMany({ where: { id: conversation.customerId, assigneeId: null }, data: { assigneeId: user.id } });
+      if (assigned.count) await tx.conversationEvent.create({ data: { conversationId, direction: "INTERNAL", type: "LEAD_ASSIGNED", payload: {
+        authorId: user.id, author, assigneeId: user.id, previousAssigneeId: null,
+        detail: `Cliente asignado a ${author} al confirmar el primer mensaje manual.`, source: "CRM_MANUAL_MESSAGE",
+      } } });
       if (draftId) await tx.automationRun.update({ where: { id: draftId }, data: { status: "ACCEPTED" } });
       return result.message.id;
     }, { maxWait: 5000, timeout: 20000 });
