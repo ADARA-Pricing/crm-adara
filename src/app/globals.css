@@ -240,6 +240,31 @@ tbody tr:hover { background: #fbf6f0; }
 .navigation-toggle { grid-column: 1 / -1; justify-self: start; margin: 12px 18px; }
 .navigation-collapsed { grid-template-columns: minmax(0, 1fr); }
 .navigation-collapsed .sidebar { display: none; }
+.inbox-workspace .topbar { margin-bottom: 12px; }
+.inbox-workspace .inbox-filter-form { display: flex; flex-wrap: wrap; gap: 10px 18px; padding: 10px 12px; align-items: center; }
+.inbox-search-row { display: flex; align-items: flex-end; gap: 12px; flex: 1; }
+.inbox-search-row label { flex: 1; max-width: 460px; }
+.inbox-filter-drawer { flex: 1 1 100%; }
+.inbox-filter-drawer > summary { cursor: pointer; font-size: 13px; }
+.inbox-filter-drawer[open] .inbox-filter-grid { margin-top: 12px; }
+.inbox-filter-drawer .inbox-filter-actions { margin-top: 12px; }
+.inbox-help { font-size: 12px; margin-top: 6px; color: var(--muted); }
+.inbox-help summary { cursor: pointer; }
+.inbox-workspace .inbox-shortcuts { margin: 8px 0; }
+.inbox-workspace .inbox-shortcuts a { padding: 5px 9px; }
+.inbox-workspace .inbox-contact { min-height: 88px; gap: 3px 8px; padding-top: 10px; padding-bottom: 10px; }
+.inbox-workspace .chat-controls { padding: 8px 12px; gap: 8px; }
+.inbox-workspace .chat-controls .button { padding: 7px 10px; }
+.inbox-workspace .chat-composer { padding: 10px 12px; gap: 6px; }
+.inbox-workspace .chat-messages { height: 52vh; max-height: none; min-height: 280px; }
+.inbox-workspace .inbox-management { padding: 10px 14px; }
+.inbox-workspace .inbox-management summary { cursor: pointer; }
+@media (min-width: 861px) {
+  .inbox-workspace .inbox-layout { grid-template-columns: minmax(240px, 300px) minmax(0, 1fr); align-items: start; }
+  .inbox-workspace .inbox-list { max-height: calc(100dvh - 240px); min-height: 400px; overflow-y: auto; position: sticky; top: 12px; }
+  .inbox-workspace .customer-context { grid-column: 2; border-top: 1px solid var(--line); }
+  .inbox-workspace .inbox-thread { border-right: 0; }
+}
 .skip-link { position: fixed; left: 12px; top: -100px; z-index: 100; padding: 12px; background: white; color: #392c25; }
 .skip-link:focus { top: 12px; }
 .skeleton { background: linear-gradient(90deg, #eee6de 25%, #faf7f3 50%, #eee6de 75%); background-size: 200% 100%; animation: crm-shimmer 1.8s infinite; border-radius: 12px; }

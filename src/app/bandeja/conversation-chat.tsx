@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BotpressMessage } from "@/lib/botpress";
 import { readConversation, sendConversationMessage, setConversationBotPaused } from "./chat-actions";
-import { useInboxCache } from "./inbox-preloader";
+import { useInboxCache, useStoreInboxSnapshot } from "./inbox-preloader";
 import { mergeInboxMessages } from "@/lib/inbox-cache";
 import { messageActivity } from "@/lib/conversation-activity";
 import { ReplyWindow } from "@/components/reply-window";
@@ -31,6 +31,7 @@ function MessageContent({ message }: { message: Message }) {
 export function ConversationChat({ id, initialPaused, refreshPage = true, channel = "whatsapp", suggestedDraft }: { id: string; initialPaused: boolean; refreshPage?: boolean; channel?: string; suggestedDraft?: { id: string; content: string } }) {
   const router = useRouter();
   const cached = useInboxCache()[id];
+  const storeSnapshot = useStoreInboxSnapshot();
   const [messages, setMessages] = useState<Message[]>(() => mergeInboxMessages([], cached?.messages ?? []));
   const [paused, setPaused] = useState(initialPaused);
   const [cursor, setCursor] = useState<string | undefined>(cached?.nextToken);
@@ -68,6 +69,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     setHistoryError("");
     setPaused(result.botPaused);
     setMessages(previous => mergeInboxMessages(previous, result.messages));
+    if (!older) storeSnapshot(id, { messages: result.messages, nextToken: result.nextToken });
     if (older || !loaded.current) setCursor(result.nextToken);
     if (!loaded.current) {
       loaded.current = true;
@@ -110,7 +112,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     } catch { setError("No pudimos confirmar el envío. Revisá el historial antes de repetirlo."); }
     finally { busyRef.current = false; setBusy(false); }
   }
-  return <section aria-label="Chat de la conversación">
+  return <section className="conversation-chat" aria-label="Chat de la conversación">
     <ReplyWindow activity={{ ...messageActivity(messages), channel }} />
     {suggestedDraft && usedDraft !== suggestedDraft.id && <section className="context-note"><p>Borrador de regla: {suggestedDraft.content}</p><button className="button secondary" disabled={busy || !paused || !!text} onClick={() => { setText(suggestedDraft.content); setDraftId(suggestedDraft.id); }}>Usar borrador (no envía)</button></section>}
     <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button></div>
@@ -122,7 +124,7 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     </div>
     <form className="chat-composer" onSubmit={send}>
       <label htmlFor="reply">Respuesta al cliente</label>
-      <textarea id="reply" rows={3} maxLength={4000} value={text} onChange={e => setText(e.target.value)} disabled={busy || !paused} placeholder={paused ? "Escribí tu respuesta…" : "Pausá el bot para responder desde acá."} />
+      <textarea id="reply" rows={2} maxLength={4000} value={text} onChange={e => setText(e.target.value)} disabled={busy || !paused} placeholder={paused ? "Escribí tu respuesta…" : "Pausá el bot para responder desde acá."} />
       <button className="button" disabled={busy || !paused || !text.trim()}>Enviar mensaje</button>
       <small>El envío manual requiere un mensaje del cliente en las últimas 24 h. No reactiva el bot.</small>
       {error ? <p role="alert">{error}</p> : null}{notice ? <p role="status">{notice}</p> : null}

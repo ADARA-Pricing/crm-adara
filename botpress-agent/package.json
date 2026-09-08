@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "adk dev",
     "build": "adk build",
-    "deploy": "adk deploy"
+    "deploy": "node scripts/deploy-safe.mjs",
+    "test:cli-output": "node --test scripts/safe-cli-output.test.mjs"
   },
   "dependencies": {
     "@botpress/evals": "^2.0.5",

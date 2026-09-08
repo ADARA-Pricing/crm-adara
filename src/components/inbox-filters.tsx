@@ -6,8 +6,14 @@ import type { z } from "zod";
 export function InboxFilters({ filters, members, categories }: { filters: z.infer<typeof inboxFilterSchema>; members: { id: string; displayName: string | null; email: string }[]; categories: string[] }) {
   const extraCount = [filters.stage, filters.category, filters.window, filters.bought, filters.sort !== "recent" ? filters.sort : ""].filter(Boolean).length;
   return <form action="/bandeja" className="panel inbox-filter-form">
-    <div className="inbox-filter-grid task-form">
+    <div className="inbox-search-row task-form">
     <label>Buscar<input name="q" defaultValue={filters.q} placeholder="Nombre, teléfono o localidad" /></label>
+    <button className="button">Buscar</button>
+    <Link href="/bandeja" scroll={false}>Limpiar</Link>
+    </div>
+    <details className="inbox-filter-drawer">
+    <summary>Filtros{[filters.owner, filters.attention, filters.filter].filter(Boolean).length + extraCount ? ` (${[filters.owner, filters.attention, filters.filter].filter(Boolean).length + extraCount} activos)` : ""}</summary>
+    <div className="inbox-filter-grid task-form">
     <label>Responsable<select name="owner" defaultValue={filters.owner}><option value="">Todos</option><option value="mine">Mis clientes</option><option value="none">Sin asignar</option>{members.map(m => <option key={m.id} value={m.id}>{m.displayName || m.email}</option>)}</select></label>
     <label>Atención<select name="attention" defaultValue={filters.attention}><option value="">Todas</option><option value="pending">Último mensaje sin respuesta</option><option value="answered">Con respuesta posterior</option><option value="human">Requiere humano / bot pausado</option><option value="bot">Bot activo</option></select></label>
     <label>Caso<select name="filter" defaultValue={filters.filter}><option value="">Todos</option><option value="open">Abiertos</option><option value="human">Derivados a humano</option><option value="closed">Resueltos</option></select></label>
@@ -23,5 +29,6 @@ export function InboxFilters({ filters, members, categories }: { filters: z.infe
       </div>
     </details>
     <div className="inbox-filter-actions"><button className="button">Filtrar</button><Link href="/bandeja">Limpiar filtros</Link></div>
+    </details>
   </form>;
 }

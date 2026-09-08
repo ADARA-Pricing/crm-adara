@@ -1,13 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { InboxSnapshot } from "@/lib/inbox-cache";
 import type { warmInboxConversations } from "./chat-actions";
 
 type CachedInbox = Record<string, InboxSnapshot>;
 const InboxContext = createContext<CachedInbox>({});
+const InboxWriter = createContext<(id: string, snapshot: InboxSnapshot) => void>(() => {});
 export const useInboxCache = () => useContext(InboxContext);
+export const useStoreInboxSnapshot = () => useContext(InboxWriter);
 
 // Memory is scoped to this authenticated page, never localStorage or a global
 // module cache that could expose a previous operator's conversations after logout.
@@ -18,6 +20,9 @@ export function InboxPreloader({ conversations, initial, children, refreshPage =
   children: React.ReactNode;
 }) {
   const [cache, setCache] = useState(initial);
+  const store = useCallback((id: string, snapshot: InboxSnapshot) => {
+    setCache(previous => ({ ...previous, [id]: snapshot }));
+  }, []);
   const current = useRef(conversations);
   current.current = conversations;
   const router = useRouter();
@@ -55,5 +60,5 @@ export function InboxPreloader({ conversations, initial, children, refreshPage =
     void warm();
     return () => { stopped = true; clearTimeout(timer); };
   }, [router, refreshPage]);
-  return <InboxContext.Provider value={cache}>{children}</InboxContext.Provider>;
+  return <InboxWriter.Provider value={store}><InboxContext.Provider value={cache}>{children}</InboxContext.Provider></InboxWriter.Provider>;
 }
