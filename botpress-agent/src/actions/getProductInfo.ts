@@ -6,8 +6,10 @@ export const getProductInfo = new Action({
   input: z.object({}),
   output: z.object({
     available: z.boolean(),
+    reason: z.enum(['catalog_missing', 'not_offered']).optional().describe('catalog_missing significa ficha no localizada, no falta de stock; not_offered significa no habilitado para ofrecer.'),
     catalogCategories: z.array(z.string()),
     product: z.object({
+      id: z.string().describe('Identificador exacto del artículo autorizado. Usar este ID al cotizar o confirmar; nunca sustituir otro modelo.'),
       category: z.string().nullable(), name: z.string(), description: z.string().nullable(), shortDescription: z.string().nullable(), botDescription: z.string().nullable(),
       technicalSpecs: z.unknown(), priceCents: z.number(), shippingCents: z.number(), warrantyMonths: z.number(),
       priceFormatted: z.string(), shippingFormatted: z.string(), includedItems: z.array(z.string()), imageUrls: z.array(z.string()), productUrl: z.string(),

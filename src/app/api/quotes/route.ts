@@ -9,8 +9,10 @@ import {
   type PaymentMethod
 } from "@/lib/sales-policy";
 import { prisma } from "@/lib/prisma";
+import { BOT_CATALOG_PRODUCT_ID, botCatalogAvailableWhere } from "@/lib/bot-catalog-product";
 
 const quoteSchema = z.object({
+  productId: z.string().min(1).max(160).optional(),
   deliveryMethod: z.enum(["COURIER", "PICKUP"]),
   paymentMethod: z.enum(["CASH_OR_TRANSFER", "CARD_ONE_PAYMENT"]),
   locality: z.string().trim().min(2).optional()
@@ -25,13 +27,16 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos de cotización inválidos" }, { status: 400 });
   }
+  if (parsed.data.productId && parsed.data.productId !== BOT_CATALOG_PRODUCT_ID) {
+    return NextResponse.json({ error: "Producto no disponible" }, { status: 409 });
+  }
 
   const { deliveryMethod, paymentMethod, locality } = parsed.data as {
     deliveryMethod: DeliveryMethod;
     paymentMethod: PaymentMethod;
     locality?: string;
   };
-  const product = await prisma.product.findFirst({ where: { isActive: true, isAvailableForBot: true }, orderBy: { createdAt: "asc" } });
+  const product = await prisma.product.findFirst({ where: botCatalogAvailableWhere });
   if (!product) return NextResponse.json({ error: "No hay producto disponible para cotizar" }, { status: 409 });
   const price = getPrice(deliveryMethod, paymentMethod, product);
   const coverage = deliveryMethod === "PICKUP"

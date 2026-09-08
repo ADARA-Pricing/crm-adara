@@ -4,6 +4,7 @@ export const quoteOrder = new Action({
   name: 'quoteOrder',
   description: 'Calcula el total de un Infinix Smart 10 negro para envío por mensajería privada o retiro en el local.',
   input: z.object({
+    productId: z.string().min(1).describe('ID exacto de getProductInfo con available=true, correspondiente al modelo que pidió el cliente. No usar para otros modelos.'),
     deliveryMethod: z.enum(['courier', 'pickup']).describe('courier para envío por mensajería privada; pickup para retirar en Av. Cramer 2548.'),
     paymentMethod: z.enum(['cash_or_transfer', 'card_one_payment']).describe('Medio de pago elegido.'),
   }),
@@ -22,6 +23,7 @@ export const quoteOrder = new Action({
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
+        productId: input.productId,
         deliveryMethod: input.deliveryMethod === 'courier' ? 'COURIER' : 'PICKUP',
         paymentMethod: input.paymentMethod === 'cash_or_transfer' ? 'CASH_OR_TRANSFER' : 'CARD_ONE_PAYMENT',
       }),

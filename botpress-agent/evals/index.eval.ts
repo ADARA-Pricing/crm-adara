@@ -1,4 +1,13 @@
-// import { Eval } from '@botpress/evals'
+import { Eval } from '@botpress/evals'
+
+// Development only, connected to scripts/fixture-crm.mjs.
+export default new Eval({
+  name: 'incident-greeting', type: 'regression',
+  conversation: [{ user: 'Hola', assert: {
+    response: [{ not_contains: '199.999' }, { not_contains: '```' }],
+    tools: [{ not_called: 'quoteOrder' }, { not_called: 'recordConfirmedOrder' }],
+  } }],
+})
 //
 // /**
 //  * An eval is a simulated conversation with assertions on the bot's responses,

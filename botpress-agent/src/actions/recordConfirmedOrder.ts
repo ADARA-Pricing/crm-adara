@@ -4,6 +4,7 @@ export const recordConfirmedOrder = new Action({
   name: 'recordConfirmedOrder',
   description: 'Registra en CRM un pedido que el cliente ya revisó y confirmó explícitamente. El resultado siempre queda pendiente de revisión comercial.',
   input: z.object({
+    productId: z.string().min(1).describe('ID exacto de la ficha activa y del producto cotizado y confirmado por el cliente.'),
     deliveryMethod: z.enum(['courier', 'pickup']).describe('Modalidad confirmada por el cliente.'),
     paymentMethod: z.enum(['cash_or_transfer', 'card_one_payment']).describe('Medio de pago confirmado.'),
     recipientName: z.string().min(2).describe('Nombre completo de quien recibe o retira.'),

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { getPrice, PRODUCT, type DeliveryMethod, type PaymentMethod } from "@/lib/sales-policy";
+import { getPrice, type DeliveryMethod, type PaymentMethod } from "@/lib/sales-policy";
+import { BOT_CATALOG_PRODUCT_ID, botCatalogAvailableWhere } from "@/lib/bot-catalog-product";
 import { isValidBotpressWebhook } from "@/lib/webhook-auth";
 
 export const runtime = "nodejs";
 
 const confirmationSchema = z.object({
+  productId: z.string().min(1).max(160).optional(),
   deliveryMethod: z.enum(["COURIER", "PICKUP"]),
   paymentMethod: z.enum(["CASH_OR_TRANSFER", "CARD_ONE_PAYMENT"]),
   recipientName: z.string().trim().min(2).max(120),
@@ -42,7 +44,10 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
-  const product = await prisma.product.findFirst({ where: { sku: PRODUCT.sku, isActive: true, isAvailableForBot: true } });
+  if (data.productId && data.productId !== BOT_CATALOG_PRODUCT_ID) {
+    return NextResponse.json({ error: "Producto no disponible" }, { status: 409 });
+  }
+  const product = await prisma.product.findFirst({ where: botCatalogAvailableWhere });
   if (!product) {
     return NextResponse.json({ error: "Producto no disponible" }, { status: 409 });
   }
