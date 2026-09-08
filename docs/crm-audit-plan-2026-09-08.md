@@ -29,6 +29,16 @@ Pendientes: prevención concurrente/idempotencia de tareas manuales, incorporaci
 
 ## Asignación automática parcial implementada
 
+### Segunda tanda local: controles de responsable
+
+Bandeja incorpora responsable visible, Asignarme si está libre, Liberar atención propia y selector de miembros activos. Cambiar una asignación existente pide confirmación. Reutiliza assignLead con comparación del responsable anterior para no pisar cambios concurrentes. El evento interno registra autor, responsable anterior y nuevo, con nombre legible; se guarda en la conversación más recientemente actualizada del cliente, no necesariamente en el chat abierto. La asignación sigue siendo por cliente. No pausa ni reactiva el bot. Sin nuevas consultas para mostrar controles.
+
+Validación: 219 pruebas aisladas aprobadas, lint y TypeScript sin errores. Revisión visual y medidas de rendimiento pendientes. No se realizaron asignaciones ni envíos reales. Esta tanda no está publicada. Pendientes asignación masiva y presencia real de operadores.
+
+### Logística: referencia acordada para próxima etapa
+
+Usar la captura de Mercado Libre como referencia de organización familiar para el equipo: pestañas Hoy, Próximos días, En tránsito y Finalizadas; contadores, resúmenes, filtros y tarjetas seleccionables con acciones individuales o masivas. Mantener mensajería privada y retiro en Cramer, sin inventar servicios Flex/colecta. Etiquetas ZPL propias de ADARA quedan para una etapa posterior, previa definición de tamaño y DPI; imprimir no debe marcar un pedido como despachado. No modificar contratos de pedidos consumidos por el bot.
+
 Tras confirmar un mensaje manual, dentro de la misma transacción del CRM, updateMany asigna el cliente únicamente si assigneeId sigue siendo null. Se registra LEAD_ASSIGNED con usuario, origen y responsable. Un cliente ya asignado no cambia; no se asigna antes del envío ni ante respuesta incierta. Sin cambios a pausa, reactivación, derivación, webhook o configuración del bot.
 
 Se preserva el esquema actual: las conversaciones muestran el responsable de su cliente. No existe una asignación independiente por conversación. Pendientes controles Asignarme/Liberar, selección masiva y advertencias de atención simultánea. Sin migraciones ni escrituras reales durante pruebas.

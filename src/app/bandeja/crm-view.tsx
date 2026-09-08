@@ -8,6 +8,7 @@ import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ConversationChat } from "./conversation-chat";
 import { ChatStage } from "./chat-stage";
+import { ChatOwner } from "./chat-owner";
 import { InboxPreloader } from "./inbox-preloader";
 import { InboxSelection, InboxContact, InboxPanel } from "./inbox-selection";
 import { InboxFilters } from "@/components/inbox-filters";
@@ -80,6 +81,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
       {[...new Map([...conversations, ...(selected ? [selected] : [])].map(item => [item.id, item])).values()].map(selected => <InboxPanel key={selected.id} id={selected.id}><article className="inbox-thread">
         {selected ? <>
           <header className="thread-heading"><div><strong>{selected.customer.fullName || selected.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{selected.customer.phone ?? "Número pendiente de identificar"}</small></div><span className={`badge ${selected.status === "HUMAN_HANDOFF" ? "warning" : "neutral"}`}>{selected.status === "HUMAN_HANDOFF" ? "Derivado a humano" : selected.status === "CLOSED" ? "Resuelta" : "Abierta"}</span></header>
+          <ChatOwner customerId={selected.customerId} owner={selected.customer.assignee} userId={user.id} members={members} />
           <ConversationChat stageControl={<ChatStage conversationId={selected.id} stage={selected.customer.funnelStage} updatedAt={selected.customer.funnelUpdatedAt.toISOString()} />} key={selected.id} id={selected.id} initialPaused={selected.botPaused} channel={selected.channel} refreshPage={false} suggestedDraft={draft && draft.id === raw.draft && selected.id === raw.conversation ? draft : undefined} />
           <div className="inbox-management"><Link className="button" href={`/pedidos/nuevo?conversation=${selected.id}`}>Crear pedido desde este chat</Link></div>
           <details className="inbox-management">

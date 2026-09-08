@@ -4,6 +4,15 @@ vi.mock("@/lib/auth",()=>({requireCrmUser:m.auth}));vi.mock("next/cache",()=>({r
 vi.mock("@/lib/prisma",()=>({prisma:{$transaction:(f:Function)=>f({userProfile:{findFirst:m.member},customer:{updateMany:m.customer},task:{updateMany:m.task},conversation:{findFirst:m.conversation},conversationEvent:{create:m.event}})}}));
 import {assignLead,updateLeadTask} from "./team-actions";
 describe("team responsibility",()=>{
+ it("records actor and both owners with a readable name",async()=>{
+  m.member.mockResolvedValue({id:"member",displayName:"Logística"});
+  await assignLead({id:"lead",assigneeId:"member",expected:"previous"});
+  expect(m.event).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({payload:expect.objectContaining({authorId:"u",previousAssigneeId:"previous",assigneeId:"member",detail:"Responsable asignado: Logística"})})}));
+ });
+ it("records the released owner",async()=>{
+  await assignLead({id:"lead",assigneeId:"",expected:"member"});
+  expect(m.event).toHaveBeenCalledWith(expect.objectContaining({data:expect.objectContaining({payload:expect.objectContaining({authorId:"u",previousAssigneeId:"member",assigneeId:null})})}));
+ });
  beforeEach(()=>{vi.resetAllMocks();m.auth.mockResolvedValue({id:"u",email:"a@b.test"});m.member.mockResolvedValue({id:"member"});m.customer.mockResolvedValue({count:1});m.task.mockResolvedValue({count:1});m.conversation.mockResolvedValue({id:"chat"});});
  it("requires a session",async()=>{m.auth.mockRejectedValue(new Error("auth"));await expect(assignLead({id:"lead",assigneeId:"member",expected:null})).rejects.toThrow();expect(m.customer).not.toHaveBeenCalled();});
  it("assigns active members with an audit",async()=>{expect((await assignLead({id:"lead",assigneeId:"member",expected:null})).ok).toBe(true);expect(m.customer).toHaveBeenCalledWith({where:{id:"lead",assigneeId:null},data:{assigneeId:"member"}});expect(m.event).toHaveBeenCalled();});

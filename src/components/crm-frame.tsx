@@ -3,6 +3,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import React, { useState, type ReactNode } from "react";
+import { NavigationIcon } from "./navigation-icon";
+import "./crm-navigation.css";
 
 const groups = [
   { label: "Principal", links: [["Dashboard", "/"], ["Buscar en CRM", "/buscar"]] },
@@ -27,13 +29,15 @@ export function CrmFrame({ children, name, role, signOut }: {
         <Link href="/" className="brand"><Image src="/brand/adara-group.png" alt="Adara group" width={176} height={92} priority /></Link>
         <button className="menu-close button secondary" title="Ocultar menú" aria-label="Ocultar menú" aria-controls="crm-navigation" onClick={() => setMenu("closed")}>‹</button>
       </header>
-      {groups.map(group => <nav key={group.label} className="nav-group" aria-label={group.label}>
-        <span className="nav-label">{group.label}</span>
+      <div className="sidebar-scroll">{groups.map(group => <nav key={group.label} className="nav-group" aria-label={group.label}>
+        <details key={menu} open className="navigation-group">
+        <summary className="nav-label">{group.label}</summary>
         {group.links.map(([label, href]) => {
           const active = pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
-          return <Link key={href} href={href} prefetch={true} aria-current={active ? "page" : undefined} className={`nav-item ${active ? "active" : ""}`}>{label}</Link>;
+          return <Link key={href} href={href} prefetch={true} aria-current={active ? "page" : undefined} aria-label={label} title={label} className={`nav-item ${active ? "active" : ""}`}><NavigationIcon href={href} /><span>{label}</span></Link>;
         })}
-      </nav>)}
+        </details>
+      </nav>)}</div>
       <div className="sidebar-footer"><strong>{name}</strong><span>{role === "ADMIN" ? "Administrador" : role === "SALES" ? "Ventas" : "Logística"}</span><form action={signOut}><button type="submit">Cerrar sesión</button></form></div>
     </aside>
     <main className="workspace" id="crm-content" tabIndex={-1}>{children}</main>

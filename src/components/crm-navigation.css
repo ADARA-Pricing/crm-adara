@@ -1,0 +1,39 @@
+/* Scoped first UI tranche: preserve all workspace and commercial styles. */
+.persistent-shell > .sidebar {
+  --nav-ink: #252321;
+  --nav-muted: #706b66;
+  --nav-brand: #5a2f1d;
+  --nav-selected: #f3e8df;
+  --nav-line: #e4e0db;
+  padding: 16px 12px 12px;
+  gap: 16px;
+  overflow: hidden;
+  color: var(--nav-ink);
+}
+.persistent-shell .sidebar-heading { flex: 0 0 auto; }
+.persistent-shell .sidebar-scroll { min-height: 0; flex: 1; overflow: auto; scrollbar-width: thin; scrollbar-color: #c6c1bb transparent; }
+.persistent-shell .sidebar .nav-group { margin-bottom: 12px; }
+.persistent-shell .sidebar .nav-label { color: var(--nav-muted); padding: 8px; font-size: 11px; letter-spacing: .06em; cursor: pointer; }
+.persistent-shell .sidebar .nav-item { position: relative; justify-content: flex-start; gap: 10px; min-height: 44px; padding: 8px 10px; color: var(--nav-muted); border-radius: 8px; line-height: 1.35; }
+.persistent-shell .sidebar .nav-item:hover { background: #f1efeb; }
+.persistent-shell .sidebar .nav-item.active { background: var(--nav-selected); color: var(--nav-brand); font-weight: 600; }
+.persistent-shell .sidebar .nav-item.active::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 2px; background: var(--nav-brand); }
+.persistent-shell .navigation-icon { flex: 0 0 20px; }
+.persistent-shell .sidebar-footer { flex: 0 0 auto; margin-top: 0; padding: 12px 8px 0; border-color: var(--nav-line); }
+.persistent-shell .sidebar-footer button { min-height: 44px; color: var(--nav-brand); font-size: 12px; }
+.persistent-shell .sidebar :is(a, button, summary):focus-visible { outline: 2px solid var(--nav-brand); outline-offset: 2px; }
+@media (min-width: 861px) {
+  .crm-shell.persistent-shell:not([data-menu="closed"]) { grid-template-columns: 228px minmax(0, 1fr); }
+  .crm-shell.persistent-shell[data-menu="closed"] { grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .persistent-shell[data-menu="closed"] > .sidebar { display: flex; padding-inline: 8px; padding-top: 60px; }
+  .persistent-shell[data-menu="closed"] > .menu-open { position: absolute; left: 14px; top: 12px; margin: 0; width: 44px; min-height: 44px; padding: 0; z-index: 11; }
+  .persistent-shell[data-menu="closed"] .sidebar-heading,
+  .persistent-shell[data-menu="closed"] .nav-label,
+  .persistent-shell[data-menu="closed"] .nav-item > span,
+  .persistent-shell[data-menu="closed"] .sidebar-footer { display: none; }
+  .persistent-shell[data-menu="closed"] .navigation-group > .nav-item { display: flex; justify-content: center; }
+  .persistent-shell[data-menu="closed"] .sidebar .nav-group { margin-bottom: 4px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .persistent-shell .sidebar .nav-item { transition: background-color 120ms ease, color 120ms ease; }
+}

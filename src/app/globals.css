@@ -240,6 +240,13 @@ tbody tr:hover { background: #fbf6f0; }
 .navigation-toggle { grid-column: 1 / -1; justify-self: start; margin: 12px 18px; }
 .navigation-collapsed { grid-template-columns: minmax(0, 1fr); }
 .navigation-collapsed .sidebar { display: none; }
+.chat-owner { padding: 8px 14px; border-bottom: 1px solid var(--line); display: grid; gap: 6px; font-size: 12px; }
+.chat-owner-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chat-owner-actions label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.chat-owner select { max-width: 100%; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); font: inherit; }
+.chat-owner .button { padding: 7px 9px; font-size: 12px; }
+.chat-owner small { display: block; }
+.chat-owner-warning { color: #875009; }
 .inbox-unanswered { grid-column: 1 / -1; width: fit-content; border-radius: 6px; padding: 3px 7px; background: #fff0d7; color: #734006; font-size: 12px; font-weight: 600; }
 .inbox-contact:has(.inbox-unanswered) { border-left: 3px solid #ba771c; background: #fffaf1; }
 .inbox-contact.selected:has(.inbox-unanswered) { background: #f4e9d7; }
