@@ -1,0 +1,41 @@
+/* Inbox presentation only. Filters, messaging and CRM actions keep their contracts. */
+.persistent-shell > .workspace:has(.inbox-workspace) { padding: 12px; overflow: hidden; }
+.inbox-workspace { height: 100%; min-height: 0; }
+.inbox-workspace .inbox-layout { height: 100%; min-height: 0; grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); align-items: stretch; overflow: hidden; border-radius: 8px; }
+.inbox-workspace .inbox-list { display: flex; flex-direction: column; position: static; min-height: 0; max-height: none; overflow: hidden; background: #fff; }
+.inbox-left-tools { padding: 12px; flex-shrink: 0; max-height: 50%; overflow: auto; border-bottom: 1px solid var(--line); }
+.inbox-left-tools h1 { font-size: 20px; }
+.inbox-left-tools .inbox-filter-form { padding: 0; border: 0; border-radius: 0; }
+.inbox-left-tools .inbox-search-row { flex-wrap: wrap; gap: 8px; }
+.inbox-left-tools .inbox-search-row label { flex: 1 1 100%; max-width: none; }
+.inbox-left-tools .inbox-filter-grid { grid-template-columns: minmax(0, 1fr); }
+.inbox-left-tools .inbox-shortcuts { gap: 6px; }
+.inbox-left-tools .inbox-shortcuts a { font-size: 12px; border-radius: 16px; }
+.inbox-contact-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.inbox-workspace .inbox-list-heading { height: 40px; }
+.inbox-workspace .inbox-thread { min-height: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 0; }
+.inbox-workspace .thread-heading { flex-shrink: 0; background: #fff; }
+.inbox-crm-tools { flex: 0 0 auto; max-height: 45%; overflow: auto; background: #fff; border-bottom: 1px solid var(--line); }
+.inbox-crm-tools > summary { cursor: pointer; padding: 10px 16px; min-height: 40px; font-size: 13px; color: var(--brand-dark); }
+.inbox-crm-tools .customer-context { padding: 12px 16px; }
+.inbox-crm-tools .customer-context dl { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); margin-top: 12px; }
+.inbox-workspace .conversation-chat { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.inbox-workspace .conversation-chat > :not(.chat-messages) { flex-shrink: 0; }
+.inbox-workspace .chat-messages { flex: 1; height: auto; min-height: 80px; max-height: none; overflow-y: auto; padding: 20px; background: #f1efeb; }
+.inbox-workspace .chat-bubble { max-width: min(80%, 680px); border-radius: 8px; box-shadow: 0 1px 1px #25232112; }
+.inbox-workspace .chat-bubble.incoming { background: #fff; }
+.inbox-workspace .chat-bubble.outgoing { background: #e2f1e8; }
+.inbox-workspace .chat-composer { display: grid; grid-template-columns: minmax(0, 1fr) auto; background: #fff; }
+.inbox-workspace .chat-composer label, .inbox-workspace .chat-composer small, .inbox-workspace .chat-composer p { grid-column: 1 / -1; }
+.inbox-workspace .chat-composer textarea { min-height: 44px; max-height: 120px; }
+.inbox-workspace :is(.inbox-list, .inbox-contact-scroll, .chat-messages, .inbox-left-tools, .inbox-crm-tools) { scrollbar-width: thin; scrollbar-color: #c6c1bb transparent; }
+@media (max-width: 700px) {
+  .persistent-shell > .workspace:has(.inbox-workspace) { padding: 8px; overflow: auto; }
+  .inbox-workspace { height: auto; }
+  .inbox-workspace .inbox-layout { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .inbox-workspace .inbox-list { height: 340px; }
+  .inbox-left-tools { max-height: 60%; }
+  .inbox-workspace .inbox-thread { height: 85dvh; min-height: 520px; }
+  .inbox-workspace .chat-bubble { max-width: 92%; }
+  .inbox-workspace .chat-composer { grid-template-columns: minmax(0, 1fr); }
+}

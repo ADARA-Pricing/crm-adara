@@ -1,5 +1,9 @@
 # Auditoría exclusivamente visual
 
+## Bandeja: distribución tipo WhatsApp Web
+
+Implementación local en bandeja/crm-view.tsx e inbox-web-layout.css. Filtros, buscador y accesos existentes movidos a columna izquierda. Lista e historial con scroll independiente; chat flexible a altura disponible y composer fuera del scroll de mensajes. Gestión CRM agrupada en desplegable conservando ficha, asignación, notas, crear pedido y auditoría. Etapa, pausa y actualizar permanecen en controles existentes. Sin cambios a ConversationChat, consultas, contratos ni acciones. En móvil se apilan lista y conversación; vista móvil de panel único queda pendiente. No se añaden estados de leído ni métricas ficticias. Pendiente revisión visual autenticada y del widget flotante. No publicado.
+
 Pedido: adjunto 8dafcf53-d5d9-4a11-87f0-954d520ef965, leído completo.
 
 ## Alcance
@@ -17,6 +21,10 @@ No editar botpress-agent, acciones del servidor, APIs, integraciones, modelos, m
 7. Skeletons, teclado, consola y revisión 1440/1280/1024/768/390.
 
 ## Primera implementación parcial
+
+## Segunda tanda local: Productos
+
+Archivos src/app/productos/crm-view.tsx y products-ui.css. Contenedor visual propio, filtros alineados con controles de 44 px, información de catálogo plegable conservando texto, números alineados a derecha, filas y acciones con jerarquía y foco visible. Sin cambios en consultas, parámetros, datos, permisos, orden o acciones del catálogo. No se implementaron todavía miniaturas ni menú de acciones. Pruebas: 219 aprobadas; lint y typecheck aprobados. Revisión autenticada y responsive pendiente. No publicada.
 
 Continuación autorizada para publicación: sidebar contraído a 72 px en escritorio, solo iconos con nombre accesible y tooltip; grupos reabiertos al cambiar el modo visual. Se preserva el drawer móvil existente. Build, lint y typecheck aprobados. Revisión visual autenticada y matriz responsive siguen pendientes; no se consideran validadas por la compilación.
 
