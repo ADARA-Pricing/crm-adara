@@ -1,5 +1,13 @@
 # Perfiles y lectura individual del CRM
 
+## Corrección de visibilidad y ventana (local)
+
+El registro ya no depende de document.hasFocus ni de callbacks de IntersectionObserver: revisa la intersección de burbujas con el área visible del chat y ventana mientras la pestaña está visible. Solo descarta reintentos de IDs confirmados en readIds del servidor; una respuesta available=false no cuenta como guardado. Contadores siguen representando lecturas de este operador en CRM, no lecturas externas de WhatsApp. No se oculta un contador para fingir éxito de escritura.
+
+Filas con borde verde si restan más de 12 h, amarillo hasta 12 h inclusive, rojo al vencer y gris sin verificar/otro canal. Cálculo separado de las reglas de envío, usando la misma fecha de último mensaje entrante. Leyenda y tooltip conservan interpretación sin depender únicamente del color. No cambia el filtro operativo «menos de 2 h» existente.
+
+249 pruebas, lint y TypeScript aprobados; validación real de lectura en navegador pendiente. No afirmar reparación verificada en producción hasta probar el caso reportado. Sin publicación en esta tanda.
+
 ## Ajuste de tarjetas posterior
 
 Lista compacta de dos líneas con avatar del responsable a la izquierda (sin asignación usa ?), nombre/preview y contador a derecha. Se retiran de la lista el punto de disponibilidad y Sin contestar, sin cambiar sus filtros o las reglas de respuesta. Teléfono y contexto siguen dentro del chat. Contador muestra solo el número confirmado en caché; la limitación de historial se explica en tooltip en lugar de +. Solicitudes versionadas evitan que una respuesta vieja sobrescriba lectura reciente; se reintenta el registro visible cada cinco segundos tras fallos. No se afirma contador global de todo WhatsApp ni sincronización con WhatsApp Web. Pendiente QA visual multiusuario; no publicado.

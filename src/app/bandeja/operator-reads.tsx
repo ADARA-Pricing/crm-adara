@@ -32,25 +32,34 @@ export function VisibleReadTracker({ id, revision }: { id: string; revision: str
     const root = anchor.current?.closest(".conversation-chat")?.querySelector(".chat-messages");
     if (!root) return;
     let stopped = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const visible = new Set<string>();
+    let running = false;
     const sent = new Set<string>();
-    const flush = () => {
-      if (document.visibilityState !== "visible" || !document.hasFocus()) return;
-      const ids = [...visible].filter(value => !sent.has(value)).slice(0, 200);
+    const flush = async () => {
+      if (running || document.visibilityState !== "visible") return;
+      const area = root.getBoundingClientRect();
+      // Only the actually visible portion of the chat viewport counts as read.
+      const top = Math.max(area.top, 0), bottom = Math.min(area.bottom, window.innerHeight);
+      const left = Math.max(area.left, 0), right = Math.min(area.right, window.innerWidth);
+      if (bottom <= top || right <= left) return;
+      const ids = [...root.querySelectorAll<HTMLElement>("[data-incoming-id]")].filter(node => {
+        const bounds = node.getBoundingClientRect();
+        return bounds.bottom > top && bounds.top < bottom && bounds.right > left && bounds.left < right;
+      }).map(node => node.dataset.incomingId!).filter(value => !sent.has(value)).slice(0, 200);
       if (!ids.length) return;
-      ids.forEach(value => sent.add(value));
-      void readState(id, ids).then(() => { if (!stopped) window.dispatchEvent(new CustomEvent("crm-read", { detail: id })); }).catch(() => ids.forEach(value => sent.delete(value)));
+      running = true;
+      try {
+        const result = await readState(id, ids);
+        if (!stopped && result.available) {
+          // Do not suppress retries for messages not acknowledged by the server.
+          result.readIds.forEach(value => sent.add(value));
+          window.dispatchEvent(new CustomEvent("crm-read", { detail: id }));
+        }
+      } catch { /* Keep the counter until persisted; retry while the chat is visible. */ }
+      finally { running = false; }
     };
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => { const value = (entry.target as HTMLElement).dataset.incomingId; if (value) { if (entry.isIntersecting) visible.add(value); else visible.delete(value); } });
-      clearTimeout(timer); timer = setTimeout(flush, 700);
-    }, { root, threshold: 0.1 });
-    root.querySelectorAll("[data-incoming-id]").forEach(node => observer.observe(node));
-    window.addEventListener("focus", flush);
-    const retry = setInterval(flush, 5000);
-    document.addEventListener("visibilitychange", flush);
-    return () => { stopped = true; clearInterval(retry); clearTimeout(timer); observer.disconnect(); window.removeEventListener("focus", flush); document.removeEventListener("visibilitychange", flush); };
+    const retry = setInterval(() => void flush(), 1500);
+    const initial = setTimeout(() => void flush(), 700);
+    return () => { stopped = true; clearTimeout(initial); clearInterval(retry); };
   }, [id, revision]);
   return <span ref={anchor} hidden />;
 }

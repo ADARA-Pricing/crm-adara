@@ -1,4 +1,9 @@
 /* Inbox presentation only. Filters, messaging and CRM actions keep their contracts. */
+.inbox-workspace .inbox-contact[data-availability] { border: 1px solid #b9b5af; border-left-width: 4px; margin: 3px 4px; border-radius: 7px; }
+.inbox-workspace .inbox-contact[data-availability="available"] { border-color: #247a52; }
+.inbox-workspace .inbox-contact[data-availability="warning"] { border-color: #a66a16; }
+.inbox-workspace .inbox-contact[data-availability="expired"] { border-color: #b33a3a; }
+.availability-legend { padding: 8px 12px; color: #706b66; font-size: 11px; line-height: 1.4; }
 .inbox-workspace .inbox-contact { grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; padding: 14px 12px; gap: 6px 12px; min-height: 80px; align-items: center; border-left: 0; }
 .inbox-workspace .contact-owner-avatar { grid-column: 1; grid-row: 1 / 3; display: grid; place-items: center; }
 .inbox-workspace .contact-owner-avatar > span { width: 44px !important; height: 44px !important; font-size: 15px !important; }
