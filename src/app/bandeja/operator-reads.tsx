@@ -12,7 +12,8 @@ export function UnreadCount({ id }: { id: string }) {
   const [read, setRead] = useState<string[] | null>(null);
   useEffect(() => {
     let alive = true;
-    const update = () => { void readState(id).then(r => { if (alive) setRead(r.available ? r.readIds : null); }).catch(() => { if (alive) setRead(null); }); };
+    let version = 0;
+    const update = () => { const current = ++version; void readState(id).then(r => { if (alive && current === version) setRead(r.available ? r.readIds : null); }).catch(() => { if (alive && current === version) setRead(null); }); };
     update();
     const changed = (event: Event) => { if ((event as CustomEvent).detail === id) update(); };
     window.addEventListener("crm-read", changed);
@@ -21,8 +22,8 @@ export function UnreadCount({ id }: { id: string }) {
   if (!snapshot || read === null) return null;
   const count = new Set(snapshot.messages.filter(m => m.direction === "incoming" && !read.includes(m.id)).map(m => m.id)).size;
   if (!count) return null;
-  const label = `${snapshot.nextToken ? "Al menos " : ""}${count} mensajes sin leer por vos en el CRM`;
-  return <span className="operator-unread" title={label} aria-label={label}>{count}{snapshot.nextToken ? "+" : ""}</span>;
+  const label = `${count} mensajes sincronizados sin leer por vos en el CRM${snapshot.nextToken ? ". Historial anterior no incluido" : ""}`;
+  return <span className="operator-unread" title={label} aria-label={label}>{count}</span>;
 }
 
 export function VisibleReadTracker({ id, revision }: { id: string; revision: string }) {
@@ -47,8 +48,9 @@ export function VisibleReadTracker({ id, revision }: { id: string; revision: str
     }, { root, threshold: 0.1 });
     root.querySelectorAll("[data-incoming-id]").forEach(node => observer.observe(node));
     window.addEventListener("focus", flush);
+    const retry = setInterval(flush, 5000);
     document.addEventListener("visibilitychange", flush);
-    return () => { stopped = true; clearTimeout(timer); observer.disconnect(); window.removeEventListener("focus", flush); document.removeEventListener("visibilitychange", flush); };
+    return () => { stopped = true; clearInterval(retry); clearTimeout(timer); observer.disconnect(); window.removeEventListener("focus", flush); document.removeEventListener("visibilitychange", flush); };
   }, [id, revision]);
   return <span ref={anchor} hidden />;
 }

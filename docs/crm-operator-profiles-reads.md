@@ -1,5 +1,9 @@
 # Perfiles y lectura individual del CRM
 
+## Ajuste de tarjetas posterior
+
+Lista compacta de dos líneas con avatar del responsable a la izquierda (sin asignación usa ?), nombre/preview y contador a derecha. Se retiran de la lista el punto de disponibilidad y Sin contestar, sin cambiar sus filtros o las reglas de respuesta. Teléfono y contexto siguen dentro del chat. Contador muestra solo el número confirmado en caché; la limitación de historial se explica en tooltip en lugar de +. Solicitudes versionadas evitan que una respuesta vieja sobrescriba lectura reciente; se reintenta el registro visible cada cinco segundos tras fallos. No se afirma contador global de todo WhatsApp ni sincronización con WhatsApp Web. Pendiente QA visual multiusuario; no publicado.
+
 ## Continuación: fotos propias
 
 Carga y eliminación de foto propia desde Mi perfil. JPG/PNG/WebP hasta 750 KB, máximo 16 millones de píxeles; normalización con Sharp a WebP de 128×128 sin metadatos. Se almacena separada del perfil para evitar transportar imágenes en todas las consultas de responsables. Endpoint requiere sesión; escritura exige mismo origen y siempre usa el ID autenticado. Lectura privada, sin caché pública. Sidebar y responsables de bandeja muestran foto o iniciales si falta/falla.

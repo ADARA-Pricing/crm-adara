@@ -14,7 +14,7 @@ import { ChatOwner } from "./chat-owner";
 import { InboxPreloader } from "./inbox-preloader";
 import { InboxSelection, InboxContact, InboxPanel } from "./inbox-selection";
 import { InboxFilters } from "@/components/inbox-filters";
-import { ReplyWindow } from "@/components/reply-window";
+
 import { inboxWhere } from "@/lib/inbox-filters";
 import { needsReply } from "@/lib/conversation-activity";
 import { parseInboxSnapshot } from "@/lib/inbox-cache";
@@ -77,11 +77,10 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         {conversations.length ? conversations.map((item) => <InboxContact key={item.id} id={item.id} href={`/bandeja?${query}&conversation=${item.id}`}>
           <strong className="inbox-contact-name" title={item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong>
           <UnreadCount id={item.id} />
-          {item.customer.assignee && <span className="contact-owner-avatar" title={`Responsable: ${item.customer.assignee.displayName || item.customer.assignee.email}`}><OperatorAvatar userId={item.customer.assignee.id} name={item.customer.assignee.displayName || item.customer.assignee.email} color={item.customer.assignee.avatarColor} /></span>}
-          {needsReply(item) && <span className="inbox-unanswered">Sin contestar</span>}
+          <span className="contact-owner-avatar" title={item.customer.assignee ? `Responsable: ${item.customer.assignee.displayName || item.customer.assignee.email}` : "Sin responsable asignado"}><OperatorAvatar userId={item.customer.assignee?.id} name={item.customer.assignee?.displayName || item.customer.assignee?.email || "?"} color={item.customer.assignee?.avatarColor} /></span>
           <small className="inbox-contact-date">{item.updatedAt.toLocaleDateString("es-AR", { day: "2-digit", month: "2-digit", timeZone: CRM_TIME_ZONE })}</small>
           <small className="inbox-contact-phone">{item.customer.phone ?? "WhatsApp por identificar"}</small>
-          <ReplyWindow compact activity={{ channel: item.channel, lastIncomingAt: item.lastIncomingAt?.toISOString() ?? null, lastOutgoingAt: item.lastOutgoingAt?.toISOString() ?? null }} /><small className="inbox-contact-meta" title={`${stageLabels[item.customer.funnelStage]} · ${item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · ${item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}`}>{stageLabels[item.customer.funnelStage]} · {item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · {item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}</small><p title={item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}>{item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}</p>
+          <small className="inbox-contact-meta" title={`${stageLabels[item.customer.funnelStage]} · ${item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · ${item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}`}>{stageLabels[item.customer.funnelStage]} · {item.customer.assignee?.displayName || item.customer.assignee?.email || "Sin asignar"} · {item.lastIncomingAt ? needsReply(item) ? "Sin respuesta posterior" : "Respondido" : "Actividad sin verificar"}</small><p title={item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}>{item.customer.lastMessagePreview ?? item.summary ?? "Sin mensajes sincronizados todavía."}</p>
         </InboxContact>) : <div className="empty">Cuando llegue un mensaje por WhatsApp, aparecerá en esta bandeja.</div>}
         <div className="topbar-actions">{filters.page > 1 && <Link href={`/bandeja?${new URLSearchParams({ ...Object.fromEntries(query), page: String(filters.page-1) })}`}>Anterior</Link>}{filters.page*50 < total && <Link href={`/bandeja?${new URLSearchParams({ ...Object.fromEntries(query), page: String(filters.page+1) })}`}>Siguiente</Link>}</div>
       </div></aside>
