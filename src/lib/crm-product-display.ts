@@ -6,5 +6,6 @@ export function productMoneyInput(value?: number) {
 export function productViewFilters(raw: Record<string, string | string[] | undefined>) {
   const search = typeof raw.q === "string" ? raw.q.trim().slice(0, 120) : "";
   const active = raw.active === "yes" || raw.active === "no" ? raw.active : "";
-  return { search, active };
+  const bot = raw.bot === "yes" || raw.bot === "no" ? raw.bot : "";
+  return { search, active, bot };
 }
