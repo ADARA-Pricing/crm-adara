@@ -61,3 +61,11 @@ export const deliveryCapture = new Eval({
     { user: 'Sebastián Pugliese, 1166837411', assert: { response: [{ llm_judge: 'No muestra tareas, etapas, errores técnicos ni pedidos de barrio; con los datos completos presenta el siguiente paso comercial o el resumen para confirmar.' }] } },
   ],
 })
+
+export const shippingPriceOnIntent = new Eval({
+  name: 'shipping-price-on-intent', type: 'regression',
+  conversation: [{ user: 'Quiero el Infinix con envío.', assert: {
+    tools: [{ called: 'getProductInfo' }, { called: 'quoteOrder' }],
+    response: [{ llm_judge: 'Informa por separado el costo exacto del envío y el total. Aclara que contraentrega se abona al recibir, al cadete, en efectivo o transferencia, sin seña ni pago anticipado. No pide barrio ni código postal antes de informar esos importes.' }],
+  } }],
+})
