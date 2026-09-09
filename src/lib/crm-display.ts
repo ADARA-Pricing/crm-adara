@@ -9,7 +9,7 @@ const labels: Record<string, string> = {
   COORDINATING_DELIVERY: "Coordinar envío", LOCAL_PICKUP: "Retiro en Av. Cramer", STORE_PICKUP: "Retiro en Av. Cramer",
   COMPLETED: "Finalizado", FINISHED: "Finalizado", ABANDONED: "Abandonado", LEAD: "Contacto",
   ACTIVE: "Activo", INACTIVE: "Inactivo", OPEN: "Abierto", CLOSED: "Cerrado", HUMAN_HANDOFF: "Atención humana",
-  IN_PROGRESS: "En curso", DONE: "Completada", FOLLOW_UP: "Seguimiento", CALL: "Llamada",
+  IN_PROGRESS: "En curso", DONE: "Completada", FOLLOW_UP: "Seguimiento", DELIVERY_CONFIRMATION: "Confirmar entrega", ORDER_REVIEW: "Revisar pedido", LOGISTICS: "Logística", CALL: "Llamada",
   DELIVERY: "Entrega", OTHER: "Otro", PICKUP: "Retiro en Av. Cramer", COURIER: "Envío por mensajería",
   CASH: "Efectivo", TRANSFER: "Transferencia", CARD: "Tarjeta", WEB: "Compra web",
   ACCEPTED: "Aceptado para envío", UNCERTAIN: "Envío por verificar", SENDING: "Enviando",
