@@ -24,6 +24,10 @@ it("rejects closing before explicit confirmation",async()=>{
   await expect(updateOrderStatus("order","DELIVERED")).rejects.toThrow("Confirmá");
   expect(m.tx).not.toHaveBeenCalled();
 });
+it("requires a cancellation reason",async()=>{
+  await expect(updateOrderStatus("order","CANCELLED",true)).rejects.toThrow("Indicá un motivo");
+  expect(m.tx).not.toHaveBeenCalled();
+});
 it("closes delivery, customer, funnel and order tasks together",async()=>{
   await updateOrderStatus("order","DELIVERED",true);
   expect(m.update).toHaveBeenCalledWith(expect.objectContaining({data:{status:"DELIVERED",deliveredAt:expect.any(Date)}}));

@@ -7,11 +7,12 @@ import { orderActions, orderStatusLabel } from "@/lib/order-status";
 
 const statusSchema = z.enum(["PREPARING", "SHIPPED", "READY_FOR_PICKUP", "DELIVERED", "CANCELLED"]);
 
-export async function updateOrderStatus(orderId: string, nextStatus: string, confirmed = false) {
+export async function updateOrderStatus(orderId: string, nextStatus: string, confirmed = false, reason = "") {
   const user = await requireCrmUser();
   const status = statusSchema.parse(nextStatus);
   if (status === "CANCELLED" && user.role === "LOGISTICS") throw new Error("La cancelación comercial requiere un vendedor o administrador.");
   if ((status === "DELIVERED" || status === "CANCELLED") && confirmed !== true) throw new Error("Confirmá la operación antes de guardar.");
+  if (status === "CANCELLED" && reason.trim().length < 5) throw new Error("Indicá un motivo de al menos 5 caracteres para cancelar.");
   const original = await prisma.order.findUnique({ where: { id: orderId }, select: { customerId: true } });
   if (!original) throw new Error("No encontramos el pedido.");
   const now = new Date();
@@ -21,7 +22,7 @@ export async function updateOrderStatus(orderId: string, nextStatus: string, con
     const order = await tx.order.findUnique({ where: { id: orderId } });
     if (!order || !orderActions(order.status, order.deliveryMethod).some(action => action.status === status)) throw new Error("El pedido ya no permite ese cambio de estado.");
     const changed = await tx.order.updateMany({ where: { id: orderId, status: order.status, deliveryMethod: order.deliveryMethod }, data: {
-      status, deliveredAt: status === "DELIVERED" ? now : undefined,
+      status, deliveredAt: status === "DELIVERED" ? now : undefined, reviewReason: status === "CANCELLED" ? reason.trim().slice(0, 500) : undefined,
     } });
     if (!changed.count) throw new Error("El pedido cambió mientras lo estabas gestionando. Actualizá la página.");
     let closure = "";
@@ -34,7 +35,7 @@ export async function updateOrderStatus(orderId: string, nextStatus: string, con
       await tx.task.updateMany({ where: { orderId, type: { in: ["ORDER_REVIEW", "LOGISTICS", "DELIVERY_CONFIRMATION"] }, status: { in: ["OPEN", "IN_PROGRESS"] } }, data: { status: "DONE", completedAt: now } });
       closure = ` El operador confirmó entrega/retiro y cobro. Cliente actualizado como activo. ${pending ? "Se conserva la etapa del embudo porque tiene otros pedidos pendientes." : "Embudo finalizado."}`;
     }
-    await tx.orderActivity.create({ data: { orderId, action: "STATUS_CHANGED", detail: `${user.displayName || user.email} (${user.id}): estado actualizado a ${orderStatusLabel(status, order.deliveryMethod)}.${closure}` } });
+    await tx.orderActivity.create({ data: { orderId, action: "STATUS_CHANGED", detail: `${user.displayName || user.email} (${user.id}): estado actualizado a ${orderStatusLabel(status, order.deliveryMethod)}.${status === "CANCELLED" ? ` Motivo: ${reason.trim()}.` : ""}${closure}` } });
   });
   for (const path of ["/", "/pedidos", `/pedidos/${orderId}`, "/logistica", "/embudo", "/clientes", `/clientes/${original.customerId}`, "/tareas"]) revalidatePath(path);
 }
