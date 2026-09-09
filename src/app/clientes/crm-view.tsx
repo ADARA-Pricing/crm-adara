@@ -18,7 +18,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
     prisma.customer.findMany({ take: 50, skip: (page - 1) * 50, where: filter.where, orderBy: filter.orderBy, include: { assignee: true, _count: { select: { orders: true } } } }),
     prisma.userProfile.findMany({ where: { isActive: true }, select: { id: true, displayName: true, email: true } })
   ]);
-  return <CrmShell active="/clientes"><header className="topbar"><div><p className="eyebrow">Base de relaciones</p><h1>Clientes</h1><p className="topbar-copy">Una ficha por persona, incluso si todavía no compró.</p></div></header>
+  return <CrmShell active="/clientes"><header className="topbar"><div><p className="eyebrow">Base de relaciones</p><h1>Clientes</h1><p className="topbar-copy">Una ficha por persona, incluso si todavía no compró.</p></div><div className="topbar-actions"><Link className="button secondary" href="/clientes/duplicados">Revisar duplicados</Link></div></header>
     <form className="bot-date-form" action="/clientes">
       <label>Buscar<input name="q" defaultValue={filter.q} placeholder="Nombre, teléfono o localidad" /></label>
       <label>Etapa<select name="stage" defaultValue={filter.stage || ""}><option value="">Todas</option>{funnelStages.map(([key]) => <option key={key} value={key}>{crmStatus(key)}</option>)}</select></label>
