@@ -13,7 +13,7 @@ export default async function CoveragePage({ searchParams }: { searchParams: Pro
   const { q = "", tab } = await searchParams;
   const search = q.trim().slice(0, 120);
   const riskTab = tab === "riesgo";
-  const zones = await prisma.deliveryCoverageZone.findMany({ where: search ? { name: { contains: search, mode: "insensitive" } } : undefined, orderBy: { name: "asc" } });
+  const zones = riskTab ? [] : await prisma.deliveryCoverageZone.findMany({ where: search ? { name: { contains: search, mode: "insensitive" } } : undefined, orderBy: { name: "asc" } });
   const updatedAt = zones.reduce<Date | null>((latest, zone) => !latest || zone.sourceUpdatedAt > latest ? zone.sourceUpdatedAt : latest, null);
   const dangerZones = riskTab ? await prisma.dangerZone.findMany({ orderBy: [{ isActive: "desc" }, { name: "asc" }] }) : [];
   const admin = user.role === "ADMIN";
