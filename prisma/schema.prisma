@@ -162,6 +162,20 @@ model DeliveryCoverageZone {
   @@index([isActive, normalizedName])
 }
 
+model DangerZone {
+  id            String   @id @default(cuid())
+  name          String
+  latitude      Float
+  longitude     Float
+  radiusMeters  Int
+  note          String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([isActive])
+}
+
 model Order {
   id              String           @id @default(cuid())
   saleNumber      Int              @unique @default(autoincrement())

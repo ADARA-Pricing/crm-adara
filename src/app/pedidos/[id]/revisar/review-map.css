@@ -1,0 +1,17 @@
+.risk-map { margin-top: 20px; overflow: hidden; }
+.risk-map-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px 10px; }
+.risk-map-heading h2 { margin: 0; }
+.risk-map-heading p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.risk-map-heading a { white-space: nowrap; font-size: 14px; }
+.risk-map-canvas { position: relative; height: 330px; background: #edf0eb; }
+.risk-map-canvas iframe, .risk-map-canvas svg { border: 0; inset: 0; height: 100%; position: absolute; width: 100%; }
+.risk-map-canvas svg { pointer-events: none; }
+.danger-zone-circle { fill: #d74d4d33; stroke: #b3261e; stroke-width: .35; vector-effect: non-scaling-stroke; }
+.order-point { fill: #1e70b7; stroke: #fff; stroke-width: .45; vector-effect: non-scaling-stroke; }
+.risk-match, .risk-clear, .risk-note { margin: 12px 20px 18px; font-size: 14px; }
+.risk-match { color: #9d251e; font-weight: 600; }
+.risk-clear { color: #247249; }
+.risk-note { border-left: 3px solid #b3261e; padding-left: 10px; color: var(--muted); }
+.danger-zone-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.danger-zone-form h2, .danger-zone-form .logistics-note { grid-column: 1 / -1; }
+@media (max-width: 700px) { .risk-map-canvas { height: 270px; } .danger-zone-form { grid-template-columns: 1fr; } .risk-map-heading { flex-direction: column; } }
