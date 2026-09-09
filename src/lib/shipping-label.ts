@@ -7,8 +7,21 @@ export type LabelOrder = {
   items: { quantity: number; unitPriceCents: number; product: { name: string; sku: string } }[];
 };
 
-export function canLabel(order: { status: string; deliveryMethod: string }) {
-  return order.deliveryMethod === "COURIER" && ["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "DELIVERED"].includes(order.status);
+export function labelEligibility(order: Partial<LabelOrder>) {
+  const missing: string[] = [];
+  if (order.deliveryMethod !== "COURIER") missing.push("la modalidad debe ser mensajería");
+  if (!order.status || !["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "DELIVERED"].includes(order.status)) missing.push("el pedido debe estar aprobado para logística");
+  if (!order.recipientName?.trim()) missing.push("receptor");
+  if (!order.recipientPhone?.trim()) missing.push("teléfono");
+  if (!order.deliveryAddress?.trim()) missing.push("dirección");
+  if (!order.locality?.trim()) missing.push("localidad");
+  if (!order.deliveryDate) missing.push("fecha programada");
+  if (!order.items?.length || order.items.some(item => !Number.isInteger(item.quantity) || item.quantity < 1 || !item.product?.name?.trim() || !item.product?.sku?.trim())) missing.push("producto, SKU o cantidad");
+  return { ready: missing.length === 0, missing };
+}
+
+export function canLabel(order: Partial<LabelOrder>) {
+  return labelEligibility(order).ready;
 }
 
 // Encode every UTF-8 byte: customer text can never become a ZPL command.
@@ -29,14 +42,14 @@ function lines(value: string, width: number, max: number): string[] {
 }
 
 export function shippingLabel(order: LabelOrder) {
-  if (!canLabel(order)) throw new Error(`Venta #${order.saleNumber}: requiere envío aprobado por mensajería.`);
+  const eligibility = labelEligibility(order);
+  if (!eligibility.ready) throw new Error(`Venta #${order.saleNumber}: faltan o requieren revisión ${eligibility.missing.join(", ")}.`);
   if (order.paymentMethod !== "CASH_OR_TRANSFER" || order.currency !== "ARS") throw new Error("Revisá la modalidad de cobro antes de generar una etiqueta contraentrega.");
   const validCents = (value: number) => Number.isSafeInteger(value) && value >= 0;
   if (!order.items.length || !validCents(order.shippingCents) || !validCents(order.totalCents) || order.items.some(item => !Number.isSafeInteger(item.quantity) || item.quantity < 1 || !validCents(item.unitPriceCents) || !item.product.name.trim())) throw new Error("El pedido tiene productos o importes inválidos.");
   const subtotal = order.items.reduce((sum, item) => sum + item.quantity * item.unitPriceCents, 0);
   if (!validCents(subtotal) || subtotal + order.shippingCents !== order.totalCents) throw new Error("Los productos y el envío no coinciden con el total del pedido. Revisalo antes de cobrar.");
   const money = (cents: number) => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(cents / 100);
-  if (![order.recipientName, order.deliveryAddress, order.locality].every(value => value.trim())) throw new Error(`Venta #${order.saleNumber}: faltan destinatario, dirección o localidad.`);
   const fields: string[] = [];
   const text = (x: number, y: number, value: string, size = 28, width = 48, max = 1, align: "L" | "C" | "R" = "L", fieldWidth = 800 - x - 32) => {
     lines(value, width, max).forEach((line, index) => fields.push(`^FO${x},${y + index * (size + 7)}^A0N,${size},${Math.round(size * .72)}^FH_^FB${fieldWidth},1,0,${align}^FD${zplText(line)}^FS`));

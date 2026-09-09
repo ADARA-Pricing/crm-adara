@@ -14,6 +14,11 @@ describe("read-only CRM list filters", () => {
     expect(messages.where).toMatchObject({ archivedAt: null, conversations: { some: { events: { none: {} } } } });
   });
   it("keeps pickup distinct without changing any states", () => { expect(orderListFilter({ method: "PICKUP", status: "READY_FOR_PICKUP" }).where).toMatchObject({ deliveryMethod: "PICKUP", status: "READY_FOR_PICKUP" }); });
+  it("sorts orders only by supported operational fields", () => {
+    expect(orderListFilter({ sort: "total_high" }).orderBy).toEqual([{ totalCents: "desc" }, { id: "asc" }]);
+    expect(orderListFilter({ sort: "client" }).orderBy).toEqual([{ recipientName: "asc" }, { id: "asc" }]);
+    expect(orderListFilter({ sort: "unknown" }).orderBy).toEqual([{ saleDate: "desc" }, { id: "asc" }]);
+  });
   it("uses inclusive calendar dates in Argentina", () => { const f = orderListFilter({ from: "2026-09-07", to: "2026-09-07" }); expect(f.where.saleDate).toEqual({ gte: new Date("2026-09-07T03:00:00Z"), lt: new Date("2026-09-08T03:00:00Z") }); });
   it.each([{ from: "2026-02-30" }, { to: "bad" }, { from: "2026-09-08", to: "2026-09-07" }])("reports invalid dates %j", query => { expect(orderListFilter(query).error).toBeTruthy(); });
   it("searches sale numbers without overflowing database integers", () => { expect(orderListFilter({ q: "#42" }).where.OR).toContainEqual({ saleNumber: 42 }); expect(orderListFilter({ q: "999999999999999999" }).where.OR).not.toContainEqual({ saleNumber: 1e18 }); });

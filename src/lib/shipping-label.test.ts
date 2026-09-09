@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { shippingLabel, zplText, type LabelOrder } from "./shipping-label";
-const order: LabelOrder = { saleNumber: 123, status: "PREPARING", deliveryMethod: "COURIER", recipientName: "Cliente de prueba", recipientPhone: null, deliveryAddress: "Calle de prueba 123", locality: "Localidad", postalCode: "1234", deliveryDate: null, deliveryTimeWindow: null, assignedCourier: null, paymentMethod: "CASH_OR_TRANSFER", currency: "ARS", shippingCents: 700000, totalCents: 20699900, items: [{ quantity: 1, unitPriceCents: 19999900, product: { name: "Infinix Smart 10", sku: "INF10" } }] };
+import { labelEligibility, shippingLabel, zplText, type LabelOrder } from "./shipping-label";
+const order: LabelOrder = { saleNumber: 123, status: "PREPARING", deliveryMethod: "COURIER", recipientName: "Cliente de prueba", recipientPhone: "1160000000", deliveryAddress: "Calle de prueba 123", locality: "Localidad", postalCode: "1234", deliveryDate: new Date("2026-09-10T03:00:00Z"), deliveryTimeWindow: null, assignedCourier: null, paymentMethod: "CASH_OR_TRANSFER", currency: "ARS", shippingCents: 700000, totalCents: 20699900, items: [{ quantity: 1, unitPriceCents: 19999900, product: { name: "Infinix Smart 10", sku: "INF10" } }] };
 describe("shipping labels", () => {
+  it("explains every required delivery field before enabling the label", () => {
+    expect(labelEligibility({ ...order, recipientPhone: null, deliveryDate: null }).missing).toEqual(expect.arrayContaining(["teléfono", "fecha programada"]));
+  });
   it("prints item identification, shipping and exact collection total", () => {
     const zpl = shippingLabel(order);
     expect(zpl).toContain(zplText("1 x Infinix Smart 10 | SKU: INF10 | c/u $ 199.999,00"));

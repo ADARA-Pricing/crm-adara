@@ -28,7 +28,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <label>Modalidad<select name="method" defaultValue={filter.method || ""}><option value="">Todas</option><option value="COURIER">Envío por mensajería</option><option value="PICKUP">Retiro en Av. Cramer</option></select></label>
       <label>Venta desde<input type="date" name="from" defaultValue={filter.from} />{filter.from && <small>{crmDate(filter.from + "T12:00:00-03:00")}</small>}</label>
       <label>Venta hasta<input type="date" name="to" defaultValue={filter.to} />{filter.to && <small>{crmDate(filter.to + "T12:00:00-03:00")}</small>}</label>
-      <label>Orden<select name="sort" defaultValue={filter.sort}><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option></select></label>
+      <label>Orden<select name="sort" defaultValue={filter.sort}><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option><option value="total_high">Mayor importe</option><option value="total_low">Menor importe</option><option value="client">Cliente A–Z</option><option value="status">Estado</option></select></label>
       <button className="button secondary">Filtrar</button><Link href="/pedidos">Limpiar filtros</Link>
     </form>
     {filter.error ? <p role="alert">{filter.error}</p> : <p className="muted">Importe de todos los pedidos filtrados: {formatArs(amount?._sum.totalCents ?? 0)}. Incluye los estados seleccionados; no equivale a cobros ni ventas entregadas. Fechas de venta en hora argentina.</p>}

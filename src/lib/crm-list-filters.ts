@@ -46,7 +46,12 @@ export function orderListFilter(raw: ListQuery) {
     ...(!error && (start || end) ? { saleDate: { ...(start ? { gte: start } : {}), ...(end ? { lt: new Date(end.getTime() + 86400000) } : {}) } } : {}),
     ...(q ? { OR: [{ recipientName: { contains: q, mode: "insensitive" } }, { recipientPhone: { contains: q } }, { customer: { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { whatsappProfileName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }] } }, ...(number !== null && number <= 2147483647 ? [{ saleNumber: number }] : [])] } : {}),
   };
-  const sort = value(raw, "sort") === "oldest" ? "oldest" : "recent";
-  const orderBy: Prisma.OrderOrderByWithRelationInput[] = [{ saleDate: sort === "oldest" ? "asc" : "desc" }, { id: "asc" }];
+  const requestedSort = value(raw, "sort");
+  const sort = ["oldest", "total_high", "total_low", "client", "status"].includes(requestedSort) ? requestedSort : "recent";
+  const orderBy: Prisma.OrderOrderByWithRelationInput[] = sort === "total_high" ? [{ totalCents: "desc" }, { id: "asc" }]
+    : sort === "total_low" ? [{ totalCents: "asc" }, { id: "asc" }]
+      : sort === "client" ? [{ recipientName: "asc" }, { id: "asc" }]
+        : sort === "status" ? [{ status: "asc" }, { saleDate: "desc" }, { id: "asc" }]
+          : [{ saleDate: sort === "oldest" ? "asc" : "desc" }, { id: "asc" }];
   return { q, from, to, status, method, sort, where, orderBy, error };
 }
