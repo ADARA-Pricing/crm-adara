@@ -62,13 +62,10 @@ export async function deleteProduct(id: string) {
   await requireAdmin();
   const product = await prisma.product.findUnique({ where: { id }, include: { _count: { select: { orderItems: true } } } });
   if (!product) redirect("/productos");
+  await prisma.product.update({ where: { id }, data: { isActive: false, isAvailableForBot: false } });
   if (product._count.orderItems) {
-    await prisma.product.update({ where: { id }, data: { isActive: false, isAvailableForBot: false } });
-    revalidatePath("/productos");
-    revalidatePath(`/productos/${id}`);
-    return;
+    revalidatePath("/productos"); revalidatePath(`/productos/${id}`); return;
   }
-  await prisma.product.delete({ where: { id } });
   revalidatePath("/productos");
   revalidatePath("/");
   redirect("/productos");

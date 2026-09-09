@@ -17,7 +17,7 @@ export function listUrl(path: string, raw: ListQuery, page: number) {
 export function customerListFilter(raw: ListQuery, userId: string) {
   const q = value(raw, "q"), owner = value(raw, "owner"), orders = value(raw, "orders");
   const stage = funnelStages.find(([s]) => s === value(raw, "stage"))?.[0];
-  const where: Prisma.CustomerWhereInput = {
+  const where: Prisma.CustomerWhereInput = { archivedAt: null,
     ...(q ? { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { whatsappProfileName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }, { locality: { contains: q, mode: "insensitive" } }] } : {}),
     ...(stage ? { funnelStage: stage } : {}),
     ...(owner ? { assigneeId: owner === "mine" ? userId : owner === "none" ? null : owner } : {}),

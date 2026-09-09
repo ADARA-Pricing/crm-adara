@@ -17,13 +17,13 @@ export default async function Home() {
 
   const [openConversations, newLeads, reviewOrders, logisticsOrders, salesToday, salesWeek, recentOrders, recentCustomers] = await Promise.all([
     prisma.conversation.count({ where: { status: { in: ["OPEN", "HUMAN_HANDOFF"] } } }),
-    prisma.customer.count({ where: { status: "LEAD", createdAt: { gte: dayStart } } }),
+    prisma.customer.count({ where: { archivedAt: null, status: "LEAD", createdAt: { gte: dayStart } } }),
     prisma.order.count({ where: { status: "PENDING_REVIEW" } }),
     prisma.order.count({ where: { status: { in: ["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "READY_FOR_PICKUP"] } } }),
     prisma.order.aggregate({ where: { status: "DELIVERED", deliveredAt: { gte: dayStart } }, _sum: { totalCents: true } }),
     prisma.order.aggregate({ where: { status: "DELIVERED", deliveredAt: { gte: weekStart } }, _sum: { totalCents: true } }),
     prisma.order.findMany({ take: 6, orderBy: { updatedAt: "desc" }, include: { customer: true, items: { include: { product: true } } } }),
-    prisma.customer.findMany({ take: 5, orderBy: [{ lastMessageAt: { sort: "desc", nulls: "last" } }, { id: "asc" }], select: { id: true, fullName: true, whatsappProfileName: true, phone: true, funnelStage: true, lastMessagePreview: true, lastMessageAt: true } })
+    prisma.customer.findMany({ where: { archivedAt: null }, take: 5, orderBy: [{ lastMessageAt: { sort: "desc", nulls: "last" } }, { id: "asc" }], select: { id: true, fullName: true, whatsappProfileName: true, phone: true, funnelStage: true, lastMessagePreview: true, lastMessageAt: true } })
   ]);
   const [overdueTasks, upcomingTasks, todayTasks] = await Promise.all([
     prisma.task.count({ where: taskTimingFilter("overdue", now) }),

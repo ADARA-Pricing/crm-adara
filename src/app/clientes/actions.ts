@@ -14,21 +14,16 @@ export async function deleteCustomer(input: { id: string; confirmation: string; 
       await tx.$queryRaw`SELECT id FROM crm."Customer" WHERE id = ${input.id} FOR UPDATE`;
       const customer = await tx.customer.findUnique({ where: { id: input.id } });
       if (!customer || customer.updatedAt.toISOString() !== input.updatedAt) throw new Error("La ficha cambió. Actualizá la página antes de eliminarla.");
-      if (await tx.order.count({ where: { customerId: input.id } })) throw new Error("No se puede eliminar un cliente con pedidos, aunque estén cancelados.");
-      if (await tx.task.count({ where: { customerId: input.id, status: { in: ["OPEN", "IN_PROGRESS"] } } })) throw new Error("Primero resolvé o cancelá las tareas pendientes del cliente.");
       await tx.$queryRaw`SELECT id FROM crm."Conversation" WHERE "customerId" = ${input.id} FOR UPDATE`;
       if (await tx.conversation.count({ where: { customerId: input.id, botPaused: false, botpressId: { not: null } } })) throw new Error("Pausá el bot en todas las conversaciones del cliente antes de eliminarlo.");
-      await tx.conversationEvent.deleteMany({ where: { conversation: { customerId: input.id } } });
-      await tx.conversation.deleteMany({ where: { customerId: input.id } });
-      await tx.task.deleteMany({ where: { customerId: input.id } });
-      await tx.customer.delete({ where: { id: input.id } });
+      await tx.customer.update({ where: { id: input.id }, data: { archivedAt: new Date(), archivedById: user.id, archiveEvents: { create: { actorId: user.id, action: "ARCHIVED" } } } });
     });
   } catch (error) {
     const safe = ["La ficha cambió.", "No se puede eliminar", "Primero resolvé", "Pausá el bot"];
     return { ok: false, message: error instanceof Error && safe.some(prefix => error.message.startsWith(prefix)) ? error.message : "No se pudo eliminar el cliente. Puede tener actividad nueva o vínculos que deben conservarse." };
   }
   for (const path of ["/clientes", "/embudo", "/bandeja", "/tareas", "/"]) revalidatePath(path);
-  return { ok: true, message: "Cliente e historial local eliminados." };
+  return { ok: true, message: "Cliente archivado. Se conserva todo su historial local." };
 }
 
 export async function createLeadTask(input: { customerId: string; title: string; description: string; assigneeId: string; dueAt: string }) {
