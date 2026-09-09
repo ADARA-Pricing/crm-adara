@@ -8,11 +8,12 @@ export async function searchCrm(raw: unknown) {
   const { q, error } = searchTerm(raw);
   if (!q || error) return { q, error, results: null };
   const filter = globalSearchFilters(q);
-  const [customers, orders, products, conversations] = await Promise.all([
+  const [customers, orders, products, conversations, tasks] = await Promise.all([
     prisma.customer.findMany({ where: filter.customer, take: 11, orderBy: [{ updatedAt: "desc" }, { id: "asc" }], select: { id: true, fullName: true, whatsappProfileName: true, phone: true, funnelStage: true } }),
     prisma.order.findMany({ where: filter.order, take: 11, orderBy: [{ saleDate: "desc" }, { id: "asc" }], select: { id: true, saleNumber: true, recipientName: true, status: true, deliveryMethod: true, saleDate: true } }),
     prisma.product.findMany({ where: filter.product, take: 11, orderBy: [{ name: "asc" }, { id: "asc" }], select: { id: true, name: true, sku: true, category: true, isActive: true } }),
-    prisma.conversation.findMany({ where: filter.conversation, take: 11, orderBy: [{ updatedAt: "desc" }, { id: "asc" }], select: { id: true, channel: true, status: true, customer: { select: { fullName: true, whatsappProfileName: true, phone: true } } } })
+    prisma.conversation.findMany({ where: filter.conversation, take: 11, orderBy: [{ updatedAt: "desc" }, { id: "asc" }], select: { id: true, channel: true, status: true, customer: { select: { fullName: true, whatsappProfileName: true, phone: true } } } }),
+    prisma.task.findMany({ where: filter.task, take: 11, orderBy: [{ updatedAt: "desc" }, { id: "asc" }], select: { id: true, title: true, status: true, dueAt: true, customerId: true, orderId: true } })
   ]);
-  return { q, error, results: { customers, orders, products, conversations } };
+  return { q, error, results: { customers, orders, products, conversations, tasks } };
 }

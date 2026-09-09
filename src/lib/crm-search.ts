@@ -13,5 +13,6 @@ export function globalSearchFilters(q: string) {
   const order: Prisma.OrderWhereInput = { OR: [{ recipientName: text(q) }, { recipientPhone: { contains: phone || q } }, { customer }, ...(number !== null && number <= 2147483647 ? [{ saleNumber: number }] : [])] };
   const product: Prisma.ProductWhereInput = { OR: [{ name: text(q) }, { sku: text(q) }, { category: text(q) }] };
   const conversation: Prisma.ConversationWhereInput = { customer };
-  return { customer, order, product, conversation };
+  const task: Prisma.TaskWhereInput = { OR: [{ title: text(q) }, { description: text(q) }, { customer }, { order: { OR: [{ recipientName: text(q) }, ...(number !== null && number <= 2147483647 ? [{ saleNumber: number }] : [])] } }] };
+  return { customer, order, product, conversation, task };
 }
