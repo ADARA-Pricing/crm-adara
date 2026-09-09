@@ -12,6 +12,7 @@ export function funnelViewFilter(raw: ListQuery, userId: string, now = new Date(
   const requestedPage = Number(get("page"));
   const page = Number.isSafeInteger(requestedPage) && requestedPage > 0 && requestedPage <= 100000 ? requestedPage : 1;
   const where: Prisma.CustomerWhereInput = {
+    archivedAt: null,
     ...(q ? { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { whatsappProfileName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }, { locality: { contains: q, mode: "insensitive" } }] } : {}),
     ...(category ? { interestCategories: { has: category } } : {}),
     ...(owner ? { assigneeId: owner === "mine" ? userId : owner === "none" ? null : owner } : {}),

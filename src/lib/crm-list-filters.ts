@@ -11,21 +11,22 @@ const value = (raw: ListQuery, key: string) => typeof raw[key] === "string" ? ra
 export function listPage(raw: ListQuery) { const v = value(raw, "page"); return /^\d+$/.test(v) ? Math.min(10000, Math.max(1, Number(v))) : 1; }
 export function listUrl(path: string, raw: ListQuery, page: number) {
   const query = new URLSearchParams();
-  for (const key of ["q", "stage", "owner", "orders", "sort", "status", "method", "from", "to"]) if (value(raw, key)) query.set(key, value(raw, key));
+  for (const key of ["q", "stage", "owner", "orders", "quality", "sort", "status", "method", "from", "to"]) if (value(raw, key)) query.set(key, value(raw, key));
   query.set("page", String(page)); return `${path}?${query}`;
 }
 export function customerListFilter(raw: ListQuery, userId: string) {
-  const q = value(raw, "q"), owner = value(raw, "owner"), orders = value(raw, "orders");
+  const q = value(raw, "q"), owner = value(raw, "owner"), orders = value(raw, "orders"), quality = value(raw, "quality");
   const stage = funnelStages.find(([s]) => s === value(raw, "stage"))?.[0];
   const where: Prisma.CustomerWhereInput = { archivedAt: null,
     ...(q ? { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { whatsappProfileName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }, { locality: { contains: q, mode: "insensitive" } }] } : {}),
     ...(stage ? { funnelStage: stage } : {}),
     ...(owner ? { assigneeId: owner === "mine" ? userId : owner === "none" ? null : owner } : {}),
     ...(orders === "yes" ? { orders: { some: {} } } : orders === "no" ? { orders: { none: {} } } : {}),
+    ...(quality === "phone" ? { phone: null } : quality === "name" ? { AND: [{ fullName: null }, { whatsappProfileName: null }] } : quality === "locality" ? { locality: null } : quality === "owner" ? { assigneeId: null } : {}),
   };
   const sort = value(raw, "sort") === "name" ? "name" : "recent";
   const orderBy: Prisma.CustomerOrderByWithRelationInput[] = sort === "name" ? [{ fullName: { sort: "asc", nulls: "last" } }, { id: "asc" }] : [{ updatedAt: "desc" }, { id: "asc" }];
-  return { q, owner, orders, stage, sort, where, orderBy };
+  return { q, owner, orders, quality, stage, sort, where, orderBy };
 }
 function day(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;

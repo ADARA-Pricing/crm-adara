@@ -5,6 +5,7 @@ import { CrmShell } from "@/components/crm-shell";
 import { argentinaDayStart, crmStatus } from "@/lib/crm-display";
 import { requireCrmUser } from "@/lib/auth";
 import { taskTimingFilter } from "@/lib/crm-task-filters";
+import { duplicateWindowHours, possibleTaskDuplicates } from "@/lib/task-duplicates";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ export default async function Home() {
   const weekStart = new Date(dayStart);
   weekStart.setTime(dayStart.getTime() - 6 * 86400000);
 
-  const [openConversations, newLeads, reviewOrders, logisticsOrders, salesToday, salesWeek, recentOrders, recentCustomers] = await Promise.all([
+  const [openConversations, newLeads, reviewOrders, logisticsOrders, salesToday, salesWeek, recentOrders, recentCustomers, unassignedCustomers, unidentifiedCustomers, oldestPending, duplicateCandidates] = await Promise.all([
     prisma.conversation.count({ where: { status: { in: ["OPEN", "HUMAN_HANDOFF"] } } }),
     prisma.customer.count({ where: { archivedAt: null, status: "LEAD", createdAt: { gte: dayStart } } }),
     prisma.order.count({ where: { status: "PENDING_REVIEW" } }),
@@ -23,13 +24,19 @@ export default async function Home() {
     prisma.order.aggregate({ where: { status: "DELIVERED", deliveredAt: { gte: dayStart } }, _sum: { totalCents: true } }),
     prisma.order.aggregate({ where: { status: "DELIVERED", deliveredAt: { gte: weekStart } }, _sum: { totalCents: true } }),
     prisma.order.findMany({ take: 6, orderBy: { updatedAt: "desc" }, include: { customer: true, items: { include: { product: true } } } }),
-    prisma.customer.findMany({ where: { archivedAt: null }, take: 5, orderBy: [{ lastMessageAt: { sort: "desc", nulls: "last" } }, { id: "asc" }], select: { id: true, fullName: true, whatsappProfileName: true, phone: true, funnelStage: true, lastMessagePreview: true, lastMessageAt: true } })
+    prisma.customer.findMany({ where: { archivedAt: null }, take: 5, orderBy: [{ lastMessageAt: { sort: "desc", nulls: "last" } }, { id: "asc" }], select: { id: true, fullName: true, whatsappProfileName: true, phone: true, funnelStage: true, lastMessagePreview: true, lastMessageAt: true } }),
+    prisma.customer.count({ where: { archivedAt: null, assigneeId: null } }),
+    prisma.customer.count({ where: { archivedAt: null, AND: [{ fullName: null }, { whatsappProfileName: null }] } }),
+    prisma.conversation.aggregate({ where: { status: { in: ["OPEN", "HUMAN_HANDOFF"] } }, _min: { updatedAt: true } }),
+    prisma.task.findMany({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } }, orderBy: { createdAt: "desc" }, take: 1001, select: { id: true, title: true, type: true, status: true, customerId: true, orderId: true, createdAt: true } })
   ]);
   const [overdueTasks, upcomingTasks, todayTasks] = await Promise.all([
     prisma.task.count({ where: taskTimingFilter("overdue", now) }),
     prisma.task.count({ where: taskTimingFilter("upcoming", now) }),
     prisma.task.count({ where: taskTimingFilter("today", now) })
   ]);
+  const duplicateTasks = possibleTaskDuplicates(duplicateCandidates.slice(0, 1000), duplicateWindowHours(process.env.CRM_TASK_DUPLICATE_WINDOW_HOURS)).size;
+  const oldestPendingHours = oldestPending._min.updatedAt ? Math.max(0, Math.floor((now.getTime() - oldestPending._min.updatedAt.getTime()) / 3600000)) : null;
   const cards = [
     ["Conversaciones pendientes", String(openConversations), "Abiertas o derivadas a una persona.", "/bandeja?filter=open"],
     ["Leads nuevos", String(newLeads), "Ingresados desde las 00:00 h."],
@@ -37,10 +44,14 @@ export default async function Home() {
     ["En logística", String(logisticsOrders), "Aprobados, en preparación o enviados."],
     ["Ventas hoy", formatArs(salesToday._sum.totalCents ?? 0), "Pedidos entregados."],
     ["Ventas 7 días", formatArs(salesWeek._sum.totalCents ?? 0), "Pedidos entregados."],
+    ["Clientes sin responsable", String(unassignedCustomers), "Activos sin una persona asignada.", "/clientes?quality=owner"],
+    ["Contactos sin identificar", String(unidentifiedCustomers), "Sin nombre ni perfil de WhatsApp.", "/clientes?quality=name"],
+    ["Atención pendiente más antigua", oldestPendingHours == null ? "Sin datos" : `${oldestPendingHours} h`, "Abierta o derivada, según última actualización.", "/bandeja?filter=open"],
+    ["Tareas con posible duplicado", String(duplicateTasks), "Coincidencias a revisar; no se modificó ninguna tarea.", "/tareas"],
   ];
 
   return <CrmShell active="/">
-    <header className="topbar"><div><p className="eyebrow">Operación comercial</p><h1>Dashboard</h1><p className="topbar-copy">WhatsApp, ventas y preparación de pedidos en un solo lugar.</p></div><div className="topbar-actions"><Link className="button secondary" href="/embudo">Ver embudo</Link><Link className="button" href="/pedidos">Revisar pedidos</Link></div></header>
+    <header className="topbar"><div><p className="eyebrow">Operación comercial</p><h1>Dashboard</h1><p className="topbar-copy">WhatsApp, ventas y preparación de pedidos en un solo lugar.</p><p className="muted">Actualizado al abrir el panel: {now.toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })}.</p></div><div className="topbar-actions"><Link className="button secondary" href="/embudo">Ver embudo</Link><Link className="button" href="/pedidos">Revisar pedidos</Link></div></header>
       <section className="metric-grid">
         {cards.map(([title, value, detail, href]) => (
           <article key={title} className="metric">

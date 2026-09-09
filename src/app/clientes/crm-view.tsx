@@ -24,6 +24,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
       <label>Etapa<select name="stage" defaultValue={filter.stage || ""}><option value="">Todas</option>{funnelStages.map(([key]) => <option key={key} value={key}>{crmStatus(key)}</option>)}</select></label>
       <label>Responsable<select name="owner" defaultValue={filter.owner}><option value="">Todos</option><option value="mine">Mis clientes</option><option value="none">Sin asignar</option>{members.map(m => <option key={m.id} value={m.id}>{m.displayName || m.email}</option>)}</select></label>
       <label>Pedidos registrados<select name="orders" defaultValue={filter.orders}><option value="">Todos</option><option value="yes">Con pedidos</option><option value="no">Sin pedidos</option></select></label>
+      <label>Calidad de datos<select name="quality" defaultValue={filter.quality}><option value="">Sin filtro</option><option value="phone">Teléfono pendiente</option><option value="name">Nombre pendiente</option><option value="locality">Sin localidad</option><option value="owner">Sin responsable</option></select></label>
       <label>Orden<select name="sort" defaultValue={filter.sort}><option value="recent">Última actualización</option><option value="name">Nombre A–Z</option></select></label>
       <button className="button secondary">Filtrar</button><Link href="/clientes">Limpiar filtros</Link>
     </form>

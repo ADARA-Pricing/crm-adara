@@ -6,7 +6,7 @@ import { funnelStages } from "@/lib/funnel-stages";
 export const dynamic="force-dynamic";
 export default async function Results({searchParams}:{searchParams:Promise<{days?:string}>}) {
   await requireCrmUser(); const days=(await searchParams).days==="7"?7:30;const now=new Date();const since=new Date(now.getTime()-days*86400000);
-  const cohort={createdAt:{gte:since,lte:now}};
+  const cohort={archivedAt:null,createdAt:{gte:since,lte:now}};
   const [leads,buyers,stages,categories,transitions]=await Promise.all([
     prisma.customer.count({where:cohort}),
     prisma.customer.count({where:{...cohort,orders:{some:{status:"DELIVERED",deliveredAt:{lte:now}}}}}),
