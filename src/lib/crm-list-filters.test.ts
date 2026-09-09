@@ -8,8 +8,10 @@ describe("read-only CRM list filters", () => {
   it("filters records pending a specific quality check without including archived customers", () => {
     const phone = customerListFilter({ quality: "phone" }, "operator");
     const name = customerListFilter({ quality: "name" }, "operator");
+    const messages = customerListFilter({ quality: "messages" }, "operator");
     expect(phone.where).toMatchObject({ archivedAt: null, phone: null });
     expect(name.where).toMatchObject({ archivedAt: null, AND: [{ fullName: null }, { whatsappProfileName: null }] });
+    expect(messages.where).toMatchObject({ archivedAt: null, conversations: { some: { events: { none: {} } } } });
   });
   it("keeps pickup distinct without changing any states", () => { expect(orderListFilter({ method: "PICKUP", status: "READY_FOR_PICKUP" }).where).toMatchObject({ deliveryMethod: "PICKUP", status: "READY_FOR_PICKUP" }); });
   it("uses inclusive calendar dates in Argentina", () => { const f = orderListFilter({ from: "2026-09-07", to: "2026-09-07" }); expect(f.where.saleDate).toEqual({ gte: new Date("2026-09-07T03:00:00Z"), lt: new Date("2026-09-08T03:00:00Z") }); });

@@ -22,7 +22,7 @@ export function customerListFilter(raw: ListQuery, userId: string) {
     ...(stage ? { funnelStage: stage } : {}),
     ...(owner ? { assigneeId: owner === "mine" ? userId : owner === "none" ? null : owner } : {}),
     ...(orders === "yes" ? { orders: { some: {} } } : orders === "no" ? { orders: { none: {} } } : {}),
-    ...(quality === "phone" ? { phone: null } : quality === "name" ? { AND: [{ fullName: null }, { whatsappProfileName: null }] } : quality === "locality" ? { locality: null } : quality === "owner" ? { assigneeId: null } : {}),
+    ...(quality === "phone" ? { phone: null } : quality === "name" ? { AND: [{ fullName: null }, { whatsappProfileName: null }] } : quality === "locality" ? { locality: null } : quality === "owner" ? { assigneeId: null } : quality === "conversation" ? { conversations: { none: {} } } : quality === "messages" ? { conversations: { some: { events: { none: {} } } } } : {}),
   };
   const sort = value(raw, "sort") === "name" ? "name" : "recent";
   const orderBy: Prisma.CustomerOrderByWithRelationInput[] = sort === "name" ? [{ fullName: { sort: "asc", nulls: "last" } }, { id: "asc" }] : [{ updatedAt: "desc" }, { id: "asc" }];
