@@ -11,7 +11,7 @@ const groups = [
   { label: "Principal", links: [["Dashboard", "/"], ["Buscar en CRM", "/buscar"]] },
   { label: "Atención", links: [["Bandeja WhatsApp", "/bandeja"], ["Clientes", "/clientes"], ["Embudo comercial", "/embudo"]] },
   { label: "Ventas", links: [["Pedidos", "/pedidos"]] },
-  { label: "Operación", links: [["Logística", "/logistica"], ["Cobertura", "/cobertura"], ["Zonas de riesgo", "/zonas-riesgo"]] },
+  { label: "Operación", links: [["Logística", "/logistica"], ["Cobertura", "/cobertura"]] },
   { label: "Trabajo", links: [["Tareas", "/tareas"], ["Bot", "/bot"], ["Resultados", "/resultados"]] },
   { label: "Catálogo", links: [["Productos", "/productos"]] },
   { label: "Marketing", links: [["Meta Ads", "/marketing"]] }

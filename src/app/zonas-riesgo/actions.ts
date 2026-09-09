@@ -11,11 +11,11 @@ export async function createDangerZone(formData: FormData) {
   await requireAdmin();
   const data = zoneSchema.parse(Object.fromEntries(formData));
   await prisma.dangerZone.create({ data });
-  revalidatePath("/zonas-riesgo");
+  revalidatePath("/cobertura");
 }
 
 export async function toggleDangerZone(id: string, active: boolean) {
   await requireAdmin();
   await prisma.dangerZone.update({ where: { id }, data: { isActive: active } });
-  revalidatePath("/zonas-riesgo");
+  revalidatePath("/cobertura");
 }
