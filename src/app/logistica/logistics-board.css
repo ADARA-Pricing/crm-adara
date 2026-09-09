@@ -22,6 +22,10 @@
 .logistics-board .logistics-details { margin: 16px; border-radius: 6px; background: #f5f5f4; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .logistics-board .logistics-details strong { overflow-wrap: anywhere; }
 .shipment-edit { border-top: 1px solid var(--line); }
+.address-verifier { margin: 0 16px 16px; display: flex; align-items: flex-start; gap: 12px; color: var(--muted); font-size: 13px; }
+.address-verifier .button { flex: 0 0 auto; }
+.address-verifier p { margin: 8px 0 0; }
+.address-verifier small { display: block; margin-top: 4px; }
 .shipment-edit > summary { padding: 14px 18px; min-height: 44px; cursor: pointer; color: #5a2f1d; font-size: 13px; }
 .logistics-board .logistics-form { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
 .logistics-board .logistics-form input { min-height: 44px; }
@@ -31,4 +35,5 @@
   .logistics-board .logistics-details, .logistics-board .logistics-form { grid-template-columns: minmax(0, 1fr); }
   .logistics-board .logistics-summary { flex-wrap: wrap; }
   .shipment-selection small { margin-left: 0; }
+  .address-verifier { align-items: stretch; flex-direction: column; }
 }

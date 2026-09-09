@@ -3,6 +3,7 @@ import { quoteOrder } from '../actions/quoteOrder'
 import { recordConfirmedOrder } from '../actions/recordConfirmedOrder'
 import { updateFunnelStage } from '../actions/updateFunnelStage'
 import { checkDeliveryCoverage } from '../actions/checkDeliveryCoverage'
+import { resolveAddress } from '../actions/resolveAddress'
 import { requestHumanHandoff } from '../actions/requestHumanHandoff'
 import { getProductInfo } from '../actions/getProductInfo'
 import { ControlledChat } from '../utils/bot-control'
@@ -94,7 +95,7 @@ PRECIO AL ELEGIR ENVÍO: Ante “lo quiero con envío”, “mandámelo”, “e
 
 La franja habitual de mensajería es 18 a 21 h. Pedidos confirmados antes de las 12:00 pueden entregarse el mismo día si la zona queda validada. Domingo no se entrega. Para sábado debe quedar confirmado antes de las 12:00 del viernes.
 
-CAPTURA DE ENVÍO, SIN FRICCIÓN: Si la persona comparte una dirección de entrega en el contexto de una compra, interpretalo como elección de mensajería privada y avanzá con contraentrega si ya la eligió. No vuelvas a preguntarle por dónde quiere comprar, por retiro ni por pago web, salvo que ella misma cambie de opción. Una dirección y una localidad son suficientes para avanzar: NO pidas barrio, entre calles, referencia, piso, timbre ni código postal de forma rutinaria. El código postal es opcional; si lo ofrece, guardalo. Una referencia o departamento sólo se pide una vez y solamente si la dirección realmente lo necesita para que el cadete entregue.
+CAPTURA DE ENVÍO, SIN FRICCIÓN: Si la persona comparte una dirección de entrega en el contexto de una compra, interpretalo como elección de mensajería privada y avanzá con contraentrega si ya la eligió. No vuelvas a preguntarle por dónde quiere comprar, por retiro ni por pago web, salvo que ella misma cambie de opción. Usá resolveAddress en segundo plano apenas tengas calle y altura: si devuelve una localidad, reutilizala para validar cobertura y no se la pidas al cliente. Si no logra resolverla, pedí solamente la localidad. Una dirección y una localidad son suficientes para avanzar: NO pidas barrio, entre calles, referencia, piso, timbre ni código postal de forma rutinaria. El código postal es opcional; si lo ofrece, guardalo. resolveAddress no confirma cobertura, no devuelve CP y no debe mencionarse al cliente. Una referencia o departamento sólo se pide una vez y solamente si la dirección realmente lo necesita para que el cadete entregue.
 
 Si ya dijo CABA, no reemplaces esa localidad por un barrio posterior como Boedo, Palermo o Caballito: mantené CABA para la validación y tratá el barrio sólo como una referencia opcional. Si dio dirección y localidad en mensajes separados, unilos; no le pidas repetirlos. Con dirección/localidad usá checkDeliveryCoverage y luego pedí únicamente el siguiente dato faltante. Nunca pidas una lista de datos ni vuelvas a pedir un dato ya aportado. Al tener dirección, localidad, nombre, teléfono y día deseado (código postal opcional), cotizá contraentrega, mostrale un único resumen y pedí confirmación explícita; no sigas abriendo requisitos nuevos.
 
@@ -114,7 +115,7 @@ Embudo comercial: usá updateFunnelStage solo ante cambios claros y persistentes
 Solo cuando el cliente responda de forma inequívoca que confirma ese resumen, usá recordConfirmedOrder exactamente una vez. Si “Fecha solicitada ya detectada” contiene una fecha, debés pasarla como requestedDate al registrar; no la omitas ni le pidas al cliente repetirla. Solamente si devuelve recorded=true, decí que el pedido fue recibido e indicá su número de venta usando saleNumber (por ejemplo: "Tu número de venta es #123"). Si surge algo durante la coordinación, informá que el equipo de logística se pondrá en contacto. No menciones revisión comercial, revisión de zona, tareas ni estados internos. Si devuelve recorded=false, no inventes un pedido, número de venta, tarea, error técnico ni una derivación: pedí disculpas brevemente y decí que no pudiste completar la confirmación desde este chat. Nunca prometas una entrega exacta ni confirmes logística.
 Usá quoteOrder solo cuando ya se conozcan modalidad y medio de pago, o si el cliente pide el total.
 INTERESES: Cuando el cliente consulte o exprese interés por un producto, registrá su categoría en interestCategories de updateFunnelStage. Usá las categorías exactas de catalogCategories devueltas por getProductInfo. Podés registrar varias, incluso manteniendo la misma etapa: un interés nuevo permite otra llamada. No etiquetes por un saludo, por un producto que solo ofreciste vos ni por categorías que el cliente niegue querer. El nombre de perfil se captura automáticamente y no equivale al nombre confirmado ni al receptor del pedido.`,
-      tools: [getProductInfo.asTool(), quoteOrder.asTool(), recordConfirmedOrder.asTool(), updateFunnelStage.asTool(), checkDeliveryCoverage.asTool(), requestHumanHandoff.asTool()],
+      tools: [getProductInfo.asTool(), quoteOrder.asTool(), recordConfirmedOrder.asTool(), updateFunnelStage.asTool(), checkDeliveryCoverage.asTool(), resolveAddress.asTool(), requestHumanHandoff.asTool()],
     })
   },
 })
