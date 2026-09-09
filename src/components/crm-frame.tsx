@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import React, { useState, type ReactNode } from "react";
+import React, { useEffect, useState, type ReactNode } from "react";
 import { NavigationIcon } from "./navigation-icon";
 import { OperatorAvatar } from "./operator-avatar";
 import "./crm-navigation.css";
@@ -22,6 +22,13 @@ export function CrmFrame({ children, name, role, signOut, avatarColor, userId }:
 }) {
   const pathname = usePathname();
   const [menu, setMenu] = useState<"auto" | "open" | "closed">("auto");
+  const operationalRoute = ["/bandeja", "/embudo", "/tareas", "/pedidos", "/logistica"].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+
+  useEffect(() => {
+    document.documentElement.dataset.crmOperational = operationalRoute ? "true" : "false";
+    return () => { delete document.documentElement.dataset.crmOperational; };
+  }, [operationalRoute]);
+
   return <div className="crm-shell persistent-shell" data-menu={menu}>
     <a className="skip-link" href="#crm-content">Ir al contenido</a>
     <button className="menu-open button secondary" title="Abrir menú" aria-label="Abrir menú" aria-controls="crm-navigation" onClick={() => setMenu("open")}>☰</button>

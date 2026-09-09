@@ -37,13 +37,13 @@ export default async function Home() {
   ]);
   const duplicateTasks = possibleTaskDuplicates(duplicateCandidates.slice(0, 1000), duplicateWindowHours(process.env.CRM_TASK_DUPLICATE_WINDOW_HOURS)).size;
   const oldestPendingHours = oldestPending._min.updatedAt ? Math.max(0, Math.floor((now.getTime() - oldestPending._min.updatedAt.getTime()) / 3600000)) : null;
-  const cards = [
+  const priorityCards = [
     ["Conversaciones pendientes", String(openConversations), "Abiertas o derivadas a una persona.", "/bandeja?filter=open"],
-    ["Leads nuevos", String(newLeads), "Ingresados desde las 00:00 h."],
+    ["Leads nuevos", String(newLeads), "Ingresados desde las 00:00 h.", "/clientes"],
     ["Pedidos a revisar", String(reviewOrders), "Confirmados por el cliente.", "/pedidos?status=PENDING_REVIEW"],
-    ["En logística", String(logisticsOrders), "Aprobados, en preparación o enviados."],
-    ["Ventas hoy", formatArs(salesToday._sum.totalCents ?? 0), "Pedidos entregados."],
-    ["Ventas 7 días", formatArs(salesWeek._sum.totalCents ?? 0), "Pedidos entregados."],
+    ["En logística", String(logisticsOrders), "Aprobados, en preparación o enviados.", "/logistica"],
+  ];
+  const attentionCards = [
     ["Clientes sin responsable", String(unassignedCustomers), "Activos sin una persona asignada.", "/clientes?quality=owner"],
     ["Contactos sin identificar", String(unidentifiedCustomers), "Sin nombre ni perfil de WhatsApp.", "/clientes?quality=name"],
     ["Atención pendiente más antigua", oldestPendingHours == null ? "Sin datos" : `${oldestPendingHours} h`, "Abierta o derivada, según última actualización.", "/bandeja?filter=open"],
@@ -52,19 +52,21 @@ export default async function Home() {
 
   return <CrmShell active="/">
     <header className="topbar"><div><p className="eyebrow">Operación comercial</p><h1>Dashboard</h1><p className="topbar-copy">WhatsApp, ventas y preparación de pedidos en un solo lugar.</p><p className="muted">Actualizado al abrir el panel: {now.toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })}.</p></div><div className="topbar-actions"><Link className="button secondary" href="/embudo">Ver embudo</Link><Link className="button" href="/pedidos">Revisar pedidos</Link></div></header>
-      <section className="metric-grid">
-        {cards.map(([title, value, detail, href]) => (
-          <article key={title} className="metric">
-            <span className="metric-label">{title}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span>{href && <Link className="metric-link" href={href}>Ver listado →</Link>}
-          </article>
+      <section className="metric-grid dashboard-priority-grid">
+        {priorityCards.map(([title, value, detail, href]) => (
+          <Link key={title} className="metric dashboard-priority-card" href={href!}>
+            <span className="metric-label">{title}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span><span className="metric-link">Abrir listado →</span>
+          </Link>
         ))}
       </section>
-      <section aria-labelledby="attention-heading"><div className="section-heading"><h2 id="attention-heading">Agenda y atención del equipo</h2><Link href="/tareas">Ver todas las tareas</Link></div><div className="metric-grid">
+      <section aria-labelledby="attention-heading"><div className="section-heading"><h2 id="attention-heading">Atención requerida</h2><Link href="/tareas">Ver todas las tareas</Link></div><div className="metric-grid dashboard-attention-grid">
+        {attentionCards.map(([title, value, detail, href]) => <Link key={title} className="metric" href={href!}><span className="metric-label">{title}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span></Link>)}
         <Link className="metric" href="/tareas?timing=overdue"><span className="metric-label">Tareas vencidas</span><strong className="metric-value">{overdueTasks}</strong><span className="metric-detail">Pendientes o en curso, con vencimiento anterior a ahora.</span></Link>
         <Link className="metric" href="/tareas?timing=today"><span className="metric-label">Tareas para hoy</span><strong className="metric-value">{todayTasks}</strong><span className="metric-detail">Día calendario argentino. Puede incluir tareas ya vencidas hoy.</span></Link>
         <Link className="metric" href="/tareas?timing=upcoming"><span className="metric-label">Próximos siete días</span><strong className="metric-value">{upcomingTasks}</strong><span className="metric-detail">Tareas activas que vencen desde ahora.</span></Link>
         <article className="metric"><span className="metric-label">Accesos de atención</span><div className="operational-shortcuts"><Link href="/bandeja?window=closing">Chats con ventana por vencer</Link><Link href="/bandeja?attention=pending">Último mensaje sin respuesta</Link><Link href="/clientes?owner=none">Clientes sin responsable</Link></div></article>
       </div><p className="muted">Los grupos de tareas pueden superponerse. “Sin respuesta” no significa “no leído”.</p></section>
+      <section className="section-heading"><h2>Ventas y operación</h2><span className="muted">Solo pedidos entregados para importes vendidos.</span></section><section className="metric-grid dashboard-operation-grid"><article className="metric"><span className="metric-label">Ventas hoy</span><strong className="metric-value">{formatArs(salesToday._sum.totalCents ?? 0)}</strong><span className="metric-detail">Pedidos entregados hoy.</span></article><article className="metric"><span className="metric-label">Ventas 7 días</span><strong className="metric-value">{formatArs(salesWeek._sum.totalCents ?? 0)}</strong><span className="metric-detail">Pedidos entregados en los últimos siete días.</span></article></section>
       <section className="dashboard-grid">
         <article className="panel dashboard-panel"><div className="panel-heading"><div><h2>Pedidos recientes</h2><p>Última actividad de venta.</p></div><Link href="/pedidos">Ver todos</Link></div>{recentOrders.length ? <div className="compact-list">{recentOrders.map((order) => <div className="compact-row" key={order.id}><span><strong>{order.customer.fullName ?? "Cliente sin nombre"}</strong><small>{order.items.map(({ product }) => product.name).join(", ") || "Pedido sin ítems"}</small></span><span className="row-end"><b>{formatArs(order.totalCents)}</b><small>{crmStatus(order.status)}</small></span></div>)}</div> : <div className="empty">Todavía no hay pedidos registrados.</div>}</article>
         <article className="panel dashboard-panel"><div className="panel-heading"><div><h2>Atención reciente</h2><p>Datos sincronizados desde WhatsApp.</p></div><Link href="/clientes">Ver clientes</Link></div>{recentCustomers.length ? <div className="compact-list">{recentCustomers.map((customer) => <div className="compact-row" key={customer.id}><span><strong>{customer.fullName || customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{customer.phone ?? "Número pendiente de identificar"}</small></span><span className="row-end"><b>{crmStatus(customer.funnelStage)}</b><small>{customer.lastMessagePreview ?? "Sin mensaje"}</small></span></div>)}</div> : <div className="empty">Las conversaciones que lleguen desde WhatsApp aparecerán acá.</div>}</article>
