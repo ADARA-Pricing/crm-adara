@@ -15,10 +15,10 @@ export const updateFunnelStage = new Action({
     postalCode: z.string().min(3).optional(),
     requestedDate: z.string().datetime().optional(),
   }),
-  output: z.object({ customerId: z.string(), stage: z.string() }),
+  output: z.object({ customerId: z.string().optional(), stage: z.string(), recorded: z.boolean() }),
   async handler({ input }) {
     const conversation = context.get('conversation', { optional: true })
-    if (!conversation?.id) throw new Error('No se encontró la conversación para actualizar el embudo.')
+    if (!conversation?.id) return { stage: input.stage, recorded: false }
     const tags = (conversation as unknown as { tags?: Record<string, string> }).tags
     const whatsappPhone = tags?.['whatsapp:userPhone']
     const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
@@ -27,7 +27,8 @@ export const updateFunnelStage = new Action({
       method: 'POST', headers: { 'content-type': 'application/json', 'x-adara-signature': secrets.CRM_WEBHOOK_SECRET },
       body: JSON.stringify({ ...input, stage: stageMap[input.stage], phone: input.phone || whatsappPhone, deliveryPreference: input.deliveryPreference === 'courier' ? 'COURIER' : input.deliveryPreference === 'pickup' ? 'PICKUP' : undefined, botpressConversationId: conversation.id }),
     })
-    if (!response.ok) throw new Error(`CRM no pudo actualizar el embudo (HTTP ${response.status})`)
-    return await response.json()
+    if (!response.ok) return { stage: input.stage, recorded: false }
+    const result = await response.json() as { customerId?: string; stage?: string }
+    return { customerId: result.customerId, stage: result.stage || input.stage, recorded: true }
   },
 })

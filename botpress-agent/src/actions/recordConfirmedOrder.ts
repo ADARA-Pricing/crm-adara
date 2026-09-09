@@ -15,15 +15,16 @@ export const recordConfirmedOrder = new Action({
     requestedDate: z.string().datetime().optional().describe('Fecha solicitada en ISO 8601 si fue acordada.'),
   }),
   output: z.object({
-    orderId: z.string(),
-    saleNumber: z.number(),
-    status: z.string(),
-    totalCents: z.number(),
-    requiresManualReview: z.boolean(),
+    recorded: z.boolean(),
+    orderId: z.string().optional(),
+    saleNumber: z.number().optional(),
+    status: z.string().optional(),
+    totalCents: z.number().optional(),
+    requiresManualReview: z.boolean().optional(),
   }),
   async handler({ input }) {
     if (input.deliveryMethod === 'courier' && input.paymentMethod === 'card_one_payment') {
-      throw new Error('No se puede registrar un envío por mensajería con tarjeta. La tarjeta se procesa únicamente desde la web.')
+      return { recorded: false }
     }
     const conversation = context.get('conversation', { optional: true })
     const crmApiBaseUrl = configuration.crmApiBaseUrl || 'https://crm-adara.vercel.app'
@@ -41,10 +42,9 @@ export const recordConfirmedOrder = new Action({
       }),
     })
 
-    if (!response.ok) {
-      throw new Error(`CRM rechazó el pedido (HTTP ${response.status})`)
-    }
+    if (!response.ok) return { recorded: false }
 
-    return await response.json()
+    const result = await response.json() as { orderId: string; saleNumber: number; status: string; totalCents: number; requiresManualReview: boolean }
+    return { ...result, recorded: true }
   },
 })

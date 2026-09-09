@@ -51,3 +51,13 @@ export const paused = new Eval({
   name: 'incident-paused', type: 'regression', options: { idleTimeout: 5000 },
   conversation: [{ user: 'Hola, quiero comprar el Infinix', expectSilence: true }],
 })
+
+export const deliveryCapture = new Eval({
+  name: 'delivery-capture-without-repetition', type: 'regression',
+  conversation: [
+    { user: 'Quiero el Infinix con envio y contraentrega. Estoy en CABA.', assert: { response: [{ llm_judge: 'Explica o continúa contraentrega y pide solamente la dirección como siguiente dato, sin pedir barrio ni repetir modalidades.' }] } },
+    { user: 'Av. San Juan 3866', assert: { tools: [{ called: 'checkDeliveryCoverage' }], response: [{ llm_judge: 'Interpreta la dirección como envío. No vuelve a preguntar envío versus retiro ni solicita barrio, código postal, piso o timbre de rutina.' }] } },
+    { user: 'Para mañana', assert: { response: [{ llm_judge: 'No menciona domingos salvo que mañana sea domingo según la fecha de ejecución.' }] } },
+    { user: 'Sebastián Pugliese, 1166837411', assert: { response: [{ llm_judge: 'No muestra tareas, etapas, errores técnicos ni pedidos de barrio; con los datos completos presenta el siguiente paso comercial o el resumen para confirmar.' }] } },
+  ],
+})
