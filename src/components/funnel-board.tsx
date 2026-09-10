@@ -81,14 +81,10 @@ export function FunnelBoard({ customers, category, visibleStage }: { customers: 
           onDragStart={(event) => { if (busy.current) { event.preventDefault(); return; } draggedId.current = person.id; setDragging(person.id); event.dataTransfer.setData("text/plain", person.id); event.dataTransfer.effectAllowed = "move"; }}
           onDragEnd={() => { lastDragAt.current = Date.now(); draggedId.current = null; setDragging(null); setTarget(null); }}>
           <strong>{person.fullName || "Contacto sin nombre"}</strong><span>{person.phone || "WhatsApp por identificar"}</span>
-          {person.locality ? <small>{person.locality}{person.postalCode ? ` · CP ${person.postalCode}` : ""}</small> : null}
-          {person.deliveryPreference ? <small>{person.deliveryPreference === "PICKUP" ? "Retiro en local" : "Mensajería privada"}</small> : null}
-          {person.deliveryAddress ? <small className="private-detail">{person.deliveryAddress}</small> : null}
-          {person.lastMessagePreview ? <small className="message-preview">“{person.lastMessagePreview}”</small> : null}
-          {person.funnelNote ? <small>{person.funnelNote}</small> : null}
-          <small>{person.interestCategories.join(" · ")}</small>
+          {person.interestCategories.length ? <small className="funnel-interest">{person.interestCategories.join(" · ")}</small> : <small className="funnel-interest">Sin interés clasificado</small>}
           <small>Responsable: {person.assigneeName || "Sin asignar"}</small>
           <small>{now === null ? "Último mensaje: pendiente de calcular" : lastContactLabel(person.lastMessageAt ?? null, now)}</small>
+          {(person.locality || person.deliveryPreference || person.deliveryAddress || person.lastMessagePreview || person.funnelNote) ? <details className="funnel-card-more"><summary>Ver contexto</summary>{person.locality ? <small>{person.locality}{person.postalCode ? ` · CP ${person.postalCode}` : ""}</small> : null}{person.deliveryPreference ? <small>{person.deliveryPreference === "PICKUP" ? "Modalidad histórica: retiro" : "Mensajería privada"}</small> : null}{person.deliveryAddress ? <small className="private-detail">{person.deliveryAddress}</small> : null}{person.lastMessagePreview ? <small className="message-preview">“{person.lastMessagePreview}”</small> : null}{person.funnelNote ? <small>{person.funnelNote}</small> : null}</details> : null}
           <footer>{person.orderCount ? `${person.orderCount} pedido(s)` : "Sin pedido"}<time>{person.dateLabel}</time></footer>
           <label className="funnel-stage-control">{saving === person.id ? "Guardando…" : "Mover a"}<select aria-label={`Etapa de ${person.fullName || person.phone || "contacto"}`} value={person.funnelStage} disabled={Boolean(saving)} onChange={(event) => void move(person.id, event.target.value as FunnelStage)}>{funnelStages.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
         </div>)}{!contacts.length ? <div className="funnel-empty">{dragging ? "Soltá la tarjeta acá" : "Sin contactos"}</div> : null}</div>
