@@ -67,13 +67,13 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     <InboxSelection initialId={selected?.id}>
     <section className="inbox-layout">
       <aside className="inbox-list" aria-label="Conversaciones">
-<div className="inbox-left-tools">    <header className="topbar"><div><h1>Bandeja WhatsApp</h1></div></header>
+<div className="inbox-left-tools">    <header className="inbox-list-appbar"><h1>WhatsApp</h1><span aria-label="Bandeja CRM">CRM</span></header>
     <InboxFilters filters={filters} members={members} categories={categories.map(c=>c.category!)} />
     <details className="inbox-help"><summary>Sobre los filtros y la disponibilidad</summary><p className="muted">Los filtros se combinan. La ventana se calcula con mensajes sincronizados y se verifica al enviar; no equivale a “no leído”. Los chats se actualizan en segundo plano.</p></details>
     <Suspense fallback={<InboxShortcutsLoading raw={raw} />}><InboxShortcuts raw={raw} /></Suspense>
 
 </div><div className="inbox-contact-scroll">
-        <div className="availability-legend">Borde: verde &gt;12 h · amarillo ≤12 h · rojo vencido · gris sin verificar</div><div className="inbox-list-heading"><strong>Conversaciones</strong><span>{total} · página {filters.page}</span></div>
+        <div className="availability-legend">Borde: verde &gt;12 h · amarillo ≤12 h · rojo vencido · gris sin verificar</div><div className="inbox-list-heading"><strong>Chats</strong><span>{total} · página {filters.page}</span></div>
         {conversations.length ? conversations.map((item) => <InboxContact key={item.id} id={item.id} activity={{ channel: item.channel, lastIncomingAt: item.lastIncomingAt?.toISOString() ?? null, lastOutgoingAt: item.lastOutgoingAt?.toISOString() ?? null }} href={`/bandeja?${query}&conversation=${item.id}`}>
           <strong className="inbox-contact-name" title={item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}>{item.customer.fullName || item.customer.whatsappProfileName || "Contacto sin nombre"}</strong>
           <PendingReply id={item.id} activity={{ lastIncomingAt: item.lastIncomingAt?.toISOString() ?? null, lastOutgoingAt: item.lastOutgoingAt?.toISOString() ?? null }} />
