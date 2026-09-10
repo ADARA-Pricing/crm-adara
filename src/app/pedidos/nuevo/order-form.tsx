@@ -13,7 +13,7 @@ export function NewChatOrderForm({ conversationId, requestId, paused, allowed, p
 }) {
   const [state, action, pending] = useActionState(createOrderFromChat, {});
   const [productId, setProduct] = useState(products[0]?.id || "");
-  const [method, setMethod] = useState<DeliveryMethod>("COURIER");
+  const [method, setMethod] = useState<DeliveryMethod>(customer.deliveryMethod);
   const [payment, setPayment] = useState<PaymentMethod>("CASH_OR_TRANSFER");
   const [confirmed, setConfirmed] = useState(false);
   const product = products.find(p => p.id === productId);
@@ -33,7 +33,7 @@ export function NewChatOrderForm({ conversationId, requestId, paused, allowed, p
         <label>Producto (1 unidad)<select name="productId" value={productId} onChange={e => setProduct(e.target.value)} required><option value="" disabled>Seleccionar producto</option>{products.map(p => <option value={p.id} key={p.id}>{p.name}</option>)}</select></label>
         <label>Nombre de quien recibe<input name="recipientName" defaultValue={customer.name} required minLength={2} maxLength={120}/></label>
         <label>Teléfono de contacto<input name="recipientPhone" type="tel" defaultValue={customer.phone} required minLength={6} maxLength={40}/></label>
-        <label>Entrega<select name="deliveryMethod" value={method} onChange={e => { setMethod(e.target.value as DeliveryMethod); setPayment("CASH_OR_TRANSFER"); }}><option value="COURIER">Mensajería privada</option></select></label>
+        <label>Entrega<select name="deliveryMethod" value={method} onChange={e => { setMethod(e.target.value as DeliveryMethod); setPayment("CASH_OR_TRANSFER"); }}><option value="COURIER">Mensajería privada</option><option value="PICKUP">Retiro en local</option></select></label>
         {method === "COURIER" ? <><label>Dirección y numeración<input name="deliveryAddress" defaultValue={customer.address} required minLength={5} maxLength={240}/></label><label>Localidad<input name="locality" defaultValue={customer.locality} required minLength={2} maxLength={120}/></label><label>Código postal (opcional)<input name="postalCode" defaultValue={customer.postalCode} maxLength={12}/></label></> : <><p>Retira por {LOCAL_ADDRESS}. Lunes a viernes de 10 a 19 h; sábados de 11 a 15 h.</p><input type="hidden" name="deliveryAddress" value=""/><input type="hidden" name="locality" value=""/><input type="hidden" name="postalCode" value=""/></>}
         <label>Fecha solicitada de entrega o retiro<input type="date" name="requestedDate" defaultValue={customer.requestedDate} required/></label>
         <p>La fecha solicitada no confirma logística. Mensajería habitual de 18 a 21 h; corte a las 12:00. Para sábado debe confirmarse antes del viernes a las 12:00. Los horarios especiales requieren coordinación previa.</p>
