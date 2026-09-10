@@ -8,9 +8,8 @@ const Selection = createContext<{ id?: string; select: (id: string, href: string
 
 export function InboxSelection({ initialId, children }: { initialId?: string; children: React.ReactNode }) {
   const [id, setId] = useState(initialId);
-  useEffect(() => { setId(initialId); }, [initialId]);
   useEffect(() => {
-    const back = () => setId(new URLSearchParams(window.location.search).get("conversation") || initialId);
+    const back = () => setId(current => new URLSearchParams(window.location.search).get("conversation") || current || initialId);
     window.addEventListener("popstate", back);
     return () => window.removeEventListener("popstate", back);
   }, [initialId]);

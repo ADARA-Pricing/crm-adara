@@ -3,6 +3,7 @@ import "server-only";
 export type BotpressMessage = {
   id: string; conversationId: string; userId: string; createdAt: string;
   direction: "incoming" | "outgoing"; type: string;
+  author?: string | null;
   payload: Record<string, unknown>;
 };
 export type MessagePage = { messages: BotpressMessage[]; meta: { nextToken?: string } };

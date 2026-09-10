@@ -57,7 +57,9 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
     prisma.product.findMany({ where: { category: { not: null } }, distinct: ["category"], select: { category: true } }),
     prisma.conversation.findMany({ take: 80, where: { botpressId: { not: null } }, orderBy: { updatedAt: "desc" }, select: { id: true, customer: { select: { whatsappProfileName: true } } } }),
   ]);
-  const selected = raw.conversation ? conversations.find(c => c.id === raw.conversation) ?? await prisma.conversation.findFirst({ where: { AND: [where, { id: raw.conversation }] }, include }) : conversations[0];
+  // Keep an explicitly selected chat mounted even when a live refresh moves it
+  // out of the current "sin responder" filter after the operator replies.
+  const selected = raw.conversation ? conversations.find(c => c.id === raw.conversation) ?? await prisma.conversation.findUnique({ where: { id: raw.conversation }, include }) : conversations[0];
   const draft = raw.draft && selected ? await prisma.automationRun.findFirst({ where: { id: raw.draft, customerId: selected.customerId, status: "DRAFT" }, select: { id: true, content: true } }) : null;
   const query = new URLSearchParams(Object.entries(raw).filter(([key,value]) => key !== "conversation" && !!value) as [string,string][]);
   const syncList = [...new Map([...conversations,...candidates].map(c => [c.id, { id: c.id, profileName: c.customer.whatsappProfileName }])).values()];
@@ -88,7 +90,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
         <article className="inbox-thread">
           <header className="thread-heading"><div><strong>{selected.customer.fullName || selected.customer.whatsappProfileName || "Contacto sin nombre"}</strong><small>{selected.customer.phone ?? "Número pendiente de identificar"}</small></div><span className={`badge ${selected.status === "HUMAN_HANDOFF" ? "warning" : "neutral"}`}>{selected.status === "HUMAN_HANDOFF" ? "Derivado a humano" : selected.status === "CLOSED" ? "Resuelta" : "Abierta"}</span></header>
           <ConversationChat stageControl={<ChatStage conversationId={selected.id} stage={selected.customer.funnelStage} updatedAt={selected.customer.funnelUpdatedAt.toISOString()} />} key={selected.id} id={selected.id} initialPaused={selected.botPaused} channel={selected.channel} refreshPage={false} suggestedDraft={draft && draft.id === raw.draft && selected.id === raw.conversation ? draft : undefined} />
-          <footer className="thread-readonly">Los mensajes enviados desde esta bandeja identifican al operador. Los mensajes sincronizados desde WhatsApp Web no incluyen autor verificable todavía.</footer>
+          <footer className="thread-readonly">Los mensajes de WhatsApp Web muestran el autor cuando el canal lo informa. Si no lo informa, se muestran como Equipo/Bot sin atribuirlos a un cliente.</footer>
         </article>
         <aside className="inbox-context-panel" aria-label="Información y gestión de la conversación">
           <header><h2>Ficha del cliente</h2><Link href={`/embudo?lead=${selected.customer.id}`}>Abrir ficha completa</Link></header>

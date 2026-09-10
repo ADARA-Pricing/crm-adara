@@ -36,7 +36,9 @@ export async function readConversation(id: string, cursor?: string) {
         }
       } catch { /* Optional profile must not hide the conversation. */ }
     }
-    const snapshot = { messages: page.messages.map(m => ({ ...m, author: authors.get(m.id) || null })), ...(page.meta?.nextToken ? { nextToken: page.meta.nextToken } : {}) };
+    // CRM sends have a durable operator event; WhatsApp Web can also include an
+    // author supplied by Botpress. Preserve either instead of mislabelling it.
+    const snapshot = { messages: page.messages.map(m => ({ ...m, author: authors.get(m.id) || m.author || null })), ...(page.meta?.nextToken ? { nextToken: page.meta.nextToken } : {}) };
     if (!cursor) {
       // This cache is a recent page, not the source of truth for bot control or sending.
       await prisma.conversationMessageCache.upsert({ where: { conversationId: id },
