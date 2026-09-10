@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatArs } from "@/lib/sales-policy";
 import { BOT_CATALOG_PRODUCT_ID } from "@/lib/bot-catalog-product";
 import { isValidBotpressWebhook } from "@/lib/webhook-auth";
+import { productTechnicalSpecs } from "@/lib/product-technical-specs";
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -18,6 +19,7 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ available: true, catalogCategories, product: {
     ...product,
     priceFormatted: formatArs(product.priceCents), shippingFormatted: formatArs(product.shippingCents),
+    technicalSpecs: productTechnicalSpecs(product.technicalSpecs),
     imageUrls: product.imageUrls.filter((value) => { try { return new URL(value).protocol === "https:"; } catch { return false; } }),
     productUrl: "https://www.adaragroup.com.ar/productos/infinix-smart-10-negro-elegante-1rymw/",
   } });

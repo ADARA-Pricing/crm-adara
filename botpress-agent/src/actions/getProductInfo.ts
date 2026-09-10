@@ -11,7 +11,7 @@ export const getProductInfo = new Action({
     product: z.object({
       id: z.string().describe('Identificador exacto del artículo autorizado. Usar este ID al cotizar o confirmar; nunca sustituir otro modelo.'),
       category: z.string().nullable(), name: z.string(), description: z.string().nullable(), shortDescription: z.string().nullable(), botDescription: z.string().nullable(),
-      technicalSpecs: z.unknown(), priceCents: z.number(), shippingCents: z.number(), warrantyMonths: z.number(),
+      technicalSpecs: z.array(z.object({ label: z.string(), value: z.string() })).describe('Características técnicas confirmadas, listas para mencionar. Si no figura una característica, no está confirmada.'), priceCents: z.number(), shippingCents: z.number(), warrantyMonths: z.number(),
       priceFormatted: z.string(), shippingFormatted: z.string(), includedItems: z.array(z.string()), imageUrls: z.array(z.string()), productUrl: z.string(),
     }).optional(),
   }),
