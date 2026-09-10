@@ -27,9 +27,14 @@ export async function changeChatStage(input: unknown) {
         funnelUpdatedAt: { gte: expected, lt: new Date(expected.getTime() + 1) } },
         data: { funnelStage: stage, funnelUpdatedAt: now } });
       if (!changed.count) throw new Error("conflict");
+      const isTerminal = stage === "COMPLETED" || stage === "ABANDONED";
+      // Terminal stages are archived from the operator inbox, never deleted. Moving
+      // an archived contact back to a live commercial stage restores the chat.
+      const nextStatus = isTerminal ? "CLOSED" : conversation.status === "CLOSED" ? "OPEN" : undefined;
+      if (nextStatus) await tx.conversation.update({ where: { id: conversationId }, data: { status: nextStatus } });
       await tx.conversationEvent.create({ data: { conversationId, direction: "INTERNAL", type: "MANUAL_FUNNEL_STAGE_CHANGED",
         payload: { authorId: user.id, author: user.displayName || user.email, previousStage: previous, newStage: stage,
-          detail: `Etapa cambiada manualmente: ${crmStatus(previous)} → ${crmStatus(stage)}` } } });
+          detail: `Etapa cambiada manualmente: ${crmStatus(previous)} → ${crmStatus(stage)}${isTerminal ? ". Conversación archivada de la bandeja operativa." : nextStatus ? ". Conversación reabierta en la bandeja operativa." : ""}` } } });
       return { customerId: conversation.customerId, updatedAt: now.toISOString() };
     });
     for (const path of ["/bandeja", "/embudo", "/clientes", `/clientes/${result.customerId}`, "/"]) revalidatePath(path);

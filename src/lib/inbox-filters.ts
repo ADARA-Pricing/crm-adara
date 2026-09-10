@@ -20,7 +20,9 @@ export function inboxWhere(raw: unknown, userId: string, now = new Date()) {
   if(filters.category) customer.interestCategories = { has: filters.category };
   if(filters.owner) customer.assigneeId = filters.owner === "mine" ? userId : filters.owner === "none" ? null : filters.owner;
   if(filters.bought) customer.orders = filters.bought === "yes" ? { some: { status: "DELIVERED" } } : { none: { status: "DELIVERED" } };
-  const where: Prisma.ConversationWhereInput = { customer };
+  // The operational inbox keeps archived conversations out by default. They remain
+  // available through the explicit "Resueltos" filter and retain their full history.
+  const where: Prisma.ConversationWhereInput = { customer, status: { not: "CLOSED" } };
   if(filters.filter === "human") where.status = "HUMAN_HANDOFF";
   if(filters.filter === "closed") where.status = "CLOSED";
   if(filters.filter === "open") where.status = { not: "CLOSED" };

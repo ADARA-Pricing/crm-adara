@@ -15,7 +15,7 @@ export function InboxFilters({ filters, members, categories }: { filters: z.infe
     <div className="inbox-filter-grid task-form">
     <label>Responsable<select name="owner" defaultValue={filters.owner}><option value="">Todos</option><option value="mine">Mis clientes</option><option value="none">Sin asignar</option>{members.map(m => <option key={m.id} value={m.id}>{m.displayName || m.email}</option>)}</select></label>
     <label>Atención<select name="attention" defaultValue={filters.attention}><option value="">Todas</option><option value="pending">Último mensaje sin respuesta</option><option value="answered">Con respuesta posterior</option><option value="human">Requiere humano / bot pausado</option><option value="bot">Bot activo</option></select></label>
-    <label>Caso<select name="filter" defaultValue={filters.filter}><option value="">Todos</option><option value="open">Abiertos</option><option value="human">Derivados a humano</option><option value="closed">Resueltos</option></select></label>
+    <label>Caso<select name="filter" defaultValue={filters.filter}><option value="">Operativos</option><option value="open">Abiertos</option><option value="human">Derivados a humano</option><option value="closed">Archivados / resueltos</option></select></label>
     </div>
     <details className="inbox-extra-filters" open={extraCount > 0}>
       <summary>Más filtros{extraCount ? ` (${extraCount} activos)` : ""}</summary>
