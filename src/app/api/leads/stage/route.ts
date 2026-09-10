@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
   const customer = existing
     ? await prisma.customer.update({ where: { id: existing.id }, data: { ...values, funnelStage: data.stage || existing.funnelStage, fullName: data.fullName || existing.fullName, phone: data.phone || existing.phone, whatsappId: data.botpressConversationId, deliveryPreference: data.deliveryPreference || existing.deliveryPreference, locality: data.locality || existing.locality, deliveryAddress: data.deliveryAddress || existing.deliveryAddress, postalCode: data.postalCode || existing.postalCode, requestedDate: data.requestedDate ? new Date(data.requestedDate) : existing.requestedDate, lastMessagePreview: data.lastMessagePreview || existing.lastMessagePreview, lastMessageAt: data.lastMessagePreview ? new Date() : existing.lastMessageAt } })
     : await prisma.customer.create({ data: { ...values, interestCategories: acceptedCategories, funnelStage: data.stage || "FIRST_CONTACT", phone: data.phone, whatsappId: data.botpressConversationId } });
-  const conversation = await prisma.conversation.upsert({ where: { botpressId: data.botpressConversationId }, update: { customerId: customer.id }, create: { customerId: customer.id, botpressId: data.botpressConversationId } });
+  // This webhook is invoked for every incoming customer message. Persist the activity now so
+  // the operator inbox can prioritize it before the optional history warm-up finishes.
+  const receivedAt = new Date();
+  const conversation = await prisma.conversation.upsert({ where: { botpressId: data.botpressConversationId }, update: { customerId: customer.id, lastIncomingAt: receivedAt, activitySyncedAt: receivedAt }, create: { customerId: customer.id, botpressId: data.botpressConversationId, lastIncomingAt: receivedAt, activitySyncedAt: receivedAt } });
   if (data.attribution && Object.values(data.attribution).some(Boolean)) {
     await prisma.acquisitionAttribution.create({ data: { customerId: customer.id, ...data.attribution } });
   }

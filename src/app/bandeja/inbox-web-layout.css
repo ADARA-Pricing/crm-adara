@@ -10,7 +10,7 @@
 .inbox-workspace .contact-owner-avatar > span { width: 44px !important; height: 44px !important; font-size: 15px !important; }
 .inbox-workspace .contact-owner-avatar img { width: 44px; height: 44px; }
 .inbox-workspace .inbox-contact-name { grid-column: 2; grid-row: 1; font-size: 14px; font-weight: 600; }
-.inbox-workspace .inbox-contact-date { grid-column: 3; grid-row: 1; font-size: 11px; }
+.inbox-workspace .inbox-contact-date { grid-column: 3; grid-row: 1; font-size: 11px; text-align: right; color: #665f59; font-variant-numeric: tabular-nums; }
 .inbox-workspace .inbox-contact > p { grid-column: 2; grid-row: 2; font-size: 13px; margin: 0; }
 .inbox-workspace .inbox-contact .operator-unread { grid-column: 3; grid-row: 2; }
 .inbox-workspace .inbox-contact-phone, .inbox-workspace .inbox-contact-meta { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
