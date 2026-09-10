@@ -5,14 +5,16 @@ export type LabelOrder = {
   deliveryTimeWindow: string | null; assignedCourier: string | null;
   paymentMethod: string; currency: string; shippingCents: number; totalCents: number;
   items: { quantity: number; unitPriceCents: number; product: { name: string; sku: string } }[];
+  customer?: { phone: string | null };
 };
 
 export function labelEligibility(order: Partial<LabelOrder>) {
   const missing: string[] = [];
+  const recipientPhone = order.recipientPhone || order.customer?.phone;
   if (order.deliveryMethod !== "COURIER") missing.push("la modalidad debe ser mensajería");
   if (!order.status || !["APPROVED_FOR_LOGISTICS", "PREPARING", "SHIPPED", "DELIVERED"].includes(order.status)) missing.push("el pedido debe estar aprobado para logística");
   if (!order.recipientName?.trim()) missing.push("receptor");
-  if (!order.recipientPhone?.trim()) missing.push("teléfono");
+  if (!recipientPhone?.trim()) missing.push("teléfono");
   if (!order.deliveryAddress?.trim()) missing.push("dirección");
   if (!order.locality?.trim()) missing.push("localidad");
   if (!order.deliveryDate) missing.push("fecha programada");
@@ -42,7 +44,8 @@ function lines(value: string, width: number, max: number): string[] {
 }
 
 export function shippingLabel(order: LabelOrder) {
-  const eligibility = labelEligibility(order);
+  const recipientPhone = order.recipientPhone || order.customer?.phone;
+  const eligibility = labelEligibility({ ...order, recipientPhone });
   if (!eligibility.ready) throw new Error(`Venta #${order.saleNumber}: faltan o requieren revisión ${eligibility.missing.join(", ")}.`);
   if (order.paymentMethod !== "CASH_OR_TRANSFER" || order.currency !== "ARS") throw new Error("Revisá la modalidad de cobro antes de generar una etiqueta contraentrega.");
   const validCents = (value: number) => Number.isSafeInteger(value) && value >= 0;
@@ -65,7 +68,7 @@ export function shippingLabel(order: LabelOrder) {
   text(32, 367, order.recipientName, 30, 45, 2);
   text(32, 442, "DIRECCION", 19);
   text(32, 469, order.deliveryAddress, 28, 48, 3);
-  text(32, 575, `Tel: ${order.recipientPhone || "No informado"}  |  Franja: ${order.deliveryTimeWindow || "A coordinar"}`, 20, 64, 2);
+  text(32, 575, `Tel: ${recipientPhone || "No informado"}  |  Franja: ${order.deliveryTimeWindow || "A coordinar"}`, 20, 64, 2);
   text(32, 652, "PRODUCTOS PARA ARMAR", 22);
   const productLines = order.items.flatMap(item => lines(`${item.quantity} x ${item.product.name} | SKU: ${item.product.sku} | c/u ${money(item.unitPriceCents)}`, 60, 4));
   if (productLines.length > 4) throw new Error("El detalle de productos no entra en una etiqueta de 10 x 15 cm. Requiere una hoja de armado adicional.");

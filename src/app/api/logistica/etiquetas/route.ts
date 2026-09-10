@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   if (!profile?.isActive) return Response.json({ error: "Acceso no autorizado." }, { status: 403 });
   const ids = [...new Set(new URL(request.url).searchParams.getAll("id"))];
   if (!ids.length || ids.length > 50 || ids.some(id => !/^[a-zA-Z0-9_-]{1,100}$/.test(id))) return Response.json({ error: "Seleccioná entre 1 y 50 ventas." }, { status: 400 });
-  const orders = await prisma.order.findMany({ where: { id: { in: ids } }, include: { items: { include: { product: { select: { name: true, sku: true } } }, orderBy: { id: "asc" } } } });
+  const orders = await prisma.order.findMany({ where: { id: { in: ids } }, include: { customer: { select: { phone: true } }, items: { include: { product: { select: { name: true, sku: true } } }, orderBy: { id: "asc" } } } });
   if (orders.length !== ids.length) return Response.json({ error: "No se encontraron todas las ventas seleccionadas." }, { status: 404 });
   let output: string;
   try { output = ids.map(id => shippingLabel(orders.find(order => order.id === id)!)).join(""); }

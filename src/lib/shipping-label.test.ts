@@ -5,6 +5,11 @@ describe("shipping labels", () => {
   it("explains every required delivery field before enabling the label", () => {
     expect(labelEligibility({ ...order, recipientPhone: null, deliveryDate: null }).missing).toEqual(expect.arrayContaining(["teléfono", "fecha programada"]));
   });
+  it("uses the verified customer phone when the order did not copy it", () => {
+    const fallback = { ...order, recipientPhone: null, customer: { phone: "1160000000" } };
+    expect(labelEligibility(fallback).ready).toBe(true);
+    expect(shippingLabel(fallback)).toContain(zplText("Tel: 1160000000 | Franja: A coordinar"));
+  });
   it("prints item identification, shipping and exact collection total", () => {
     const zpl = shippingLabel(order);
     expect(zpl).toContain(zplText("1 x Infinix Smart 10 | SKU: INF10 | c/u $ 199.999,00"));
