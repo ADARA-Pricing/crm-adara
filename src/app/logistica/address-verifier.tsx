@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type Result = { resolved: boolean; normalizedAddress?: string; locality?: string; province?: string; postalCode: null };
+type Result = { resolved: boolean; normalizedAddress?: string; locality?: string; province?: string; postalCode: string | null };
 
 export function AddressVerifier({ address, locality }: { address: string; locality: string }) {
   const [result, setResult] = useState<Result | null>(null);
@@ -17,7 +17,7 @@ export function AddressVerifier({ address, locality }: { address: string; locali
   return <div className="address-verifier">
     <button type="button" className="button secondary" onClick={verify} disabled={loading}>{loading ? "Verificando dirección…" : "Verificar dirección"}</button>
     {result && (result.resolved
-      ? <p role="status"><b>Dirección validada:</b> {result.normalizedAddress || address}{result.locality ? ` · ${result.locality}` : ""}{result.province ? `, ${result.province}` : ""}. <small>CP: no informado; no se estima automáticamente.</small></p>
+      ? <p role="status"><b>Dirección validada:</b> {result.normalizedAddress || address}{result.locality ? ` · ${result.locality}` : ""}{result.province ? `, ${result.province}` : ""}. <small>CP: {result.postalCode || "no pudo determinarse; verificá antes de imprimir."}</small></p>
       : <p role="status">No se pudo normalizar la dirección automáticamente. Conservamos los datos informados por el cliente para validación de logística.</p>)}
   </div>;
 }

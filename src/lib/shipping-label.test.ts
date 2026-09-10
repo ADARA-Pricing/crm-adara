@@ -8,20 +8,20 @@ describe("shipping labels", () => {
   it("uses the verified customer phone when the order did not copy it", () => {
     const fallback = { ...order, recipientPhone: null, customer: { phone: "1160000000" } };
     expect(labelEligibility(fallback).ready).toBe(true);
-    expect(shippingLabel(fallback)).toContain(zplText("Tel: 1160000000 | Franja: A coordinar"));
+    expect(shippingLabel(fallback)).toContain(zplText("TELÉFONO: 1160000000"));
   });
   it("prints item identification, shipping and exact collection total", () => {
     const zpl = shippingLabel(order);
-    expect(zpl).toContain(zplText("1 x Infinix Smart 10 | SKU: INF10 | c/u $ 199.999,00"));
-    expect(zpl).toContain(zplText("Productos: $ 199.999,00"));
-    expect(zpl).toContain(zplText("Envio: $ 7.000,00"));
-    expect(zpl).toContain(zplText("TOTAL A COBRAR: $ 206.999,00"));
+    expect(zpl).toContain(zplText("1 x Infinix Smart 10 · SKU INF10"));
+    expect(zpl).toContain(zplText("Producto: $ 199.999,00 · Envío: $ 7.000,00"));
+    expect(zpl).toContain(zplText("TOTAL A COBRAR"));
+    expect(zpl).toContain(zplText("$ 206.999,00"));
   });
   it("rejects mismatching totals", () => expect(() => shippingLabel({ ...order, totalCents: 1 })).toThrow());
   it("rejects other payment methods", () => expect(() => shippingLabel({ ...order, paymentMethod: "WEB" })).toThrow());
   it("rejects missing products", () => expect(() => shippingLabel({ ...order, items: [] })).toThrow());
   it("does not drop products when the label is full", () => expect(() => shippingLabel({ ...order, items: Array(10).fill(order.items[0]), totalCents: 200699000 })).toThrow());
-  it("uses 100x150mm and one copy", () => { const zpl = shippingLabel(order); expect(zpl).toContain("^PW800\n^LL1200"); expect(zpl).toContain("^PQ1"); expect(zpl).toContain("^FD123^FS"); });
+  it("uses 100x150mm, one copy and no barcode", () => { const zpl = shippingLabel(order); expect(zpl).toContain("^PW800\n^LL1200"); expect(zpl).toContain("^PQ1"); expect(zpl).toContain(zplText("VENTA #123")); expect(zpl).not.toContain("^BCN"); });
   it("encodes UTF8 and all printer control characters", () => { expect(zplText("^~_á")).toBe("_5e_7e_5f_c3_a1"); expect(shippingLabel({ ...order, recipientName: "^XZ^XA" }).match(/\^XA/g)).toHaveLength(1); });
   it.each(["DRAFT", "PENDING_REVIEW", "CANCELLED"])("rejects %s", status => expect(() => shippingLabel({ ...order, status })).toThrow());
   it("rejects pickup", () => expect(() => shippingLabel({ ...order, deliveryMethod: "PICKUP" })).toThrow());

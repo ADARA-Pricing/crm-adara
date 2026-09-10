@@ -13,8 +13,35 @@ export type AddressResolution = {
   latitude?: number;
   longitude?: number;
   source: "georef-ar" | "unresolved";
-  postalCode: null;
+  postalCode: string | null;
 };
+
+function normalizedPostalCode(value: unknown) {
+  if (typeof value !== "string") return null;
+  const postalCode = value.trim().toUpperCase().replace(/\s+/g, "");
+  // Argentine CPA: province letter + four digits + optional three block letters.
+  return /^[A-Z]\d{4}(?:[A-Z]{3})?$/.test(postalCode) || /^\d{4}$/.test(postalCode) ? postalCode : null;
+}
+
+export async function postalCodeFromCoordinates(latitude?: number, longitude?: number) {
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 4_000);
+  try {
+    const query = new URLSearchParams({ format: "jsonv2", lat: String(latitude), lon: String(longitude), addressdetails: "1" });
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?${query}`, {
+      signal: controller.signal,
+      headers: { accept: "application/json", "user-agent": "ADARA-CRM/1.0 (logistica@adaragroup.com.ar)" },
+    });
+    if (!response.ok) return null;
+    const data = await response.json() as { address?: { postcode?: unknown } };
+    return normalizedPostalCode(data.address?.postcode);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 export function addressResolutionFromGeoref(address: GeorefAddress | undefined): AddressResolution {
   const normalizedAddress = address?.nomenclatura?.trim();
@@ -45,7 +72,9 @@ export async function resolveArgentineAddress(address: string, locality?: string
     const response = await fetch(`https://apis.datos.gob.ar/georef/api/direcciones?${query}`, { signal: controller.signal, headers: { accept: "application/json" } });
     if (!response.ok) return { resolved: false, source: "unresolved", postalCode: null };
     const data = await response.json() as { direcciones?: GeorefAddress[] };
-    return addressResolutionFromGeoref(data.direcciones?.[0]);
+    const resolved = addressResolutionFromGeoref(data.direcciones?.[0]);
+    if (!resolved.resolved) return resolved;
+    return { ...resolved, postalCode: await postalCodeFromCoordinates(resolved.latitude, resolved.longitude) };
   } catch {
     return { resolved: false, source: "unresolved", postalCode: null };
   } finally {
