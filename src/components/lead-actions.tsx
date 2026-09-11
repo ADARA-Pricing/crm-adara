@@ -1,7 +1,18 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createLeadTask, deleteCustomer } from "@/app/clientes/actions";
+import { createLeadTask, deleteCustomer, updateLeadDetails } from "@/app/clientes/actions";
+
+type LeadDetails = { id: string; updatedAt: string; fullName: string | null; email: string | null; interestCategories: string[]; deliveryAddress: string | null; locality: string | null; postalCode: string | null; deliveryPreference: string | null; notes: string | null; funnelNote: string | null };
+export function LeadDetailsEditor({ lead, onSaved }: { lead: LeadDetails; onSaved: () => void }) {
+  const original = { fullName: lead.fullName || "", email: lead.email || "", interests: lead.interestCategories.join(", "), deliveryAddress: lead.deliveryAddress || "", locality: lead.locality || "", postalCode: lead.postalCode || "", deliveryPreference: lead.deliveryPreference === "PICKUP" || lead.deliveryPreference === "COURIER" ? lead.deliveryPreference : "", notes: lead.notes || "", funnelNote: lead.funnelNote || "" };
+  const [values, setValues] = useState(original), [busy, setBusy] = useState(false), [message, setMessage] = useState("");
+  const dirty = JSON.stringify(values) !== JSON.stringify(original);
+  const set = (key: keyof typeof values, value: string) => setValues(current => ({ ...current, [key]: value }));
+  return <form className="lead-details-editor" onSubmit={async event => { event.preventDefault(); if (busy || !dirty) return; setBusy(true); setMessage(""); try { const result = await updateLeadDetails({ id: lead.id, expected: lead.updatedAt, ...values }); setMessage(result.message); if (result.ok) onSaved(); } catch { setMessage("No se pudo confirmar el guardado."); } finally { setBusy(false); } }}>
+    <label>Nombre<input value={values.fullName} maxLength={120} onChange={event => set("fullName", event.target.value)} /></label><label>Email<input type="email" value={values.email} maxLength={200} onChange={event => set("email", event.target.value)} /></label><label>Intereses<input value={values.interests} placeholder="Separados por coma" maxLength={500} onChange={event => set("interests", event.target.value)} /></label><label>Dirección<input value={values.deliveryAddress} maxLength={300} onChange={event => set("deliveryAddress", event.target.value)} /></label><label>Localidad<input value={values.locality} maxLength={120} onChange={event => set("locality", event.target.value)} /></label><label>Código postal<input value={values.postalCode} maxLength={20} onChange={event => set("postalCode", event.target.value)} /></label><label>Modalidad<select value={values.deliveryPreference} onChange={event => set("deliveryPreference", event.target.value)}><option value="">Sin definir</option><option value="COURIER">Mensajería privada</option><option value="PICKUP">Retiro en local</option></select></label><label className="wide">Notas<textarea value={values.notes} rows={2} maxLength={1000} onChange={event => set("notes", event.target.value)} /></label><label className="wide">Nota comercial<textarea value={values.funnelNote} rows={2} maxLength={1000} onChange={event => set("funnelNote", event.target.value)} /></label><div className="lead-details-save"><button className="button" disabled={busy || !dirty}>{busy ? "Guardando…" : "Guardar cambios"}</button><p role="status">{message}</p></div>
+  </form>;
+}
 
 export function DeleteCustomerButton({ id, updatedAt }: { id: string; updatedAt: string }) {
   const [open, setOpen] = useState(false), [confirmation, setConfirmation] = useState(""), [busy, setBusy] = useState(false), [message, setMessage] = useState("");

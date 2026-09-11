@@ -40,3 +40,25 @@ export async function createLeadTask(input: { customerId: string; title: string;
   for (const path of ["/tareas", "/embudo", `/clientes/${input.customerId}`, "/"]) revalidatePath(path);
   return { ok: true, message: "Tarea creada y asignada." };
 }
+
+export async function updateLeadDetails(input: unknown) {
+  await requireCrmUser();
+  const parsed = z.object({
+    id: z.string().min(1), expected: z.string().datetime(), fullName: z.string().trim().max(120), email: z.string().trim().email().max(200).or(z.literal("")),
+    interests: z.string().trim().max(500), deliveryAddress: z.string().trim().max(300), locality: z.string().trim().max(120), postalCode: z.string().trim().max(20),
+    deliveryPreference: z.enum(["", "COURIER", "PICKUP"]), notes: z.string().trim().max(1000), funnelNote: z.string().trim().max(1000),
+  }).safeParse(input);
+  if (!parsed.success) return { ok: false, message: "Revisá el correo y los datos ingresados." };
+  const data = parsed.data;
+  try {
+    const expected = new Date(data.expected);
+    const changed = await prisma.customer.updateMany({ where: { id: data.id, updatedAt: { gte: expected, lt: new Date(expected.getTime() + 1) } }, data: {
+      fullName: data.fullName || null, email: data.email || null, interestCategories: data.interests.split(",").map(value => value.trim()).filter(Boolean).slice(0, 20),
+      deliveryAddress: data.deliveryAddress || null, locality: data.locality || null, postalCode: data.postalCode || null, deliveryPreference: data.deliveryPreference || null,
+      notes: data.notes || null, funnelNote: data.funnelNote || null,
+    } });
+    if (!changed.count) throw new Error();
+  } catch { return { ok: false, message: "No se pudieron guardar los datos. La ficha pudo cambiar; actualizala e intentá nuevamente." }; }
+  for (const path of ["/clientes", "/embudo", "/bandeja", `/clientes/${data.id}`]) revalidatePath(path);
+  return { ok: true, message: "Datos del lead guardados." };
+}
