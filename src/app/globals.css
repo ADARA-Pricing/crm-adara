@@ -582,6 +582,46 @@ form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; wh
 .lead-assignment-panel .lead-task-form > p { grid-column: 1 / -1; margin: 0; }
 .lead-admin-actions { display: flex; justify-content: flex-end; padding-top: 2px; }
 .lead-admin-actions .danger-button { min-height: 32px; font-size: 12px; }
+
+/* Personal settings keeps operational account data distinct from the editable
+   presentation fields, like a compact CRM settings workspace. */
+.settings-page { display: grid; grid-template-columns: 210px minmax(0, 1fr); min-height: calc(100vh - 110px); margin: -22px -24px; }
+.settings-nav { display: grid; align-content: start; gap: 5px; padding: 26px 16px; border-right: 1px solid var(--line); background: #fff; }
+.settings-nav .eyebrow { margin: 0 0 6px; }
+.settings-nav > strong, .settings-nav > span { padding: 8px 10px; color: var(--muted); font-size: 12px; }
+.settings-nav > a { padding: 9px 10px; border-radius: 7px; color: var(--brand-dark); font-size: 13px; font-weight: 700; text-decoration: none; }
+.settings-nav > a[aria-current="page"] { background: #eaf2fb; color: #27689f; }
+.settings-nav .settings-soon { color: #989b9d; font-size: 11px; }
+.settings-main { min-width: 0; padding: 26px 30px 42px; }
+.settings-heading h1 { margin: 3px 0 6px; font-size: 24px; }
+.settings-heading p { margin: 0; color: var(--muted); }
+.settings-identity { display: grid; grid-template-columns: 180px minmax(240px, .8fr) minmax(280px, 1fr); gap: 26px; align-items: start; margin-top: 22px; padding: 26px; }
+.settings-avatar { display: grid; justify-items: center; gap: 12px; }
+.settings-avatar > span { width: 112px !important; height: 112px !important; font-size: 34px !important; }
+.settings-avatar img { width: 112px !important; height: 112px !important; }
+.profile-photo-form { display: grid; justify-items: center; gap: 7px; }
+.profile-photo-form input { display: none; }
+.profile-photo-form .button { min-height: 34px; padding: 6px 10px; font-size: 12px; cursor: pointer; }
+.profile-photo-remove { border: 0; background: transparent; color: #a34545; font: inherit; font-size: 12px; cursor: pointer; }
+.profile-photo-form small, .profile-photo-form p { margin: 0; color: var(--muted); font-size: 11px; text-align: center; }
+.settings-account-data { display: grid; gap: 14px; padding-top: 8px; }
+.settings-account-data > div { display: grid; gap: 4px; }
+.settings-account-data span { color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+.settings-account-data strong, .settings-account-data code { overflow-wrap: anywhere; color: var(--ink); font-size: 13px; }
+.settings-account-data code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.settings-account-data small { color: var(--muted); font-size: 11px; line-height: 1.4; }
+.profile-editor fieldset { display: grid; gap: 13px; min-width: 0; padding: 0; border: 0; }
+.profile-editor label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.profile-editor input[type="text"] { min-height: 40px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); font: inherit; }
+.profile-editor .avatar-color-options { display: flex; flex-wrap: wrap; gap: 7px; padding: 0; border: 0; }
+.profile-editor .avatar-color-options legend { width: 100%; margin-bottom: 2px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.profile-editor .avatar-color-options label { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 500; }
+.profile-editor > p, .profile-editor small { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.settings-security { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 18px; padding: 17px 20px; }
+.settings-security h2 { width: 100%; margin: 0; font-size: 16px; }
+.settings-security p { flex: 1 1 400px; margin: 0; color: var(--muted); font-size: 12px; }
+@media (max-width: 900px) { .settings-page { grid-template-columns: 1fr; margin: -16px; } .settings-nav { display: flex; flex-wrap: wrap; gap: 4px; padding: 14px 16px; border-right: 0; border-bottom: 1px solid var(--line); } .settings-nav .eyebrow { width: 100%; } .settings-main { padding: 20px 16px 32px; } .settings-identity { grid-template-columns: 150px minmax(0, 1fr); } .settings-identity .profile-editor { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .settings-page { margin: -12px; } .settings-identity { grid-template-columns: 1fr; padding: 18px; } .settings-account-data { padding-top: 0; } }
 .lead-chat { padding: 12px; }
 .lead-chat .chat-messages { height: min(55vh, 540px); }
 .lead-empty-title { display: flex; align-items: center; gap: 8px; }

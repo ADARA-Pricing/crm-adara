@@ -16,5 +16,5 @@ export function PhotoForm({ hasPhoto }: { hasPhoto: boolean }) {
     } catch { setMessage("No pudimos guardar el cambio. Usá JPG, PNG o WebP de hasta 750 KB."); }
     finally { setBusy(false); }
   }
-  return <section className="form-section"><h2>Foto de perfil</h2><label>Elegir foto<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.target.value = ""; }} /></label><small>JPG, PNG o WebP de hasta 750 KB. Se recorta al centro y se eliminan los metadatos.</small><button className="button secondary" type="button" disabled={busy || !photoExists} onClick={() => void upload(undefined, true)}>Quitar mi foto</button><p role="status">{busy ? "Guardando…" : message}</p></section>;
+  return <section className="profile-photo-form"><label className="button secondary">Cambiar foto<input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => { void upload(event.target.files?.[0]); event.target.value = ""; }} /></label>{photoExists ? <button className="profile-photo-remove" type="button" disabled={busy} onClick={() => void upload(undefined, true)}>Quitar</button> : null}<small>JPG, PNG o WebP · hasta 750 KB.</small><p role="status">{busy ? "Guardando…" : message}</p></section>;
 }
