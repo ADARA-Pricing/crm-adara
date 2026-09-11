@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CrmShell } from "@/components/crm-shell";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { analyticsRange, ratio, totalMetric } from "@/lib/bot-analytics";
+import { analyticsRange, groupAnalyticsByArgentinaDay, ratio, totalMetric } from "@/lib/bot-analytics";
 import { getBotAnalytics } from "@/lib/bot-analytics-server";
 import { crmDate } from "@/lib/crm-display";
 
@@ -27,7 +27,8 @@ export default async function BotPage({ searchParams }: { searchParams: Promise<
     prisma.conversation.groupBy({ by: ["channel"], where: { createdAt: period, botpressId: { not: null } }, _count: true }),
     prisma.order.count({ where: { status: "DELIVERED", deliveredAt: period } }),
   ]);
-  const records = "records" in analytics ? analytics.records : [];
+  const rawRecords = "records" in analytics ? analytics.records : [];
+  const records = groupAnalyticsByArgentinaDay(rawRecords);
   const sum = (select: Parameters<typeof totalMetric>[1]) => totalMetric(records, select);
   const cost = sum(r => r.llm?.cost?.sum);
   const conversations = sum(r => r.conversationsCreated);
@@ -60,17 +61,17 @@ export default async function BotPage({ searchParams }: { searchParams: Promise<
     {"error" in analytics && <section className="panel" role="alert">{analytics.error}</section>}
     {!records.length && !("error" in analytics) && <section className="panel">Botpress no devolvió registros para este período. Esto no confirma consumo cero.</section>}
     <section className="metric-grid bot-executive-grid">{executiveCards.map(([label, value, detail]) => <article className="metric" key={label}><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span></article>)}</section>
-    <section className="section-heading"><h2>Actividad y consumo</h2><span className="muted">Cada barra representa un registro real informado por Botpress.</span></section>
+    <section className="section-heading"><h2>Actividad y consumo</h2><span className="muted">Gráficos agrupados por día calendario argentino.</span></section>
     <section className="bot-chart-grid">
       <DailyBars title="Evolución del gasto" description={highestCost ? `Mayor gasto: ${crmDate(highestCost.startDateTimeUtc)} (${usd(highestCost.llm?.cost?.sum)}).` : "Sin gasto informado en este período."} records={records} values={[{ label: "USD", value: r => r.llm?.cost?.sum, color: "#a65d47" }]} />
       <DailyBars title="Costo por conversación" description="Gasto diario dividido por conversaciones creadas ese día; no se muestran días sin conversaciones." records={dailyCost} values={[{ label: "USD por conversación", value: r => (r as MetricRecord & { costPerConversation: number | null }).costPerConversation, color: "#4f7e9a" }]} />
-      <DailyBars title="Conversaciones y usuarios" description="Altas y usuarios nuevos por período informado." records={records} values={[{ label: "Conversaciones", value: r => r.conversationsCreated, color: "#7b563d" }, { label: "Usuarios nuevos", value: r => r.newUsers, color: "#4f8a6b" }]} />
+      <DailyBars title="Conversaciones y usuarios" description="Altas por día argentino. Usuarios nuevos se omiten cuando Botpress dividió el día para no duplicarlos." records={records} values={[{ label: "Conversaciones", value: r => r.conversationsCreated, color: "#7b563d" }, { label: "Usuarios nuevos", value: r => r.newUsers, color: "#4f8a6b" }]} />
       <DailyBars title="Mensajes" description="Mensajes recibidos frente a mensajes enviados por el bot." records={records} values={[{ label: "Recibidos", value: r => r.userMessages, color: "#5a7da8" }, { label: "Del bot", value: r => r.botMessages, color: "#c48358" }]} />
       <DailyBars title="Consumo de tokens" description="Entrada y salida, sin completar períodos ausentes." records={records} values={[{ label: "Entrada", value: r => r.llm?.inputTokens, color: "#755f9a" }, { label: "Salida", value: r => r.llm?.outputTokens, color: "#c47777" }]} />
       <DailyBars title="Llamadas de IA" description="Llamadas al modelo informadas por Botpress." records={records} values={[{ label: "Llamadas", value: r => r.llm?.calls, color: "#2f8074" }]} />
     </section>
     <section className="metric-grid bot-secondary-grid">{secondaryCards.map(([label, value, detail]) => <article className="metric" key={label}><span className="metric-label">{label}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span></article>)}</section><section className="panel"><h2>Lectura del período</h2><p>Gasto total: {usd(cost)} · promedio diario: {usd(averageDaily)} · conversaciones: {number(conversations)}.</p><p>Mensajes recibidos / enviados por el bot: {number(sum(r => r.userMessages))} / {number(sum(r => r.botMessages))}. {highestCost ? `Mayor gasto el ${crmDate(highestCost.startDateTimeUtc)}.` : "No hay un día de gasto para destacar."}</p></section>
-    <details className="panel bot-details"><summary><span><strong>Ver datos detallados</strong><small>Tabla exacta informada por Botpress.</small></span></summary><div className="bot-table-scroll"><table className="bot-table"><thead><tr><th>Período UTC</th><th>Conversaciones</th><th>Recibidos</th><th>Del bot</th><th>Tokens entrada</th><th>Tokens salida</th><th>Gasto IA</th></tr></thead><tbody>{[...records].sort((a,b) => a.startDateTimeUtc.localeCompare(b.startDateTimeUtc)).map((r, i) => <tr key={`${r.startDateTimeUtc}-${i}`}><td>{crmDate(r.startDateTimeUtc, true)}<br />a {crmDate(r.endDateTimeUtc, true)}</td><td>{number(r.conversationsCreated)}</td><td>{number(r.userMessages)}</td><td>{number(r.botMessages)}</td><td>{number(r.llm?.inputTokens)}</td><td>{number(r.llm?.outputTokens)}</td><td>{usd(r.llm?.cost?.sum)}</td></tr>)}</tbody></table></div></details>
+    <details className="panel bot-details"><summary><span><strong>Ver datos técnicos originales</strong><small>Registros exactos informados por Botpress, sin agrupar.</small></span></summary><div className="bot-table-scroll"><table className="bot-table"><thead><tr><th>Período UTC</th><th>Conversaciones</th><th>Recibidos</th><th>Del bot</th><th>Tokens entrada</th><th>Tokens salida</th><th>Gasto IA</th></tr></thead><tbody>{[...rawRecords].sort((a,b) => a.startDateTimeUtc.localeCompare(b.startDateTimeUtc)).map((r, i) => <tr key={`${r.startDateTimeUtc}-${i}`}><td>{crmDate(r.startDateTimeUtc, true)}<br />a {crmDate(r.endDateTimeUtc, true)}</td><td>{number(r.conversationsCreated)}</td><td>{number(r.userMessages)}</td><td>{number(r.botMessages)}</td><td>{number(r.llm?.inputTokens)}</td><td>{number(r.llm?.outputTokens)}</td><td>{usd(r.llm?.cost?.sum)}</td></tr>)}</tbody></table></div></details>
     <section className="panel"><h2>Referencia comercial del CRM</h2><p>Conversaciones vinculadas a Botpress registradas por primera vez en el CRM durante el período. No equivale a usuarios únicos ni garantiza el histórico completo de Botpress.</p><div className="policy-list">{channels.map(c => <div key={c.channel}>{c.channel}: {number(c._count)}</div>)}<div>Ventas entregadas o retiradas en el período: {number(completed)}<span>Todos los orígenes del CRM. No se calcula costo por venta hasta vincular con precisión el consumo y las ventas del bot.</span></div></div></section>
     <section className="panel"><h2>Cómo interpretar el gasto</h2><p>El importe es consumo de IA en USD. No incluye abono de Botpress, cargos de Meta, impuestos ni otros servicios. No es saldo disponible ni un límite de gasto.</p><p>La API agregada no separa el consumo por canal ni identifica usuarios únicos del período. Esos datos no se estiman a partir de sesiones ni de la caché de chats.</p></section>
   </CrmShell>;

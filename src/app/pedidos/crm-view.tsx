@@ -24,14 +24,14 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const sortHref = (next: string) => { const params = new URLSearchParams(Object.entries(query).filter(([key, value]) => key !== "sort" && key !== "page" && typeof value === "string" && value) as [string, string][]); params.set("sort", next); return `/pedidos?${params}`; };
   const SortHeader = ({ label, ascending, descending }: { label: string; ascending: string; descending: string }) => { const active = filter.sort === ascending || filter.sort === descending; return <Link className={`table-sort-header${active ? " active" : ""}`} href={sortHref(filter.sort === ascending ? descending : ascending)}>{label}<span aria-hidden="true">{active ? filter.sort === descending ? "↓" : "↑" : "↕"}</span></Link>; };
   return <CrmShell active="/pedidos"><header className="topbar"><div><p className="eyebrow">Ventas</p><h1>Pedidos</h1><p className="topbar-copy">Cada confirmación entra a revisión antes de pasar a logística.</p></div></header>
-    <form className="bot-date-form">
+    <form className="bot-date-form list-filter-bar order-filter-bar">
       <label>Buscar<input name="q" defaultValue={filter.q} placeholder="Venta, cliente o teléfono" /></label>
       <label>Estado<select name="status" defaultValue={filter.status || ""}><option value="">Todos</option>{orderFilterStates.map(s => <option key={s} value={s}>{crmStatus(s)}</option>)}</select></label>
       <label>Modalidad<select name="method" defaultValue={filter.method || ""}><option value="">Todas</option><option value="COURIER">Envío por mensajería</option><option value="PICKUP">Retiro en local</option></select></label>
       <label>Venta desde<input type="date" name="from" defaultValue={filter.from} />{filter.from && <small>{crmDate(filter.from + "T12:00:00-03:00")}</small>}</label>
       <label>Venta hasta<input type="date" name="to" defaultValue={filter.to} />{filter.to && <small>{crmDate(filter.to + "T12:00:00-03:00")}</small>}</label>
       <label>Orden<select name="sort" defaultValue={filter.sort}><option value="recent">Más recientes</option><option value="oldest">Más antiguos</option><option value="total_high">Mayor importe</option><option value="total_low">Menor importe</option><option value="client">Cliente A–Z</option><option value="client_desc">Cliente Z–A</option><option value="status">Estado</option><option value="status_desc">Estado Z–A</option></select></label>
-      <button className="button secondary">Filtrar</button><Link href="/pedidos">Limpiar filtros</Link>
+      <div className="filter-actions"><button className="button secondary">Filtrar</button><Link className="button ghost" href="/pedidos">Limpiar filtros</Link></div>
     </form>
     {filter.error ? <p role="alert">{filter.error}</p> : <aside className="filter-result-summary" aria-live="polite"><strong>{formatArs(amount?._sum.totalCents ?? 0)}</strong><span>Importe de los pedidos filtrados. Incluye los estados seleccionados; no equivale a cobros ni ventas entregadas.</span></aside>}
     <ListPagination path="/pedidos" query={query} page={page} total={total} />

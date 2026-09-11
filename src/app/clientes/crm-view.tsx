@@ -21,14 +21,14 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   const sortHref = (next: string) => { const params = new URLSearchParams(Object.entries(query).filter(([key, value]) => key !== "sort" && key !== "page" && typeof value === "string" && value) as [string, string][]); params.set("sort", next); return `/clientes?${params}`; };
   const SortHeader = ({ label, ascending, descending }: { label: string; ascending: string; descending: string }) => { const active = filter.sort === ascending || filter.sort === descending; return <Link className={`table-sort-header${active ? " active" : ""}`} href={sortHref(filter.sort === ascending ? descending : ascending)}>{label}<span aria-hidden="true">{active ? filter.sort === descending ? "↓" : "↑" : "↕"}</span></Link>; };
   return <CrmShell active="/clientes"><header className="topbar"><div><p className="eyebrow">Base de relaciones</p><h1>Clientes</h1><p className="topbar-copy">Una ficha por persona, incluso si todavía no compró.</p></div><div className="topbar-actions"><Link className="button secondary" href="/clientes/duplicados">Revisar duplicados</Link></div></header>
-    <form className="bot-date-form" action="/clientes">
+    <form className="bot-date-form list-filter-bar customer-filter-bar" action="/clientes">
       <label>Buscar<input name="q" defaultValue={filter.q} placeholder="Nombre, teléfono o localidad" /></label>
       <label>Etapa<select name="stage" defaultValue={filter.stage || ""}><option value="">Todas</option>{funnelStages.map(([key]) => <option key={key} value={key}>{crmStatus(key)}</option>)}</select></label>
       <label>Responsable<select name="owner" defaultValue={filter.owner}><option value="">Todos</option><option value="mine">Mis clientes</option><option value="none">Sin asignar</option>{members.map(m => <option key={m.id} value={m.id}>{m.displayName || m.email}</option>)}</select></label>
       <label>Pedidos registrados<select name="orders" defaultValue={filter.orders}><option value="">Todos</option><option value="yes">Con pedidos</option><option value="no">Sin pedidos</option></select></label>
       <label>Calidad de datos<select name="quality" defaultValue={filter.quality}><option value="">Sin filtro</option><option value="phone">Teléfono pendiente</option><option value="name">Nombre pendiente</option><option value="locality">Sin localidad</option><option value="owner">Sin responsable</option><option value="conversation">Sin conversación</option><option value="messages">Sin mensajes sincronizados</option></select></label>
       <label>Orden<select name="sort" defaultValue={filter.sort}><option value="recent">Última actualización</option><option value="oldest">Actualización más antigua</option><option value="name">Nombre A–Z</option><option value="name_desc">Nombre Z–A</option></select></label>
-      <button className="button secondary">Filtrar</button><Link href="/clientes">Limpiar filtros</Link>
+      <div className="filter-actions"><button className="button secondary">Filtrar</button><Link className="button ghost" href="/clientes">Limpiar filtros</Link></div>
     </form>
     <p className="muted">Los filtros se combinan. Tener pedidos registrados no significa que hayan sido entregados.</p>
     <ListPagination path="/clientes" query={query} page={page} total={total} />
