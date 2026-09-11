@@ -2,7 +2,7 @@ import Link from "next/link";
 import { formatArs } from "@/lib/sales-policy";
 import { prisma } from "@/lib/prisma";
 import { CrmShell } from "@/components/crm-shell";
-import { argentinaDayStart, crmStatus } from "@/lib/crm-display";
+import { argentinaDayStart, crmDate, crmStatus } from "@/lib/crm-display";
 import { requireCrmUser } from "@/lib/auth";
 import { taskTimingFilter } from "@/lib/crm-task-filters";
 import { duplicateWindowHours, possibleTaskDuplicates } from "@/lib/task-duplicates";
@@ -51,7 +51,7 @@ export default async function Home() {
   ];
 
   return <CrmShell active="/">
-    <header className="topbar"><div><p className="eyebrow">Operación comercial</p><h1>Dashboard</h1><p className="topbar-copy">WhatsApp, ventas y preparación de pedidos en un solo lugar.</p><p className="muted">Actualizado al abrir el panel: {now.toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })}.</p></div><div className="topbar-actions"><Link className="button secondary" href="/embudo">Ver embudo</Link><Link className="button" href="/pedidos">Revisar pedidos</Link></div></header>
+    <header className="topbar"><div><p className="eyebrow">Operación comercial</p><h1>Dashboard</h1><p className="topbar-copy">WhatsApp, ventas y preparación de pedidos en un solo lugar.</p><p className="muted">Actualizado al abrir el panel: {crmDate(now, true)}.</p></div><div className="topbar-actions"><Link className="button secondary" href="/embudo">Ver embudo</Link><Link className="button" href="/pedidos">Revisar pedidos</Link></div></header>
       <section className="metric-grid dashboard-priority-grid">
         {priorityCards.map(([title, value, detail, href]) => (
           <Link key={title} className="metric dashboard-priority-card" href={href!}>

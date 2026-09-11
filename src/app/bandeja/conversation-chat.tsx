@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- WhatsApp media hosts are dynamic and cannot be allow-listed safely. */
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -22,9 +23,13 @@ function MessageContent({ message }: { message: Message }) {
   const p = message.payload;
   const text = typeof p.text === "string" ? p.text : typeof p.title === "string" ? p.title : "";
   const url = safeUrl(p.imageUrl || p.audioUrl || p.videoUrl || p.fileUrl);
+  const mediaLabel = message.type === "image" ? "imagen" : message.type === "audio" ? "audio" : message.type === "video" ? "video" : "archivo";
   return <>
     {text ? <SafeMessage text={text} /> : null}
-    {url ? <a href={url} target="_blank" rel="noopener noreferrer">Ver {message.type === "image" ? "imagen" : message.type === "audio" ? "audio" : message.type === "video" ? "video" : "archivo"}</a> : null}
+    {url && message.type === "image" ? <a className="chat-media chat-media-image" href={url} target="_blank" rel="noopener noreferrer" aria-label="Abrir imagen en tamaño completo"><img src={url} alt={text || "Imagen compartida"} loading="lazy" /></a> : null}
+    {url && message.type === "audio" ? <audio className="chat-media chat-media-audio" controls preload="metadata" src={url}>Tu navegador no permite reproducir este audio.</audio> : null}
+    {url && message.type === "video" ? <video className="chat-media chat-media-video" controls preload="metadata" src={url}>Tu navegador no permite reproducir este video.</video> : null}
+    {url && !["image", "audio", "video"].includes(message.type) ? <a className="chat-file" href={url} target="_blank" rel="noopener noreferrer">Abrir {mediaLabel}</a> : null}
     {!text && !url ? <p className="muted">Mensaje de tipo {message.type} (contenido no disponible en esta vista)</p> : null}
     {Array.isArray(p.options) ? <p>{p.options.map(o => typeof o === "object" && o && "label" in o ? String(o.label) : "").filter(Boolean).join(" · ")}</p> : null}
   </>;
