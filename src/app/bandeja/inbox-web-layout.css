@@ -44,7 +44,10 @@
 .inbox-left-tools .inbox-shortcuts a.active { background: #e4f6e5; border-color: #b2dfb7; color: #1d6d3c; font-weight: 700; }
 .inbox-left-tools .inbox-shortcuts span { background: transparent; min-width: auto; padding: 0; }
 .inbox-contact-scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.inbox-workspace .inbox-list-heading { height: 34px; padding: 0 14px; background: #fff; font-size: 12px; color: #667078; }
+.inbox-workspace .inbox-list-heading { height: 38px; padding: 0 14px; background: #fff; font-size: 12px; color: #667078; }
+.inbox-workspace .inbox-list-heading > div { display: inline-flex; align-items: center; gap: 8px; }
+.inbox-sort-trigger { display: inline-flex; align-items: center; min-height: 26px; padding: 3px 6px; border: 1px solid transparent; border-radius: 6px; color: #5b6871; font-size: 11px; font-weight: 600; text-decoration: none; }
+.inbox-sort-trigger:hover, .inbox-sort-trigger:focus-visible { border-color: #d4d9dc; background: #f4f6f7; color: #1f2c33; outline: 0; }
 @media (min-width: 1101px) { .inbox-workspace .inbox-layout { grid-template-columns: clamp(340px, 27%, 390px) minmax(500px, 1fr) minmax(280px, 320px); } }
 .inbox-workspace .inbox-thread { min-height: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; border: 0; }
 .inbox-workspace .thread-heading { flex-shrink: 0; background: #fff; }

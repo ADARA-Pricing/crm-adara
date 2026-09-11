@@ -24,7 +24,7 @@ export function InboxFilters({ filters, members, categories }: { filters: z.infe
     <label>Categoría<select name="category" defaultValue={filters.category}><option value="">Todas</option>{categories.map(c => <option key={c}>{c}</option>)}</select></label>
     <label>Ventana WhatsApp<select name="window" defaultValue={filters.window}><option value="">Todas</option><option value="open">Disponible (menos de 24 h)</option><option value="closing">Vence en menos de 2 h</option><option value="closed">Vencida</option><option value="unknown">Sin verificar</option></select></label>
     <label>Compras concretadas<select name="bought" defaultValue={filters.bought}><option value="">Todos</option><option value="yes">Ya compró</option><option value="no">Sin compras concretadas</option></select></label>
-    <label>Orden<select name="sort" defaultValue={filters.sort}><option value="recent">Último mensaje más reciente</option><option value="oldest">Mensaje más antiguo / ventana por vencer</option></select></label>
+    <label>Orden<select name="sort" defaultValue={filters.sort}><option value="recent">Última actividad más reciente</option><option value="oldest">Última actividad más antigua</option></select></label>
       </div>
     </details>
     <div className="inbox-filter-actions"><button className="button">Filtrar</button><Link href="/bandeja">Limpiar filtros</Link></div>
