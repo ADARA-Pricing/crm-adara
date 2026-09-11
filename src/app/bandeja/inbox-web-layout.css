@@ -34,8 +34,10 @@
 .inbox-live-search .search-symbol { position: absolute; left: 13px; top: 8px; font-size: 22px; color: #706b66; }
 .inbox-live-search .search-progress { position: absolute; right: 14px; top: 13px; font-size: 11px; background: #f4f4f3; }
 .inbox-left-tools .inbox-filter-drawer > summary { display: inline-flex; align-items: center; min-height: 30px; font-size: 12px; padding: 2px 6px; border: 1px solid #dedddb; border-radius: 16px; color: #42515a; }
-.inbox-left-tools .inbox-shortcuts { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+.inbox-left-tools .inbox-shortcuts { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #b8c0c5 transparent; padding-bottom: 5px; }
 .inbox-left-tools .inbox-shortcuts a { white-space: nowrap; flex-shrink: 0; }
+.inbox-left-tools .inbox-shortcuts::-webkit-scrollbar { display: block; height: 6px; }
+.inbox-left-tools .inbox-shortcuts::-webkit-scrollbar-thumb { background: #b8c0c5; border-radius: 999px; }
 .inbox-left-tools .inbox-filter-grid { grid-template-columns: minmax(0, 1fr); }
 .inbox-left-tools .inbox-shortcuts { gap: 6px; }
 .inbox-left-tools .inbox-shortcuts a { font-size: 12px; border-radius: 18px; border-color: #d9dcde; background: #fff; color: #43505a; }
