@@ -274,14 +274,15 @@ td { padding: 15px 17px; border-top: 1px solid #eee8e4; font-size: 13px; vertica
 .marketing-steps li { display: flex; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius); background: #fcfaf8; }
 .marketing-steps b { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 auto; border-radius: 50%; background: #f1e3d7; color: var(--brand-dark); font-size: 12px; }
 .marketing-steps span { display: grid; gap: 4px; }.marketing-steps small { color: var(--muted); font-size: 12px; line-height: 1.4; }
-.lead-dialog { width: min(1500px, 96vw); max-width: 96vw; max-height: 94vh; padding: 20px; border: 1px solid #dfd7d0; border-radius: 16px; background: #f7f5f3; color: #27221e; }
+.lead-dialog { width: min(1500px, calc(100vw - 32px)); height: min(900px, calc(100vh - 32px)); max-width: 96vw; max-height: 94vh; padding: 20px; border: 1px solid #dfd7d0; border-radius: 16px; background: #f7f5f3; color: #27221e; overflow: hidden; }
 .lead-dialog::backdrop { background: #24170d80; }
-.lead-dialog-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.lead-dialog-heading { position: sticky; top: 0; z-index: 2; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; background: #f7f5f3; }
+.lead-dialog-body { min-height: 0; height: calc(100% - 50px); overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
 .lead-workspace { display: grid; grid-template-columns: minmax(240px, 1fr) minmax(360px, 1.6fr) minmax(230px, 1fr); gap: 16px; align-items: start; }
 .lead-workspace .panel { min-width: 0; overflow-wrap: anywhere; }
 .lead-task-form, .lead-task-form label { display: grid; gap: 8px; }
 .lead-task-form input, .lead-task-form select, .lead-task-form textarea { width: 100%; padding: 9px; border: 1px solid #dfd7d0; border-radius: 8px; }
-.lead-chat .chat-messages { max-height: 50vh; }
+.lead-chat .chat-messages { height: auto; min-height: 0; max-height: none; overflow: visible; }
 .funnel-person:focus-visible { outline: 2px solid #815734; outline-offset: 2px; }
 @media(max-width: 1000px) { .lead-workspace { grid-template-columns: 1fr; } }
 
