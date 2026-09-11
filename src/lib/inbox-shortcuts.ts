@@ -10,11 +10,11 @@ export function inboxShortcuts(raw: unknown) {
     { label: "Sin respuesta", changes: { attention: "pending" } }
   ];
   const shortcutKeys = ["owner", "window", "attention", "stage", "bought"] as const;
-  const base = { ...filters, owner: "", window: "", attention: "", stage: "", bought: "", sort: "recent" as const, page: 1 };
+  const base = { ...filters, owner: "", window: "", attention: "", stage: "", bought: "", sort: "", page: 1 };
   const href = (selection: typeof base) => {
     const query = new URLSearchParams();
     for (const [key, value] of Object.entries(selection)) if (value !== "" && key !== "page" && !(key === "sort" && value === "recent")) query.set(key, String(value));
-    return `/bandeja?${query}`;
+    return query.size ? `/bandeja?${query}` : "/bandeja";
   };
   return presets.map(preset => {
     const active = shortcutKeys.every(key => String(filters[key] || "") === String(preset.changes[key as keyof typeof preset.changes] || ""));
