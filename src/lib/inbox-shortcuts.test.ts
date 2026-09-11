@@ -18,7 +18,7 @@ it("uses the same selection in the destination and its counter", () => {
     const query = new URL(item.href, "https://crm.test").searchParams;
     for (const [key, value] of Object.entries(item.selection)) if (key !== "page" && value !== "") expect(query.get(key)).toBe(String(value));
   }
-  expect(inboxShortcuts({})[3].selection.attention).toBe("pending");
+  expect(inboxShortcuts({})[0].selection.attention).toBe("pending");
 });
 it("does not accumulate shortcuts and clears the active shortcut", () => {
   const items = inboxShortcuts({ owner: "mine", window: "open", attention: "human" });

@@ -4,10 +4,10 @@ import { inboxFilterSchema } from "./inbox-filters";
 export function inboxShortcuts(raw: unknown) {
   const filters = inboxFilterSchema.parse(raw);
   const presets = [
+    { label: "Sin responder", changes: { attention: "pending" } },
     { label: "Mis chats", changes: { owner: "mine", window: "open", attention: "human" } },
     { label: "Ventana por vencer", changes: { window: "closing" } },
     { label: "Muy interesados", changes: { stage: "VERY_INTERESTED", window: "open", bought: "no" } },
-    { label: "Sin respuesta", changes: { attention: "pending" } }
   ];
   const shortcutKeys = ["owner", "window", "attention", "stage", "bought"] as const;
   const base = { ...filters, owner: "", window: "", attention: "", stage: "", bought: "", sort: "", page: 1 };

@@ -18,8 +18,6 @@ import { InboxFilters } from "@/components/inbox-filters";
 import { inboxWhere } from "@/lib/inbox-filters";
 import { needsReply } from "@/lib/conversation-activity";
 import { parseInboxSnapshot } from "@/lib/inbox-cache";
-import { inboxPriorityPage } from "@/lib/inbox-priority";
-import type { Prisma } from "@prisma/client";
 
 import "./inbox-web-layout.css";
 
@@ -37,21 +35,12 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
   if (filters.attention === "pending") where.AND = [{ lastIncomingAt: { not: null } }, { OR: [{ lastOutgoingAt: null }, { lastIncomingAt: { gt: prisma.conversation.fields.lastOutgoingAt } }] }];
   if (filters.attention === "answered") where.AND = [{ lastIncomingAt: { not: null } }, { lastOutgoingAt: { gte: prisma.conversation.fields.lastIncomingAt } }];
   const include = { messageCache: true, events: { where: { direction: "INTERNAL" }, orderBy: { createdAt: "desc" as const }, take: 30 }, customer: { include: { assignee: true, _count: { select: { orders: true } } } } };
-  async function priorityConversations() {
-    const unanswered: Prisma.ConversationWhereInput = { AND: [{ lastIncomingAt: { not: null } }, { OR: [{ lastOutgoingAt: null }, { lastIncomingAt: { gt: prisma.conversation.fields.lastOutgoingAt } }] }] };
-    const answered: Prisma.ConversationWhereInput = { OR: [{ lastIncomingAt: null }, { lastOutgoingAt: { gte: prisma.conversation.fields.lastIncomingAt } }] };
-    const pendingWhere = { AND: [where, unanswered] };
-    const count = await prisma.conversation.count({ where: pendingWhere });
-    const slice = inboxPriorityPage(count, filters.page);
-    const orderBy: Prisma.ConversationOrderByWithRelationInput[] = [{ lastIncomingAt: { sort: filters.sort === "oldest" ? "asc" : "desc", nulls: "last" } }, { id: "asc" }];
-    const [pending, rest] = await Promise.all([
-      slice.pendingTake ? prisma.conversation.findMany({where: pendingWhere, skip: slice.pendingSkip, take: slice.pendingTake, orderBy, include}) : [],
-      slice.restTake ? prisma.conversation.findMany({where: {AND:[where,answered]}, skip:slice.restSkip,take:slice.restTake,orderBy,include}) : [],
-    ]);
-    return [...pending, ...rest];
+  async function recentConversations() {
+    return prisma.conversation.findMany({ where, skip: (filters.page - 1) * 50, take: 50,
+      orderBy: [{ updatedAt: filters.sort === "oldest" ? "asc" : "desc" }, { id: "asc" }], include });
   }
   const [conversations, total, members, categories, candidates] = await Promise.all([
-    priorityConversations(),
+    recentConversations(),
     prisma.conversation.count({ where }),
     prisma.userProfile.findMany({ where: { isActive: true }, select: { id: true, displayName: true, email: true } }),
     prisma.product.findMany({ where: { category: { not: null } }, distinct: ["category"], select: { category: true } }),
