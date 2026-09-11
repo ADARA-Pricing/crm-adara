@@ -454,3 +454,25 @@ tbody tr:hover { background: #fbf6f0; }
   .profile-layout { grid-template-columns: 1fr; }
   .marketing-steps { grid-template-columns: 1fr; }
 }
+
+/* Shared filter bar for operational lists. Keeps each GET contract intact while
+   giving Clientes, Pedidos, Embudo, Productos and reporting the same UI. */
+form.bot-date-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px; margin: 16px 0; padding: 14px 16px 16px; border: 1px solid #e3e1dd; border-radius: 10px; background: #fff; box-shadow: 0 1px 2px #25232108; }
+form.bot-date-form label { display: grid; flex: 1 1 160px; min-width: 0; gap: 6px; color: #59636b; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+form.bot-date-form label:first-of-type { flex: 2 1 270px; }
+form.bot-date-form :is(input, select) { width: 100%; min-width: 0; min-height: 42px; padding: 9px 11px; border: 1px solid #d8dcde; border-radius: 7px; background: #fff; color: #26343c; font: inherit; font-size: 13px; }
+form.bot-date-form input::placeholder { color: #858d92; }
+form.bot-date-form :is(input, select):focus-visible { border-color: #2e6b9a; outline: 2px solid #b8d3e5; outline-offset: 1px; }
+form.bot-date-form .button { min-height: 42px; padding-inline: 14px; }
+form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; white-space: nowrap; }
+.task-filter-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 11px; padding: 14px 16px 16px; border-color: #e3e1dd; border-radius: 10px; background: #fff; box-shadow: 0 1px 2px #25232108; }
+.task-filter-bar label { flex: 1 1 160px; min-width: 0; }
+.task-filter-bar select { width: 100%; min-height: 42px; padding: 9px 11px; border-color: #d8dcde; background: #fff; }
+.task-filter-bar .button { min-height: 42px; padding-inline: 14px; }
+.task-filter-bar > a { align-self: center; color: #5b6670; font-size: 12px; white-space: nowrap; }
+.task-filter-more summary { min-height: 42px; padding: 0 8px; border: 1px solid #d8dcde; border-radius: 7px; color: #43515a; font-size: 12px; }
+@media (max-width: 700px) {
+  form.bot-date-form, .task-filter-bar { padding: 12px; }
+  form.bot-date-form label, form.bot-date-form label:first-of-type, .task-filter-bar label { flex-basis: 100%; }
+  form.bot-date-form .button, .task-filter-bar .button { flex: 1; }
+}
