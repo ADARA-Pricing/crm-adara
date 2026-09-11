@@ -9,5 +9,5 @@ export function LeadDialog({ children, onClose }: { children: ReactNode; onClose
     return () => { document.body.style.overflow = previous; if (focusBeforeOpen instanceof HTMLElement && focusBeforeOpen.isConnected) focusBeforeOpen.focus({ preventScroll: true }); };
   }, []);
   const close = onClose;
-  return <dialog ref={dialog} className="lead-dialog" aria-label="Ficha del lead" onCancel={e => { e.preventDefault(); close(); }}><div className="lead-dialog-heading"><strong>Ficha del lead</strong><button className="button secondary" onClick={close} autoFocus>Cerrar ficha</button></div><div className="lead-dialog-body">{children}</div></dialog>;
+  return <dialog ref={dialog} className="lead-dialog" aria-labelledby="lead-dialog-title" onCancel={e => { e.preventDefault(); close(); }} onClick={event => { if (event.target === event.currentTarget) close(); }}><div className="lead-dialog-heading"><strong id="lead-dialog-title">Ficha del lead</strong><button className="button secondary" onClick={close} autoFocus>Cerrar ficha</button></div><div className="lead-dialog-body">{children}</div></dialog>;
 }
