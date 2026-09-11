@@ -35,7 +35,7 @@ export function LeadLoader({ id, preview, cache, conversationId }: {
     })();
     return () => { active = false; controller.abort(); clearTimeout(timeout); };
   }, [id, refresh, cache]);
-  return <><p role="status">{error || (loading ? (data ? "Actualizando la ficha guardada…" : "Cargando detalle…") : "Ficha actualizada.")}</p>{error && <button className="button secondary" onClick={() => setRefresh(n => n+1)}>Reintentar</button>}
+  return <>{(error || loading) ? <p className="lead-loader-status" role="status">{error || (data ? "Actualizando ficha…" : "Cargando ficha…")}</p> : null}{error && <button className="button secondary" onClick={() => setRefresh(n => n+1)}>Reintentar</button>}
     {data ? <LeadWorkspace data={data} conversationId={conversationId} onRefresh={() => setRefresh(n => n+1)} /> : <section className="panel"><h2>{preview?.fullName || "Ficha del lead"}</h2><p>{preview?.phone}</p><p>{preview?.locality}</p><p>{preview?.funnelNote}</p>{loading && <p>Preparando chat, pedidos y tareas…</p>}</section>}
   </>;
 }

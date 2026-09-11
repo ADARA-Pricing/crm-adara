@@ -482,6 +482,7 @@ form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; wh
 .lead-dialog { display: flex; flex-direction: column; }
 .lead-dialog-heading { flex: 0 0 auto; min-height: 44px; }
 .lead-dialog-body { flex: 1; height: auto; min-height: 0; padding: 0 4px 4px 0; }
+.lead-loader-status { margin: 0 0 7px; color: var(--muted); font-size: 12px; }
 .lead-workspace { display: block; min-width: 0; }
 .lead-summary-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 4px 2px 14px; }
 .lead-summary-header h2 { margin: 0; font-size: 22px; }
@@ -503,9 +504,15 @@ form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; wh
 .lead-owner-compact { margin-top: 14px; padding: 13px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .lead-owner-compact .lead-task-form { grid-template-columns: minmax(180px, 1fr) auto; align-items: end; }
 .lead-owner-compact .lead-task-form > p { grid-column: 1 / -1; }
-.lead-conversation-switch { display: flex; gap: 6px; overflow-x: auto; margin: -3px 0 10px; }
+.lead-conversation-switch { display: flex; gap: 5px; overflow-x: auto; margin: 0; }
 .lead-conversation-switch button { min-height: 32px; padding: 5px 9px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
 .lead-conversation-switch button.active { border-color: var(--brand); background: #edf5ef; color: var(--brand-dark); font-weight: 700; }
+.lead-chat-controls { min-height: 40px; flex-wrap: nowrap; gap: 6px; margin: 0 0 8px; overflow-x: auto; }
+.lead-chat-controls .lead-chat-title { flex: 0 0 auto; margin-right: 3px; font-size: 17px; }
+.lead-chat-controls .button { flex: 0 0 auto; min-height: 32px; padding: 5px 9px; font-size: 12px; }
+.bot-state-icon { display: inline-grid; flex: 0 0 auto; width: 30px; height: 30px; place-items: center; border: 1px solid var(--line); border-radius: 50%; font-size: 17px; cursor: default; }
+.bot-state-icon.active { border-color: #97c9a4; background: #eef9f0; filter: none; }
+.bot-state-icon.paused { border-color: #d5d8da; background: #f1f2f3; filter: grayscale(1); opacity: .7; }
 .lead-chat .chat-messages { height: min(52vh, 530px); }
 .lead-task-create { margin: 0 0 14px; }
 .lead-task-create summary { display: inline-flex; cursor: pointer; list-style: none; }
@@ -539,4 +546,4 @@ form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; wh
 .order-row-actions > button:disabled { opacity: .55; cursor: not-allowed; }
 .order-row-actions .context-note { min-width: 250px; }
 @media (max-width: 900px) { .lead-overview-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lead-order-list > a { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 700px) { .lead-dialog { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; border: 0; padding: 14px; } .lead-summary-header { align-items: stretch; flex-direction: column; } .lead-summary-header .button { width: fit-content; } .lead-tabs { margin-inline: -2px; } .lead-tab-content { padding-top: 14px; } .lead-overview-grid, .lead-data-list { grid-template-columns: 1fr; } .lead-owner-compact .lead-task-form { grid-template-columns: 1fr; } .lead-chat .chat-messages { height: 48vh; } .lead-task-card { grid-template-columns: 1fr; } .lead-order-list > a { grid-template-columns: 1fr; gap: 5px; } }
+@media (max-width: 700px) { .lead-dialog { width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; border: 0; padding: 14px; } .lead-summary-header { align-items: stretch; flex-direction: column; } .lead-summary-header .button { width: fit-content; } .lead-tabs { margin-inline: -2px; } .lead-tab-content { padding-top: 14px; } .lead-overview-grid, .lead-data-list { grid-template-columns: 1fr; } .lead-owner-compact .lead-task-form { grid-template-columns: 1fr; } .lead-chat .chat-messages { height: 48vh; } .lead-task-card { grid-template-columns: 1fr; } .lead-order-list > a { grid-template-columns: 1fr; gap: 5px; } .lead-chat-controls { min-height: 36px; } .lead-chat-controls .lead-chat-title { font-size: 15px; } }
