@@ -72,7 +72,7 @@ export default async function InboxPage({ searchParams }: { searchParams: Promis
 <div className="inbox-left-tools">    <header className="inbox-list-appbar"><h1>WhatsApp</h1><span aria-label="Bandeja CRM">CRM</span></header>
     <InboxFilters filters={filters} members={members} categories={categories.map(c=>c.category!)} />
     <details className="inbox-help"><summary>Sobre los filtros y la disponibilidad</summary><p className="muted">Los filtros se combinan. La ventana se calcula con mensajes sincronizados y se verifica al enviar; no equivale a “no leído”. Los chats se actualizan en segundo plano.</p></details>
-    <Suspense fallback={<InboxShortcutsLoading raw={raw} />}><InboxShortcuts raw={raw} /></Suspense>
+    <Suspense fallback={<InboxShortcutsLoading raw={raw} />}><InboxShortcuts raw={raw} visibleTotal={total} /></Suspense>
 
 </div><div className="inbox-contact-scroll">
         <div className="availability-legend">Borde: verde &gt;12 h · amarillo ≤12 h · rojo vencido · gris sin verificar</div><div className="inbox-list-heading"><strong>Chats</strong><span>{total} · página {filters.page}</span></div>
