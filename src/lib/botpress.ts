@@ -44,3 +44,15 @@ export async function hasRecentIncoming(conversationId: string) {
   }
   return false;
 }
+
+export async function hasIncomingAfter(conversationId: string, after: Date) {
+  let nextToken: string | undefined;
+  for (let page = 0; page < 10; page++) {
+    const result = await listMessages(conversationId, nextToken, after.toISOString());
+    if (result.messages.some(message => message.direction === "incoming" && Date.parse(message.createdAt) > after.getTime())) return true;
+    nextToken = result.meta?.nextToken;
+    if (!nextToken) return false;
+  }
+  // More than ten pages cannot be safely treated as no reply.
+  return true;
+}
