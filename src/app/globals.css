@@ -467,6 +467,13 @@ form.bot-date-form :is(input, select):focus-visible { border-color: #2e6b9a; out
 form.bot-date-form .button { min-height: 42px; padding-inline: 14px; }
 form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; white-space: nowrap; }
 .filter-actions { display: flex; align-items: flex-end; gap: 8px; min-height: 42px; }
+.automation-system-rule { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(260px, .9fr); gap: 18px; border-left: 4px solid var(--success); }
+.automation-system-rule h2 { margin: 9px 0 6px; font-size: 18px; }
+.automation-system-rule dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.automation-system-rule dl div { padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fafcfb; }
+.automation-system-rule dt { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.automation-system-rule dd { margin: 4px 0 0; font-size: 12px; line-height: 1.35; }
+.automation-system-rule > .muted { grid-column: 1 / -1; font-size: 12px; }
 .filter-actions .button { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
 form.bot-date-form > a.button, .task-filter-bar > a.button, .logistics-filter-actions > a.button { min-height: 42px; padding-inline: 14px; font-size: 13px; text-decoration: none; }
 .list-filter-bar { display: grid !important; grid-template-columns: minmax(220px, 1.55fr) repeat(4, minmax(125px, 1fr)); align-items: flex-end; }
@@ -500,6 +507,7 @@ form.bot-date-form > a.button, .task-filter-bar > a.button, .logistics-filter-ac
   form.bot-date-form .button, .task-filter-bar .button { flex: 1; }
   .task-filter-more { width: 100%; }
   .task-filter-more-content { position: static; width: 100%; grid-template-columns: 1fr; margin-top: 8px; box-shadow: none; }
+  .automation-system-rule, .automation-system-rule dl { grid-template-columns: 1fr; }
 }
 
 /* Lead workspace: one clear, tabbed surface instead of three independently
