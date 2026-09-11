@@ -8,7 +8,18 @@
 .shipment-tabs a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 20px; font-size: 14px; min-height: 44px; }
 .shipment-tabs a[aria-current="page"] { background: white; color: #5a2f1d; box-shadow: 0 1px 3px #25232118; font-weight: 600; }
 .shipment-tabs span { background: #2e6b9a; color: white; border-radius: 12px; padding: 2px 6px; font-size: 11px; }
-.logistics-board .bot-date-form { flex-wrap: wrap; gap: 12px; }
+.logistics-filter-bar { display: grid; grid-template-columns: minmax(250px, 1.6fr) repeat(3, minmax(150px, 1fr)) minmax(166px, .9fr) auto; gap: 12px; align-items: end; margin: 16px 0 10px; padding: 14px 16px 16px; border: 1px solid #e4e2de; border-radius: 10px; background: #fff; box-shadow: 0 1px 2px #25232108; }
+.logistics-filter-bar > header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.logistics-filter-bar > header strong { color: #26343c; font-size: 14px; }
+.logistics-filter-bar > header span { color: #6c7378; font-size: 12px; }
+.logistics-filter-bar label { display: grid; min-width: 0; gap: 6px; color: #59636b; font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+.logistics-filter-bar :is(input, select) { width: 100%; min-width: 0; min-height: 42px; padding: 9px 11px; border: 1px solid #d8dcde; border-radius: 7px; background: #fff; color: #26343c; font: inherit; font-size: 13px; }
+.logistics-filter-bar input::placeholder { color: #858d92; }
+.logistics-date-field small { color: #6c7378; font-size: 10px; font-weight: 500; }
+.logistics-filter-actions { display: flex; align-items: center; gap: 10px; min-height: 42px; }
+.logistics-filter-actions .button { min-height: 42px; padding-inline: 14px; }
+.logistics-filter-actions a { color: #5b6670; font-size: 12px; white-space: nowrap; }
+.logistics-filter-bar :is(input, select):focus-visible { border-color: #2e6b9a; outline: 2px solid #b8d3e5; outline-offset: 1px; }
 .shipment-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin: 16px 0; padding: 12px 16px; background: #fff; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
 .shipment-selection label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .shipment-selection small { color: var(--muted); margin-left: auto; }
@@ -31,6 +42,8 @@
 .logistics-board .logistics-form input { min-height: 44px; }
 .logistics-board :is(a, button, input, select, summary):focus-visible { outline: 2px solid #5a2f1d; outline-offset: 3px; }
 @media (max-width: 700px) {
+  .logistics-filter-bar { grid-template-columns: 1fr 1fr; padding: 12px; }
+  .logistics-search-field, .logistics-filter-actions { grid-column: 1 / -1; }
   .logistics-board .logistics-card > header { flex-wrap: wrap; flex-direction: row; }
   .logistics-board .logistics-details, .logistics-board .logistics-form { grid-template-columns: minmax(0, 1fr); }
   .logistics-board .logistics-summary { flex-wrap: wrap; }

@@ -33,19 +33,21 @@ export default async function LogisticsPage({ searchParams }: { searchParams: Pr
   const counts = filter.error ? logisticsViews.map(() => 0) : await Promise.all(logisticsViews.map(([key]) => prisma.order.count({ where: { AND: [base, logisticsViewWhere(key, filter.today)] } })));
   const viewIndex = logisticsViews.findIndex(([key]) => key === view);
   const total = counts[Math.max(0, viewIndex)] || 0;
+  const activeFilterCount = [filter.q, filter.method, filter.status, filter.timing, filter.date].filter(Boolean).length;
   const page = Math.min(listPage(raw), Math.max(1, Math.ceil(total / 30)));
   const tabsQuery = new URLSearchParams(Object.entries(raw).filter(([key, value]) => key !== "view" && typeof value === "string") as [string, string][]);
   const orders = filter.error ? [] : await prisma.order.findMany({ take: 30, skip: (page - 1) * 30, where: { AND: [base, logisticsViewWhere(view, filter.today)] }, orderBy: [{ deliveryDate: { sort: "asc", nulls: "last" } }, { id: "asc" }], include: { customer: true, items: { include: { product: true } } } });
   const pageUrl = (nextPage: number) => { const query = new URLSearchParams(Object.entries(raw).filter(([, value]) => typeof value === "string" && value) as [string, string][]); query.set("view", view); query.set("page", String(nextPage)); return `/logistica?${query}`; };
   return <CrmShell active="/logistica"><div className="logistics-board"><header className="topbar"><div><p className="eyebrow">Operación</p><h1>Logística</h1><p className="topbar-copy">Validá, asigná y seguí cada envío confirmado.</p></div></header>
     <nav className="shipment-tabs" aria-label="Vistas de logística">{logisticsViews.map(([key, label], index) => <Link key={key} aria-current={view === key ? "page" : undefined} href={`/logistica?${tabsQuery}&view=${key}`}>{label}<span>{counts[index]}</span></Link>)}</nav>
-    <form className="bot-date-form"><input type="hidden" name="view" value={view} />
-      <label>Buscar<input name="q" defaultValue={filter.q} placeholder="Receptor, teléfono, localidad o responsable" /></label>
-      <label>Modalidad<select name="method" defaultValue={filter.method || ""}><option value="">Todas</option><option value="COURIER">Envío por mensajería</option><option value="PICKUP">Retiro en local</option></select></label>
-      <label>Estado<select name="status" defaultValue={filter.status || ""}><option value="">Todos los de esta vista</option>{logisticsStates.map(s => <option key={s} value={s}>{crmStatus(s)}</option>)}</select></label>
-      <label>Agenda<select name="timing" defaultValue={filter.timing || ""}><option value="">Toda la agenda</option><option value="today">Programados para hoy</option><option value="overdue">Fecha anterior a hoy</option><option value="unscheduled">Sin fecha programada</option></select></label>
-      <label>Fecha programada<input name="date" type="date" defaultValue={filter.date} />{filter.date && <small>{crmDate(filter.date + "T12:00:00-03:00")}</small>}</label>
-      <button className="button secondary">Filtrar</button><Link href="/logistica">Limpiar filtros</Link>
+    <form className="logistics-filter-bar" aria-label="Filtrar pedidos de logística"><input type="hidden" name="view" value={view} />
+      <header><strong>Filtrar pedidos</strong><span>{activeFilterCount ? `${activeFilterCount} activo${activeFilterCount === 1 ? "" : "s"}` : "Sin filtros activos"}</span></header>
+      <label className="logistics-search-field"><span>Buscar</span><input name="q" defaultValue={filter.q} placeholder="Receptor, teléfono, localidad o responsable" /></label>
+      <label><span>Modalidad</span><select name="method" defaultValue={filter.method || ""}><option value="">Todas</option><option value="COURIER">Envío por mensajería</option><option value="PICKUP">Retiro en local</option></select></label>
+      <label><span>Estado</span><select name="status" defaultValue={filter.status || ""}><option value="">Todos los de esta vista</option>{logisticsStates.map(s => <option key={s} value={s}>{crmStatus(s)}</option>)}</select></label>
+      <label><span>Agenda</span><select name="timing" defaultValue={filter.timing || ""}><option value="">Toda la agenda</option><option value="today">Programados para hoy</option><option value="overdue">Fecha anterior a hoy</option><option value="unscheduled">Sin fecha programada</option></select></label>
+      <label className="logistics-date-field"><span>Fecha programada</span><input name="date" type="date" defaultValue={filter.date} />{filter.date && <small>{crmDate(filter.date + "T12:00:00-03:00")}</small>}</label>
+      <div className="logistics-filter-actions"><button className="button secondary">Aplicar</button><Link href="/logistica">Restablecer</Link></div>
     </form>
     {filter.error && <p role="alert">{filter.error}</p>}
     <p className="muted">{total} pedidos en esta selección. Mostrando {orders.length} en la página {page}. Los filtros se combinan y utilizan la fecha programada, no la solicitada por el cliente. Los contadores corresponden a esta selección.</p>
