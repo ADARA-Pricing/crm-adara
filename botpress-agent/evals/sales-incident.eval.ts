@@ -6,8 +6,12 @@ export const available = new Eval({
   name: 'incident-available', type: 'regression',
   conversation: [
     { user: 'Hola! Quiero más información sobre el celular Infinix del anuncio.', assert: {
-      tools: [{ called: 'getProductInfo' }],
-      response: [...plain, { contains: 'Smart 10' }, { contains: '199.999' }, { not_contains: 'no me figura disponible' }],
+      tools: [{ not_called: 'getProductInfo' }, { not_called: 'quoteOrder' }, { not_called: 'recordConfirmedOrder' }],
+      response: [...plain, { not_contains: '199.999' }, { llm_judge: 'Saluda de forma breve y pregunta qué dato le interesa del Infinix. No informa precio, garantía, envío, retiro, cuotas ni un listado de características.' }],
+    } },
+    { user: '¿Cuánto sale?', assert: {
+      tools: [{ called: 'getProductInfo' }, { not_called: 'quoteOrder' }, { not_called: 'recordConfirmedOrder' }],
+      response: [...plain, { contains: '199.999' }, { llm_judge: 'Responde el precio solicitado de forma breve, sin agregar un menú de características, entrega o pago.' }],
     } },
     { user: '¿Y a qué precio tenés el Infinix 50 Pro?', assert: {
       tools: [{ not_called: 'quoteOrder' }, { not_called: 'recordConfirmedOrder' }],
