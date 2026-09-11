@@ -11,5 +11,6 @@ const titles: Array<[string, string]> = [
 export function PageSkeleton({ title }: { title?: string }) {
   const pathname = usePathname();
   const routeTitle = title || titles.find(([route]) => pathname === route || pathname.startsWith(`${route}/`))?.[1] || "CRM";
-  return <section className="workspace" aria-busy="true" aria-label={routeTitle}><p className="eyebrow">Cargando</p><h1>{routeTitle}</h1><p role="status">Preparando la información…</p><div className="metric-grid" aria-hidden="true">{[0, 1, 2, 3].map(i => <div key={i} className="metric skeleton" />)}</div><div className="skeleton skeleton-table" aria-hidden="true" /></section>;
+  const variant = pathname.startsWith("/embudo") ? "funnel" : pathname.startsWith("/bandeja") ? "inbox" : pathname.startsWith("/bot") || pathname.startsWith("/resultados") ? "charts" : pathname.startsWith("/logistica") || pathname.startsWith("/pedidos") ? "table" : "dashboard";
+  return <section className={`workspace page-skeleton page-skeleton-${variant}`} aria-busy="true" aria-label={routeTitle}><p className="eyebrow">Cargando</p><h1>{routeTitle}</h1><p role="status">Cargando datos de {routeTitle}…</p><div className="metric-grid" aria-hidden="true">{[0, 1, 2, 3].map(i => <div key={i} className="metric skeleton" />)}</div><div className="skeleton skeleton-table" aria-hidden="true" /></section>;
 }
