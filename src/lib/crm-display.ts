@@ -28,6 +28,14 @@ export function crmDate(value: Date | string | null | undefined, withTime = fals
   if (Number.isNaN(date.getTime())) return "Fecha por verificar";
   return new Intl.DateTimeFormat("es-AR", { timeZone: CRM_TIME_ZONE, day: "2-digit", month: "2-digit", year: "numeric", ...(withTime ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" as const } : {}) }).format(date);
 }
+/** Calendar value for date inputs; avoids changing a stored Argentine day by timezone. */
+export function crmInputDate(value: Date | string | null | undefined) {
+  if (!value) return "";
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
+}
 export function crmPhone(value: string | null | undefined) {
   if (!value || !/^\+?[\d\s().-]+$/.test(value)) return null;
   const digits = value.replace(/\D/g, "");

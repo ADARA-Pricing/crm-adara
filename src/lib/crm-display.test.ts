@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { argentinaDayStart, crmDate, crmPhone, crmStatus } from "./crm-display";
+import { argentinaDayStart, crmDate, crmInputDate, crmPhone, crmStatus } from "./crm-display";
 import { messageLink, SafeMessage } from "@/components/safe-message";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -7,6 +7,7 @@ describe("CRM presentation boundaries", () => {
   it("does not expose internal phone identifiers", () => { expect(crmPhone("conv_123456789012")).toBeNull(); expect(crmPhone("abc1166837411")).toBeNull(); expect(crmPhone("+54 9 11 2360-4715")).toBe("+5491123604715"); });
   it("translates and safely handles unknown states", () => { expect(crmStatus("LOCAL_PICKUP")).toBe("Retiro en local"); expect(crmStatus("DELIVERY_CONFIRMATION")).toBe("Confirmar entrega"); expect(crmStatus("NEW_INTERNAL_STATE")).toBe("Estado por verificar"); });
   it("formats dates in Argentina independently of host timezone", () => { expect(crmDate("2026-09-08T01:00:00Z")).toBe("07/09/2026"); expect(crmDate("2026-09-08T01:00:00Z", true)).toContain("22:00"); expect(crmDate("2026-09-10")).toBe("10/09/2026"); expect(crmDate("bad")).toBe("Fecha por verificar"); });
+  it("keeps the stored calendar day in native date inputs", () => { expect(crmInputDate("2026-09-10")).toBe("2026-09-10"); expect(crmInputDate(new Date("2026-09-10T12:00:00.000Z"))).toBe("2026-09-10"); expect(crmInputDate("bad")).toBe(""); });
   it("uses Argentina midnight for dashboard", () => { expect(argentinaDayStart(new Date("2026-09-08T01:00:00Z")).toISOString()).toBe("2026-09-07T03:00:00.000Z"); });
   it("allows only web links", () => { for (const value of ["javascript:alert(1)", "data:text/html,hello", "file:///etc/passwd", "//evil.example"]) expect(messageLink(value)).toBeUndefined(); });
   it("renders formatting without interpreting HTML", () => {

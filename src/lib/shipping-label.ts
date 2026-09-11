@@ -58,7 +58,6 @@ export function shippingLabel(order: LabelOrder) {
     lines(value, width, max).forEach((line, index) => fields.push(`^FO${x},${y + index * (size + 7)}^A0N,${size},${Math.round(size * .72)}^FH_^FB${fieldWidth},1,0,${align}^FD${zplText(line)}^FS`));
   };
   fields.push(`^FO32,20${ADARA_LABEL_LOGO_ZPL}`);
-  text(440, 48, `VENTA #${order.saleNumber}`, 34, 22, 1, "R", 328);
   text(450, 38, `VENTA #${order.saleNumber}`, 34, 22, 1, "R", 318);
   text(32, 112, "ENTREGA A DOMICILIO", 34, 32, 1);
   const date = order.deliveryDate ? new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires" }).format(order.deliveryDate) : "A coordinar";

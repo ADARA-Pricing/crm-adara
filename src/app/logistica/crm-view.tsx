@@ -5,7 +5,7 @@ import { labelEligibility } from "@/lib/shipping-label";
 import "./logistics-board.css";
 import Link from "next/link";
 import { requireCrmUser } from "@/lib/auth";
-import { crmStatus } from "@/lib/crm-display";
+import { crmInputDate, crmStatus } from "@/lib/crm-display";
 import { logisticsFilter, logisticsStates } from "@/lib/crm-logistics-filters";
 import type { ListQuery } from "@/lib/crm-list-filters";
 import { crmDate } from "@/lib/crm-display";
@@ -21,7 +21,7 @@ import { listPage } from "@/lib/crm-list-filters";
 export const dynamic = "force-dynamic";
 
 const statusLabels: Record<string, string> = { PENDING_REVIEW: "A revisar", APPROVED_FOR_LOGISTICS: "Pendiente", PREPARING: "Preparando", SHIPPED: "En reparto" };
-const inputDate = (date: Date | null) => date ? `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}` : "";
+const inputDate = crmInputDate;
 
 export default async function LogisticsPage({ searchParams }: { searchParams: Promise<ListQuery> }) {
   await requireCrmUser();

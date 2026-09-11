@@ -44,3 +44,10 @@ it("archives terminal stages while retaining the audit event", async () => {
   expect(m.conversationUpdate).toHaveBeenCalledWith({ where: { id: "chat" }, data: { status: "CLOSED" } });
   expect(m.event).toHaveBeenCalledWith({ data: expect.objectContaining({ payload: expect.objectContaining({ newStage: "ABANDONED" }) }) });
 });
+it("reopens an archived conversation when it returns to an active stage", async () => {
+  m.read.mockResolvedValue({ customerId:"customer", status:"CLOSED", customer:{funnelStage:"ABANDONED",funnelUpdatedAt:new Date(input.updatedAt)} });
+  const result = await changeChatStage({ ...input, stage: "INTERESTED" });
+  expect(result.ok).toBe(true);
+  expect(m.conversationUpdate).toHaveBeenCalledWith({ where: { id: "chat" }, data: { status: "OPEN" } });
+  expect(m.event).toHaveBeenCalledWith({ data: expect.objectContaining({ payload: expect.objectContaining({ previousStage: "ABANDONED", newStage: "INTERESTED" }) }) });
+});

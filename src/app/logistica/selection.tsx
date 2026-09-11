@@ -9,5 +9,5 @@ export function LogisticsSelection({ ids, children }: { ids: string[]; children:
 }
 export function ShipmentCheckbox({ id, saleNumber, disabled = false }: { id: string; saleNumber: number; disabled?: boolean }) {
   const context = useContext(Selection);
-  return <input type="checkbox" aria-label={`Seleccionar venta ${saleNumber}`} checked={context.selected.includes(id)} disabled={disabled} onChange={() => context.toggle(id)} />;
+  return <label className="shipment-checkbox"><input type="checkbox" aria-label={`Seleccionar venta ${saleNumber}`} checked={context.selected.includes(id)} disabled={disabled} onChange={() => context.toggle(id)} /><span className="sr-only">Seleccionar venta {saleNumber}</span></label>;
 }

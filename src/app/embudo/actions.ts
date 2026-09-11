@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { requireCrmUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -18,10 +19,16 @@ export async function moveFunnelContact(input: unknown) {
   const { id, stage, updatedAt } = parsed.data;
   try {
     const now = new Date();
-    const result = await prisma.customer.updateMany({
+    const result = await prisma.$transaction(async tx => {
+      const current = await tx.customer.findUnique({ where: { id }, select: { funnelStage: true } });
+      if (!current) return { count: 0 };
+      const updated = await tx.customer.updateMany({
       // PostgreSQL may store microseconds; browser Date preserves milliseconds only.
       where: { id, funnelUpdatedAt: { gte: new Date(updatedAt), lt: new Date(new Date(updatedAt).getTime() + 1) } },
       data: { funnelStage: stage, funnelUpdatedAt: now },
+      });
+      if (updated.count) await tx.funnelTransition.create({ data: { id: randomUUID(), customerId: id, fromStage: current.funnelStage, toStage: stage, createdAt: now } });
+      return updated;
     });
     if (!result.count) return { ok: false as const, message: "El contacto cambió mientras lo movías. Actualizamos el embudo; intentá nuevamente." };
     revalidatePath("/embudo");
