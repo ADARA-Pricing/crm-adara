@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createOrderFromChat } from "./actions";
 import { formatArs, getPrice, LOCAL_ADDRESS, type DeliveryMethod, type PaymentMethod } from "@/lib/sales-policy";
+import { ArgentineDateInput } from "@/components/argentine-date-input";
 
 export function NewChatOrderForm({ conversationId, requestId, paused, allowed, products, customer, orders }: {
   conversationId: string; requestId: string; paused: boolean; allowed: boolean;
@@ -35,7 +36,7 @@ export function NewChatOrderForm({ conversationId, requestId, paused, allowed, p
         <label>Teléfono de contacto<input name="recipientPhone" type="tel" defaultValue={customer.phone} required minLength={6} maxLength={40}/></label>
         <label>Entrega<select name="deliveryMethod" value={method} onChange={e => { setMethod(e.target.value as DeliveryMethod); setPayment("CASH_OR_TRANSFER"); }}><option value="COURIER">Mensajería privada</option><option value="PICKUP">Retiro en local</option></select></label>
         {method === "COURIER" ? <><label>Dirección y numeración<input name="deliveryAddress" defaultValue={customer.address} required minLength={5} maxLength={240}/></label><label>Localidad<input name="locality" defaultValue={customer.locality} required minLength={2} maxLength={120}/></label><label>Código postal (opcional)<input name="postalCode" defaultValue={customer.postalCode} maxLength={12}/></label></> : <><p>Retira por {LOCAL_ADDRESS}. Lunes a viernes de 10 a 19 h; sábados de 11 a 15 h.</p><input type="hidden" name="deliveryAddress" value=""/><input type="hidden" name="locality" value=""/><input type="hidden" name="postalCode" value=""/></>}
-        <label>Fecha solicitada de entrega o retiro<input type="date" name="requestedDate" defaultValue={customer.requestedDate} required/></label>
+        <label>Fecha solicitada de entrega o retiro<ArgentineDateInput name="requestedDate" defaultValue={customer.requestedDate} required/></label>
         <p>La fecha solicitada no confirma logística. Mensajería habitual de 18 a 21 h; corte a las 12:00. Para sábado debe confirmarse antes del viernes a las 12:00. Los horarios especiales requieren coordinación previa.</p>
         <label>Forma de pago<select name="paymentMethod" value={payment} onChange={e => setPayment(e.target.value as PaymentMethod)}><option value="CASH_OR_TRANSFER">Efectivo o transferencia al recibir / retirar</option>{method === "PICKUP" ? <option value="CARD_ONE_PAYMENT">Tarjeta en un pago en el local (+7%)</option> : null}</select></label>
         <p>Sin seña ni transferencia previa. Compra anticipada o en cuotas: únicamente por la web.</p>

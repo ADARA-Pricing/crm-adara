@@ -10,7 +10,7 @@ const configurationUrl = "https://files.bpcontent.cloud/2026/09/04/16/2026090416
 export function BotpressWebchat() {
   const [injectLoaded, setInjectLoaded] = useState(false);
   const pathname = usePathname();
-  const operationalRoute = ["/bandeja", "/embudo", "/tareas", "/pedidos", "/logistica"].some(route => pathname === route || pathname.startsWith(`${route}/`));
+  const operationalRoute = ["/", "/bandeja", "/embudo", "/tareas", "/pedidos", "/logistica", "/bot", "/resultados"].some(route => route === "/" ? pathname === route : pathname === route || pathname.startsWith(`${route}/`));
 
   if (operationalRoute) return null;
   return <>

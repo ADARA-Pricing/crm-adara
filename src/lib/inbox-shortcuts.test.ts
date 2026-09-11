@@ -20,3 +20,13 @@ it("uses the same selection in the destination and its counter", () => {
   }
   expect(inboxShortcuts({})[3].selection.attention).toBe("pending");
 });
+it("does not accumulate shortcuts and clears the active shortcut", () => {
+  const items = inboxShortcuts({ owner: "mine", window: "open", attention: "human" });
+  const mine = items.find(item => item.label === "Mis chats")!;
+  expect(mine.active).toBe(true);
+  expect(mine.href).toBe("/bandeja");
+  const interested = items.find(item => item.label === "Muy interesados")!;
+  expect(interested.href).toContain("stage=VERY_INTERESTED");
+  expect(interested.href).not.toContain("attention=human");
+  expect(interested.href).not.toContain("owner=mine");
+});

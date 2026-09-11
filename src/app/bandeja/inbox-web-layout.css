@@ -39,7 +39,7 @@
 .inbox-left-tools .inbox-filter-grid { grid-template-columns: minmax(0, 1fr); }
 .inbox-left-tools .inbox-shortcuts { gap: 6px; }
 .inbox-left-tools .inbox-shortcuts a { font-size: 12px; border-radius: 18px; border-color: #d9dcde; background: #fff; color: #43505a; }
-.inbox-left-tools .inbox-shortcuts a:first-child { background: #e4f6e5; border-color: #b2dfb7; color: #1d6d3c; }
+.inbox-left-tools .inbox-shortcuts a.active { background: #e4f6e5; border-color: #b2dfb7; color: #1d6d3c; font-weight: 700; }
 .inbox-left-tools .inbox-shortcuts span { background: transparent; min-width: auto; padding: 0; }
 .inbox-contact-scroll { flex: 1; min-height: 0; overflow-y: auto; }
 .inbox-workspace .inbox-list-heading { height: 34px; padding: 0 14px; background: #fff; font-size: 12px; color: #667078; }

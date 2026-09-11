@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { reviewOrder } from "./actions";
+import { ArgentineDateInput } from "@/components/argentine-date-input";
 
 export function ReviewForm({ id, version, date, window, allowed }: { id: string; version: string; date: string; window: string; allowed: boolean }) {
   const [state, action, pending] = useActionState(reviewOrder, {});
@@ -15,7 +16,7 @@ export function ReviewForm({ id, version, date, window, allowed }: { id: string;
       <label><input type="checkbox" name="payment"/> El cliente confirmó productos, importe final y forma de pago.</label>
       <label><input type="checkbox" name="delivery"/> Verifiqué dirección/cobertura o retiro en Cramer, fecha, horario y disponibilidad con logística.</label>
       <label><input type="checkbox" name="risk"/> Revisé las alertas y las condiciones de seguridad; no quedan impedimentos para entregar.</label>
-      <label>Fecha de entrega o retiro acordada<input type="date" name="deliveryDate" defaultValue={date}/></label>
+      <label>Fecha de entrega o retiro acordada<ArgentineDateInput name="deliveryDate" defaultValue={date}/></label>
       <label>Franja acordada<input name="timeWindow" maxLength={100} defaultValue={window} placeholder="Por ejemplo: 18 a 21 h"/></label>
       <p>Mensajería: corte a las 12:00; para sábado, confirmar antes del viernes a las 12:00. Una entrega más temprano requiere coordinación previa. No se entrega los domingos.</p>
       <label>Observaciones / qué falta resolver<textarea name="note" maxLength={1000} rows={4}/></label>

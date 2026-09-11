@@ -44,10 +44,10 @@ export default async function Home() {
     ["En logística", String(logisticsOrders), "Aprobados, en preparación o enviados.", "/logistica"],
   ];
   const attentionCards = [
-    ["Clientes sin responsable", String(unassignedCustomers), "Activos sin una persona asignada.", "/clientes?quality=owner"],
-    ["Contactos sin identificar", String(unidentifiedCustomers), "Sin nombre ni perfil de WhatsApp.", "/clientes?quality=name"],
-    ["Atención pendiente más antigua", oldestPendingHours == null ? "Sin datos" : `${oldestPendingHours} h`, "Abierta o derivada, según última actualización.", "/bandeja?filter=open"],
-    ["Tareas con posible duplicado", String(duplicateTasks), "Coincidencias a revisar; no se modificó ninguna tarea.", "/tareas"],
+    ["Clientes sin responsable", String(unassignedCustomers), "Activos sin una persona asignada.", "/clientes?quality=owner", "unassigned", "Sin asignar"],
+    ["Contactos sin identificar", String(unidentifiedCustomers), "Sin nombre ni perfil de WhatsApp.", "/clientes?quality=name", "review", "Revisar"],
+    ["Atención pendiente más antigua", oldestPendingHours == null ? "Sin datos" : `${oldestPendingHours} h`, "Abierta o derivada, según última actualización.", "/bandeja?filter=open", oldestPendingHours && oldestPendingHours >= 24 ? "critical" : "review", oldestPendingHours && oldestPendingHours >= 24 ? "Crítico" : "Revisar"],
+    ["Tareas con posible duplicado", String(duplicateTasks), "Coincidencias a revisar; no se modificó ninguna tarea.", "/tareas", "review", "Revisar"],
   ];
 
   return <CrmShell active="/">
@@ -60,8 +60,8 @@ export default async function Home() {
         ))}
       </section>
       <section aria-labelledby="attention-heading"><div className="section-heading"><h2 id="attention-heading">Atención requerida</h2><Link href="/tareas">Ver todas las tareas</Link></div><div className="metric-grid dashboard-attention-grid">
-        {attentionCards.map(([title, value, detail, href]) => <Link key={title} className="metric" href={href!}><span className="metric-label">{title}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span></Link>)}
-        <Link className="metric" href="/tareas?timing=overdue"><span className="metric-label">Tareas vencidas</span><strong className="metric-value">{overdueTasks}</strong><span className="metric-detail">Pendientes o en curso, con vencimiento anterior a ahora.</span></Link>
+        {attentionCards.map(([title, value, detail, href, tone, state]) => <Link key={title} className={`metric dashboard-alert dashboard-alert-${tone}`} href={href!}><span className="metric-label">{title}</span><strong className="metric-value">{value}</strong><span className="metric-detail">{detail}</span><span className="dashboard-alert-chip">{state}</span></Link>)}
+        <Link className="metric dashboard-alert dashboard-alert-critical" href="/tareas?timing=overdue"><span className="metric-label">Tareas vencidas</span><strong className="metric-value">{overdueTasks}</strong><span className="metric-detail">Pendientes o en curso, con vencimiento anterior a ahora.</span><span className="dashboard-alert-chip">Vencido</span></Link>
         <Link className="metric" href="/tareas?timing=today"><span className="metric-label">Tareas para hoy</span><strong className="metric-value">{todayTasks}</strong><span className="metric-detail">Día calendario argentino. Puede incluir tareas ya vencidas hoy.</span></Link>
         <Link className="metric" href="/tareas?timing=upcoming"><span className="metric-label">Próximos siete días</span><strong className="metric-value">{upcomingTasks}</strong><span className="metric-detail">Tareas activas que vencen desde ahora.</span></Link>
         <article className="metric"><span className="metric-label">Accesos de atención</span><div className="operational-shortcuts"><Link href="/bandeja?window=closing">Chats con ventana por vencer</Link><Link href="/bandeja?attention=pending">Último mensaje sin respuesta</Link><Link href="/clientes?owner=none">Clientes sin responsable</Link></div></article>
