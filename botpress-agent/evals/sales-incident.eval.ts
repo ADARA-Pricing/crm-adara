@@ -13,6 +13,10 @@ export const available = new Eval({
       tools: [{ called: 'getProductInfo' }, { not_called: 'quoteOrder' }, { not_called: 'recordConfirmedOrder' }],
       response: [...plain, { contains: '199.999' }, { llm_judge: 'Responde el precio solicitado de forma breve, sin agregar un menú de características, entrega o pago.' }],
     } },
+    { user: 'Lo usaría para WhatsApp, fotos y redes.', assert: {
+      tools: [{ called: 'getProductInfo' }, { not_called: 'recordConfirmedOrder' }],
+      response: [...plain, { llm_judge: 'Actúa como vendedor consultivo: relaciona solo características confirmadas con el uso indicado, no inventa prestaciones y hace una única pregunta útil para avanzar la compra.' }],
+    } },
     { user: '¿Y a qué precio tenés el Infinix 50 Pro?', assert: {
       tools: [{ not_called: 'quoteOrder' }, { not_called: 'recordConfirmedOrder' }],
       response: [...plain, { not_contains: '199.999' }, { llm_judge: 'Dice claramente que el 50 Pro no está disponible. No ofrece derivar, consultar al equipo para conseguirlo, venderlo, avisar reposición ni pedir una captura.' }],
