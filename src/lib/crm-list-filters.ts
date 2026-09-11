@@ -24,8 +24,11 @@ export function customerListFilter(raw: ListQuery, userId: string) {
     ...(orders === "yes" ? { orders: { some: {} } } : orders === "no" ? { orders: { none: {} } } : {}),
     ...(quality === "phone" ? { phone: null } : quality === "name" ? { AND: [{ fullName: null }, { whatsappProfileName: null }] } : quality === "locality" ? { locality: null } : quality === "owner" ? { assigneeId: null } : quality === "conversation" ? { conversations: { none: {} } } : quality === "messages" ? { conversations: { some: { events: { none: {} } } } } : {}),
   };
-  const sort = value(raw, "sort") === "name" ? "name" : "recent";
-  const orderBy: Prisma.CustomerOrderByWithRelationInput[] = sort === "name" ? [{ fullName: { sort: "asc", nulls: "last" } }, { id: "asc" }] : [{ updatedAt: "desc" }, { id: "asc" }];
+  const requestedSort = value(raw, "sort");
+  const sort = ["name", "name_desc", "oldest"].includes(requestedSort) ? requestedSort : "recent";
+  const orderBy: Prisma.CustomerOrderByWithRelationInput[] = sort === "name" ? [{ fullName: { sort: "asc", nulls: "last" } }, { id: "asc" }]
+    : sort === "name_desc" ? [{ fullName: { sort: "desc", nulls: "last" } }, { id: "asc" }]
+      : [{ updatedAt: sort === "oldest" ? "asc" : "desc" }, { id: "asc" }];
   return { q, owner, orders, quality, stage, sort, where, orderBy };
 }
 function day(value: string) {
@@ -47,11 +50,11 @@ export function orderListFilter(raw: ListQuery) {
     ...(q ? { OR: [{ recipientName: { contains: q, mode: "insensitive" } }, { recipientPhone: { contains: q } }, { customer: { OR: [{ fullName: { contains: q, mode: "insensitive" } }, { whatsappProfileName: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }] } }, ...(number !== null && number <= 2147483647 ? [{ saleNumber: number }] : [])] } : {}),
   };
   const requestedSort = value(raw, "sort");
-  const sort = ["oldest", "total_high", "total_low", "client", "status"].includes(requestedSort) ? requestedSort : "recent";
+  const sort = ["oldest", "total_high", "total_low", "client", "client_desc", "status", "status_desc"].includes(requestedSort) ? requestedSort : "recent";
   const orderBy: Prisma.OrderOrderByWithRelationInput[] = sort === "total_high" ? [{ totalCents: "desc" }, { id: "asc" }]
     : sort === "total_low" ? [{ totalCents: "asc" }, { id: "asc" }]
-      : sort === "client" ? [{ recipientName: "asc" }, { id: "asc" }]
-        : sort === "status" ? [{ status: "asc" }, { saleDate: "desc" }, { id: "asc" }]
+      : sort === "client" || sort === "client_desc" ? [{ recipientName: sort === "client_desc" ? "desc" : "asc" }, { id: "asc" }]
+        : sort === "status" || sort === "status_desc" ? [{ status: sort === "status_desc" ? "desc" : "asc" }, { saleDate: "desc" }, { id: "asc" }]
           : [{ saleDate: sort === "oldest" ? "asc" : "desc" }, { id: "asc" }];
   return { q, from, to, status, method, sort, where, orderBy, error };
 }
