@@ -561,7 +561,11 @@ form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; wh
 .lead-profile-panel h3 { margin: 14px 0 6px; font-size: 14px; }
 .lead-profile-panel > p { margin: 5px 0; font-size: 12px; }
 .lead-profile-panel .detail-list > div { padding: 5px 0; }
-.lead-profile-panel .lead-task-form { margin-top: 10px; }
+.lead-profile-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; }
+.lead-profile-details > div { min-width: 0; }
+.lead-profile-details > div.wide { grid-column: 1 / -1; }
+.lead-profile-details dt { font-size: 9px; }
+.lead-profile-details dd { overflow-wrap: anywhere; font-size: 12px; }
 .lead-tasks-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
 .lead-tasks-header h2 { margin: 0; font-size: 17px; }
 .lead-tasks-panel .lead-task-create { position: relative; margin: 0; }
@@ -571,12 +575,16 @@ form.bot-date-form > a { align-self: center; color: #5b6670; font-size: 12px; wh
 .lead-tasks-panel .context-note { margin: 0 0 8px; padding: 10px; }
 .lead-tasks-panel .context-note p { margin: 5px 0; font-size: 12px; }
 .lead-tasks-panel .context-note details summary { cursor: pointer; color: var(--brand-dark); font-size: 12px; font-weight: 700; }
-.lead-owner-under-tasks { margin: 10px 0; padding-top: 10px; border-top: 1px solid var(--line); }
-.lead-owner-under-tasks .lead-task-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
-.lead-owner-under-tasks .lead-task-form > p { grid-column: 1 / -1; margin: 0; }
+.lead-side-stack { display: grid; gap: 10px; align-content: start; }
+.lead-assignment-panel { padding: 12px 14px; }
+.lead-assignment-panel h2 { margin: 0 0 8px; font-size: 15px; }
+.lead-assignment-panel .lead-task-form { grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+.lead-assignment-panel .lead-task-form > p { grid-column: 1 / -1; margin: 0; }
+.lead-admin-actions { display: flex; justify-content: flex-end; padding-top: 2px; }
+.lead-admin-actions .danger-button { min-height: 32px; font-size: 12px; }
 .lead-chat { padding: 12px; }
 .lead-chat .chat-messages { height: min(55vh, 540px); }
 .lead-empty-title { display: flex; align-items: center; gap: 8px; }
 .lead-empty-title h2 { margin: 0; font-size: 17px; }
-@media (max-width: 1100px) { .lead-workspace-columns { grid-template-columns: minmax(210px, .8fr) minmax(370px, 1.35fr); } .lead-tasks-panel { grid-column: 1 / -1; } .lead-tasks-panel .lead-task-list { max-height: none; } }
-@media (max-width: 760px) { .lead-workspace-columns { grid-template-columns: 1fr; } .lead-tasks-panel { grid-column: auto; } .lead-dialog-heading { margin-bottom: 4px; } .lead-owner-under-tasks .lead-task-form { grid-template-columns: 1fr; } }
+@media (max-width: 1100px) { .lead-workspace-columns { grid-template-columns: minmax(210px, .8fr) minmax(370px, 1.35fr); } .lead-side-stack { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr) minmax(250px, .7fr); } .lead-tasks-panel .lead-task-list { max-height: none; } }
+@media (max-width: 760px) { .lead-workspace-columns { grid-template-columns: 1fr; } .lead-side-stack { grid-column: auto; grid-template-columns: 1fr; } .lead-dialog-heading { margin-bottom: 4px; } .lead-profile-details { grid-template-columns: 1fr; } .lead-profile-details > div.wide { grid-column: auto; } .lead-assignment-panel .lead-task-form { grid-template-columns: 1fr; } }
