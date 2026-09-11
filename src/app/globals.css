@@ -282,7 +282,19 @@ td { padding: 15px 17px; border-top: 1px solid #eee8e4; font-size: 13px; vertica
 .lead-workspace .panel { min-width: 0; overflow-wrap: anywhere; }
 .lead-task-form, .lead-task-form label { display: grid; gap: 8px; }
 .lead-task-form input, .lead-task-form select, .lead-task-form textarea { width: 100%; padding: 9px; border: 1px solid #dfd7d0; border-radius: 8px; }
-.lead-chat .chat-messages { height: auto; min-height: 0; max-height: none; overflow: visible; }
+.lead-chat { padding: 16px; }
+.lead-chat > h2 { margin: 0; font-size: 18px; }
+.lead-chat > .topbar-actions { margin: 7px 0 5px; gap: 5px; }
+.lead-chat > .topbar-actions .button { min-height: 30px; padding: 4px 9px; font-size: 12px; }
+.lead-chat .chat-controls { min-height: 42px; padding: 6px 8px; gap: 6px; }
+.lead-chat .chat-controls .badge { padding: 4px 7px; font-size: 11px; }
+.lead-chat .chat-controls .button { min-height: 30px; padding: 4px 8px; font-size: 12px; }
+.lead-chat .chat-messages { height: clamp(420px, 60vh, 680px); min-height: 0; max-height: none; overflow-y: auto; padding: 14px 16px; }
+.lead-chat-window { position: sticky; top: 0; z-index: 1; align-self: flex-end; margin: -6px -8px 2px 0; padding: 4px 8px; box-shadow: 0 1px 3px #25232120; }
+.lead-chat .chat-composer { padding: 8px; gap: 5px; }
+.lead-chat .chat-composer textarea { min-height: 40px; }
+.lead-chat .chat-composer .button { min-height: 34px; padding: 6px 9px; font-size: 12px; }
+.lead-chat .chat-composer small { font-size: 10px; }
 .funnel-person:focus-visible { outline: 2px solid #815734; outline-offset: 2px; }
 @media(max-width: 1000px) { .lead-workspace { grid-template-columns: 1fr; } }
 

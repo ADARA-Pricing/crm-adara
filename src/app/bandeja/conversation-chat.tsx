@@ -35,7 +35,7 @@ function MessageContent({ message }: { message: Message }) {
   </>;
 }
 
-export function ConversationChat({ id, initialPaused, refreshPage = true, channel = "whatsapp", suggestedDraft, stageControl }: { id: string; initialPaused: boolean; refreshPage?: boolean; channel?: string; suggestedDraft?: { id: string; content: string }; stageControl?: React.ReactNode }) {
+export function ConversationChat({ id, initialPaused, refreshPage = true, channel = "whatsapp", suggestedDraft, stageControl, compactLead = false }: { id: string; initialPaused: boolean; refreshPage?: boolean; channel?: string; suggestedDraft?: { id: string; content: string }; stageControl?: React.ReactNode; compactLead?: boolean }) {
   const router = useRouter();
   const cached = useInboxCache()[id];
   const storeSnapshot = useStoreInboxSnapshot();
@@ -139,10 +139,11 @@ export function ConversationChat({ id, initialPaused, refreshPage = true, channe
     finally { busyRef.current = false; setBusy(false); void refresh(); }
   }
   return <section className="conversation-chat" aria-label="Chat de la conversación">
-    <ReplyWindow activity={{ ...messageActivity(messages), channel }} />
+    {!compactLead && <ReplyWindow activity={{ ...messageActivity(messages), channel }} />}
     {suggestedDraft && usedDraft !== suggestedDraft.id && <section className="context-note"><p>Borrador de regla: {suggestedDraft.content}</p><button className="button secondary" disabled={busy || !paused || !!text} onClick={() => { setText(suggestedDraft.content); setDraftId(suggestedDraft.id); }}>Usar borrador (no envía)</button></section>}
     <div className="chat-controls"><span className={`badge ${paused ? "warning" : "success"}`}>{paused ? "Bot pausado · Atención manual" : "Bot activo"}</span><button className="button secondary" disabled={busy} onClick={changeControl}>{paused ? "Reactivar bot" : "Pausar bot y atender"}</button><button className="button secondary" disabled={busy} onClick={() => void refresh()}>Actualizar</button>{stageControl}</div>
     <div className="chat-messages" ref={body} aria-label="Historial de mensajes" aria-busy={loading}>
+      {compactLead && <ReplyWindow className="lead-chat-window" activity={{ ...messageActivity(messages), channel }} />}
       {cursor ? <button className="button secondary" disabled={busy} onClick={async () => { setBusy(true); busyRef.current = true; try { await refresh(true); } finally { setBusy(false); busyRef.current = false; } }}>Cargar anteriores</button> : null}
       {loading ? <p className="muted">Cargando conversación…</p> : !messages.length && !historyError ? <p className="muted">No hay mensajes disponibles en Botpress.</p> : null}
       {historyError ? <p role="alert">{historyError}</p> : null}
