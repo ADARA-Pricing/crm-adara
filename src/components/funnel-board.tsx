@@ -49,6 +49,11 @@ export function FunnelBoard({ customers, category, visibleStage }: { customers: 
   const draggedId = useRef<string | null>(null);
   const lastDragAt = useRef(0);
   const [message, setMessage] = useState("");
+  const [density, setDensity] = useState<"normal" | "compact">("normal");
+  useEffect(() => {
+    const cancel = (event: KeyboardEvent) => { if (event.key === "Escape" && dragging) { draggedId.current = null; setDragging(null); setTarget(null); setMessage("Movimiento cancelado."); } };
+    window.addEventListener("keydown", cancel); return () => window.removeEventListener("keydown", cancel);
+  }, [dragging]);
   useEffect(() => { setPeople(customers); }, [customers]);
   async function move(id: string, stage: FunnelStage) {
     if (busy.current) return;
@@ -67,8 +72,8 @@ export function FunnelBoard({ customers, category, visibleStage }: { customers: 
   }
   return <><nav className="funnel-view-switch" aria-label="Vista del embudo"><button className="button secondary" aria-pressed={!visibleStage && params.get("viewGroup") !== "closed"} onClick={() => changeView("viewGroup", "active")}>Etapas activas</button><button className="button secondary" aria-pressed={!visibleStage && params.get("viewGroup") === "closed"} onClick={() => changeView("viewGroup", "closed")}>Finalizados y abandonados</button></nav>
     <label className="funnel-mobile-selector">Etapa en pantalla<select value={mobileStage} onChange={event => changeView("mobileStage", event.target.value)}>{columns.map(([stage, title]) => <option key={stage} value={stage}>{title} ({people.filter(person => person.funnelStage === stage).length})</option>)}</select></label>
-    <p className="funnel-feedback" role="status">{message || "Arrastrá una tarjeta o usá su selector. Los contadores corresponden a los contactos cargados."}</p>
-    <section className={`funnel-board funnel-board-focused${visibleStage ? " funnel-single-stage" : ""}${columns.length === 2 ? " funnel-closed-stages" : ""}`} aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{columns.map(([stage, title, description]) => {
+    <div className="funnel-toolbar"><p className="funnel-feedback" role="status">{message || "Arrastrá una tarjeta o usá su selector. Los contadores corresponden a los contactos cargados."}</p><label>Densidad<select value={density} onChange={event => setDensity(event.target.value as "normal" | "compact")}><option value="normal">Normal</option><option value="compact">Compacto</option></select></label></div>
+    <section className={`funnel-board funnel-board-focused funnel-density-${density}${visibleStage ? " funnel-single-stage" : ""}${columns.length === 2 ? " funnel-closed-stages" : ""}`} aria-label="Etapas del embudo" aria-busy={Boolean(saving)}>{columns.map(([stage, title, description]) => {
       const contacts = people.filter((person) => person.funnelStage === stage);
       return <article key={stage} className={`funnel-column${mobileStage === stage ? " funnel-mobile-current" : ""}${target === stage ? " funnel-drop-target" : ""}`}
         onDragOver={(event) => { if (draggedId.current && !busy.current) { event.preventDefault(); event.dataTransfer.dropEffect = "move"; setTarget(stage); } }}

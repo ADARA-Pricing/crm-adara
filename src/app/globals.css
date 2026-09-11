@@ -31,7 +31,10 @@
 html[data-crm-operational="true"] .bpw-widget-container,
 html[data-crm-operational="true"] .bpw-layout,
 html[data-crm-operational="true"] #botpress-webchat,
-html[data-crm-operational="true"] [class*="botpress-webchat"] { display: none !important; }
+html[data-crm-operational="true"] [class*="botpress-webchat"],
+html[data-crm-operational="true"] .bpw-floating-button,
+html[data-crm-operational="true"] iframe[src*="botpress"],
+html[data-crm-operational="true"] iframe[title*="Bot"] { display: none !important; }
 
 /* Keep the navigation outside the route loading boundary. */
 .crm-shell.persistent-shell { height: 100dvh; min-height: 0; overflow: hidden; }
@@ -360,9 +363,12 @@ tbody tr:hover { background: #fbf6f0; }
 .funnel-view-switch { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
 .funnel-view-switch button[aria-pressed="true"] { background: var(--brand-dark); color: white; }
 .funnel-mobile-selector { display: none; }
-.funnel-board.funnel-board-focused { grid-template-columns: repeat(5, minmax(175px, 1fr)); overflow-x: auto; scrollbar-width: auto; scrollbar-color: #9e8674 #eee6df; }
+.funnel-board.funnel-board-focused { grid-template-columns: repeat(5, 300px); overflow-x: auto; scrollbar-width: auto; scrollbar-color: #9e8674 #eee6df; }
 .funnel-board.funnel-closed-stages { grid-template-columns: repeat(2, minmax(175px, 1fr)); }
-.funnel-board-focused .funnel-column { min-width: 0; max-height: 75vh; overflow-y: auto; }
+.funnel-board-focused { grid-template-columns: repeat(5, 300px); overflow-x: auto; overflow-y: visible; padding-bottom: 28px; align-items: start; }
+.funnel-board-focused.funnel-closed-stages { grid-template-columns: repeat(2, 300px); }
+.funnel-board-focused .funnel-column { min-width: 300px; width: 300px; max-height: none; overflow: visible; }
+.funnel-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }.funnel-toolbar > label { display:flex; align-items:center; gap:8px; font-size:12px; white-space:nowrap; }.funnel-density-compact .funnel-cards { padding:6px; gap:6px; }.funnel-density-compact .funnel-person { padding:8px; }.funnel-density-compact .funnel-person small { margin-top:4px; }.funnel-density-compact .funnel-person footer { margin-top:6px; padding-top:6px; }.funnel-density-compact .funnel-card-more { display:none; }
 .funnel-board-focused .funnel-column-head { position: sticky; top: 0; z-index: 1; background: #f1eeeb; padding: 12px 10px; }
 .funnel-board-focused .funnel-person { overflow-wrap: anywhere; }
 .funnel-board.funnel-board-focused.funnel-single-stage { grid-template-columns: minmax(0, 1fr); }
