@@ -60,7 +60,16 @@ export function metaConfiguration() {
   return { appId, appSecret, redirectUri };
 }
 
-type InsightsReply = { data?: Array<{ spend?: string; impressions?: string; reach?: string; clicks?: string }>; error?: { message?: string } };
+type ActionValue = { action_type?: string; value?: string };
+type InsightsReply = { data?: Array<{ campaign_id?: string; campaign_name?: string; spend?: string; impressions?: string; reach?: string; clicks?: string; actions?: ActionValue[]; purchase_roas?: ActionValue[] }>; error?: { message?: string } };
+
+const reportedValue = (values: ActionValue[] | undefined, actionTypes: string[]) => {
+  for (const actionType of actionTypes) {
+    const value = values?.find(item => item.action_type === actionType)?.value;
+    if (value !== undefined) return value;
+  }
+  return null;
+};
 
 export async function readMetaAccountInsights() {
   const connection = await prisma.metaAdsConnection.findUnique({ where: { id: "primary" } });
@@ -72,7 +81,20 @@ export async function readMetaAccountInsights() {
     const payload = await response.json() as InsightsReply;
     if (!response.ok || !payload.data?.[0]) return { connection, insights: null, error: payload.error?.message || "Meta no devolvió métricas para este período." };
     const item = payload.data[0];
-    return { connection, insights: { spend: item.spend || "0", impressions: item.impressions || "0", reach: item.reach || "0", clicks: item.clicks || "0" }, error: null };
+    const campaignQuery = new URLSearchParams({ date_preset: "last_30d", level: "campaign", limit: "100", fields: "campaign_id,campaign_name,spend,impressions,reach,clicks,actions,purchase_roas", access_token: token });
+    const campaignResponse = await fetch(`${graphUrl(`act_${connection.adAccountId}/insights`)}?${campaignQuery.toString()}`, { cache: "no-store" });
+    const campaignPayload = await campaignResponse.json() as InsightsReply;
+    const campaigns = campaignResponse.ok ? (campaignPayload.data || []).map(campaign => ({
+      id: campaign.campaign_id || campaign.campaign_name || crypto.randomUUID(),
+      name: campaign.campaign_name || "Campaña sin nombre",
+      spend: campaign.spend || "0",
+      reach: campaign.reach || "0",
+      impressions: campaign.impressions || "0",
+      clicks: campaign.clicks || "0",
+      purchases: reportedValue(campaign.actions, ["omni_purchase", "purchase", "offsite_conversion.fb_pixel_purchase"]),
+      roas: reportedValue(campaign.purchase_roas, ["omni_purchase", "purchase", "offsite_conversion.fb_pixel_purchase"])
+    })).sort((a, b) => Number(b.spend) - Number(a.spend)) : [];
+    return { connection, insights: { spend: item.spend || "0", impressions: item.impressions || "0", reach: item.reach || "0", clicks: item.clicks || "0", campaigns }, error: null };
   } catch {
     return { connection, insights: null, error: "No se pudieron consultar las métricas de Meta. Reconectá la cuenta si el acceso venció." };
   }
