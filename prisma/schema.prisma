@@ -365,3 +365,16 @@ model ConversationEvent {
   payload         Json
   createdAt       DateTime     @default(now())
 }
+
+// One server-managed, read-only connection for the CRM's advertising account.
+// The access token is encrypted before it reaches PostgreSQL.
+model MetaAdsConnection {
+  id                 String   @id @default("primary")
+  adAccountId        String   @unique
+  adAccountName      String?
+  accessTokenCipher  String
+  tokenExpiresAt     DateTime?
+  connectedById      String
+  connectedAt        DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
