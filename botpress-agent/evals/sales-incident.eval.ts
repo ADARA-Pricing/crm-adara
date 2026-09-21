@@ -74,6 +74,6 @@ export const shippingPriceOnIntent = new Eval({
   name: 'shipping-price-on-intent', type: 'regression',
   conversation: [{ user: 'Quiero el Infinix con envío.', assert: {
     tools: [{ called: 'getProductInfo' }, { called: 'quoteOrder' }],
-    response: [{ llm_judge: 'Informa por separado el costo exacto del envío y el total. Aclara que contraentrega se abona al recibir, al cadete, en efectivo o transferencia, sin seña ni pago anticipado. No pide barrio ni código postal antes de informar esos importes.' }],
+    response: [{ llm_judge: 'Informa por separado el costo exacto del envío y el total. Si menciona contraentrega, confirma de forma breve que se paga al recibir, sin sumar advertencias sobre seña, tarjeta o transferencias previas si no se las preguntaron. No pide barrio ni código postal antes de informar esos importes.' }],
   } }],
 })
